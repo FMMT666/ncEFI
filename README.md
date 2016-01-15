@@ -9,11 +9,11 @@ including a minimalistic OpenGL preview.
 Well, er... Parts of :)
 
 I restored these Python fragments from an old CPIOed backup tape.  
-The only thing I remember is, that I implemented a quite cool,
+The only thing I remember is, that I implemented a quite cool, round
 pocket milling algorithm.
 
 As far as I can remember, that was my first contact with Python at all.  
-And that's also what the code looks like (o_O)
+That's also what the code looks like (o_O)
 
 But I want that in EMC2...
 
@@ -34,5 +34,5 @@ Move on, there is nothing to see here, yet...
 
 ---
 
-Have fun (with whatever)
+Have fun (with whatever)  
 FMMT666(ASkr)
