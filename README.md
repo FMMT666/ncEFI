@@ -27,10 +27,14 @@ Move on, there is nothing to see here, yet...
 ---
 ## News
 
-### CHANGES 2016/01/14
+### CHANGES 2021/08/XX
+    - I have a stupid idea.
 
+### CHANGES 2016/01/14
     - initial upload of this "whatever"
 
+### CHANGES 2007/11/XX
+    - last available code before the computer was destroyed by a fire
 
 ---
 
