@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/env python3
 
 
 # Just playing around with python...
@@ -35,7 +35,7 @@ def createArc180(p1,p2,rad,step,dir):
   pm=arcCenter180XY(p1,p2,rad,dir)
   
   if pm==None:
-    print "ERR: createArc180: no center; p1,p2: ",p1,p2
+    print( "ERR: createArc180: no center; p1,p2: ",p1,p2 )
     return []
   dArc=[]
   sta_an=vecAngleXY((p1[0]-pm[0],p1[1]-pm[1],0))
@@ -56,14 +56,14 @@ def createArc180(p1,p2,rad,step,dir):
     spa_an=2.0*math.pi-spa_an
 
   if spa_an == 0.0:
-    print "ERR: createArc180: no angle"
+    print( "ERR: createArc180: no angle" )
     return []
 
   if spa_an > math.pi + 0.01:
     spa_an-=math.pi
   else:
     if spa_an < -(math.pi+0.01):
-#      print "spa_an < -(math.pi+0.01)"
+#      print( "spa_an < -(math.pi+0.01)" )
 #      spa_an+=math.pi
       spa_an=2.0*math.pi+spa_an
 
@@ -72,7 +72,7 @@ def createArc180(p1,p2,rad,step,dir):
 
   stp_an=spa_an/step
 
-  print "spa_an: ",spa_an
+  print( "spa_an: ",spa_an )
                
   count=2
   lp=p1			# the last point
@@ -199,7 +199,7 @@ class Canvas:
           p2=iElem['p2']
           rad=iElem['rad']
           dir=iElem['dir']
-          print "arc pNr: ",iElem['pNr'],p1,p2
+          print( "arc pNr: ",iElem['pNr'],p1,p2 )
           lines=createArc180(p1,p2,rad,20,dir)
           glDisable(GL_LIGHTING)
           glColor3f(1, 1, 1)
@@ -261,7 +261,7 @@ class Canvas:
 
     glFlush()          
 #    hits=glRenderMode(GL_RENDER)
-#    print "HITS: ",hits
+#    print( "HITS: ",hits )
 
 
 
@@ -301,7 +301,7 @@ class Canvas:
   ###
   ###########################################################################
   def pick(self,o, p1, p2, event=None):
-    print "."
+    print( "." )
     return 1    
 
 
@@ -313,11 +313,11 @@ class Canvas:
 #    result = glSelectWithCallback(event.x,event.y, self.pick_redraw)
     result = glSelectWithCallback(event.x,event.y, self.drawall_pick)
 
-    print "result:      ",str(result)
+    print( "result:      ",str(result) )
 
     if result and result[0][2]:
       sel=result[0][2][-1]
-      print "SELECT: ",sel
+      print( "SELECT: ",sel )
 #      for iParts in self.o.parts:
 #        if iParts[0]=='geom':
 #          iParts[1].sel_element_toggle(sel)
@@ -331,14 +331,14 @@ if __name__ == '__main__':
   try:
     f=open('data.txt','r+t')
   except:
-    print 'ERROR: file not found'
+    print( "ERROR: file not found" )
     sys.exit()
 
   try:
     partlist=pickle.load(f)
 #    print partlist
   except:
-    print "ERROR loading data"
+    print( "ERROR loading data" )
 
   kekse=0
 

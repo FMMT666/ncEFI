@@ -114,8 +114,8 @@ class PyMillWin:
   ###
   ############################################################################
   def PMcallback(self,nam=''):
-    print "CALLBACK:"
-    print nam
+    print( "CALLBACK:" )
+    print( nam )
 
 
   ############################################################################
@@ -124,7 +124,7 @@ class PyMillWin:
   ###
   ############################################################################
   def PMredraw(self,event):
-    print "REDRAW"
+    print( "REDRAW" )
 
 
 
@@ -135,7 +135,7 @@ class PyMillWin:
   ############################################################################
   def PMcallbackMouse(self,event):
 #    print self.PMcanvas.find_closest(event.x,event.y)
-    print event.type
+    print( event.type )
     
     
 

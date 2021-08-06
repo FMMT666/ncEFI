@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 
 
 import string
@@ -99,7 +99,7 @@ def vecScale(p1,fac):
 def vecAngleXY(p1):
   len=vecLength((p1[0],p1[1],0))
   if len == 0:
-    print "vecAngleXY: vector has zero length"
+    print( "vecAngleXY: vector has zero length" )
     return None
   an=math.asin(math.fabs(p1[1])/len)
   if p1[0] >= 0:
@@ -142,16 +142,16 @@ def vecAngleDiffXY(p1,p2):
   if a1==a2:
     return 0.0
   
-  as=2.0*math.pi-a1+a2
-  if as >= 2.0*math.pi:
-    as-=2.0*math.pi
+  ad=2.0*math.pi-a1+a2
+  if ad >= 2.0*math.pi:
+    ad-=2.0*math.pi
 
-  if as <= math.pi:
-    return as
+  if ad <= math.pi:
+    return ad
   else:
-    return -(2.0*math.pi-as)
+    return -(2.0*math.pi-ad)
 
-  
+
 
 #############################################################################
 ### vecHasPoint
@@ -160,7 +160,7 @@ def vecAngleDiffXY(p1,p2):
 #############################################################################
 def vecHasPointXY(p1,p2,px):
   if not p1[2]==p2[2]==px[2]:  
-    print "vecHasPointXY: line and point not in same plane (xy)"
+    print( "vecHasPointXY: line and point not in same plane (xy)" )
     return False
 
   if p1==p2:
@@ -258,7 +258,7 @@ def vecGetParameter(p1,p2):
 #############################################################################
 def vecIntersectXY(p1,p2,q1,q2):
   if not p1[2]==p2[2]==q1[2]==q2[2]:  
-    print "vecIntersectXY: lines not in same plane (xy)"
+    print( "vecIntersectXY: lines not in same plane (xy)" )
     return None
   par1=vecGetParameter(p1,p2)
   par2=vecGetParameter(q1,q2)
@@ -277,14 +277,14 @@ def vecIntersectXY(p1,p2,q1,q2):
 #############################################################################
 def vecArcIntersectXY(p1,p2,pc,r):
   if not p1[2]==p2[2]==pc[2]:  
-    print "vecIntersectXY: line and arc not in same plane (xy)"
+    print( "vecIntersectXY: line and arc not in same plane (xy)" )
     return None
 
-#  print "vecArcIntersect"
-#  print "__ p1: ",p1
-#  print "__ p2: ",p2
-#  print "__ pc: ",pc
-#  print "__ r : ",r
+#  print( "vecArcIntersect" )
+#  print( "__ p1: ",p1 )
+#  print( "__ p2: ",p2 )
+#  print( "__ pc: ",pc )
+#  print( "__ r : ",r )
 
   # intersection points list
   ips=[]
@@ -329,7 +329,7 @@ def vecArcIntersectXY(p1,p2,pc,r):
 #############################################################################
 def arcIntersectXY(p1,r1,p2,r2):
   if not p1[2]==p2[2]:  
-    print "arcIntersectXY: arcs not in same plane (xy)"
+    print( "arcIntersectXY: arcs not in same plane (xy)" )
     return []
 
   if p1==p2:
@@ -367,7 +367,7 @@ def arcHasPointInSegmentXY(p1,p2,rad,dir,px):
 
   pm=arcCenter180XY(p1,p2,rad,dir)
   if pm == None:
-    print "arcHasPointInSegmentXY: no midpoint: ",p1,p2,rad,dir
+    print( "arcHasPointInSegmentXY: no midpoint: ",p1,p2,rad,dir )
     return None
     
   # quick hack:
@@ -388,13 +388,13 @@ def arcHasPointInSegmentXY(p1,p2,rad,dir,px):
   # The span can not be greater than pi!
 
 #  print
-#  print "pm   ",pm
-#  print "p1   ",p1
-#  print "p2   ",p2
-#  print "px   ",px
-#  print "p1px ",360.0/(2.0*math.pi)*p1px
-#  print "p2px ",360.0/(2.0*math.pi)*p2px
-#  print "dir  ",dir
+#  print( "pm   ",pm )
+#  print( "p1   ",p1 )
+#  print( "p2   ",p2 )
+#  print( "px   ",px )
+#  print( "p1px ",360.0/(2.0*math.pi)*p1px )
+#  print( "p2px ",360.0/(2.0*math.pi)*p2px )
+#  print( "dir  ",dir )
 
   if dir == 'cw':
     if p1px >= -RADTOL and p2px <= RADTOL:
@@ -430,12 +430,12 @@ def arcDistPointOnBowXY(p1,p2,rad,dir,px):
   # check if it is between p1 and p2
   chkIn=arcHasPointInSegmentXY(p1,p2,rad,dir,px)
   if chkIn==None:
-    print "arcDistPointOnBowXY: arcHasPointInSegment error"
+    print( "arcDistPointOnBowXY: arcHasPointInSegment error" )
     return None
 
   pm=arcCenter180XY(p1,p2,rad,dir)
   if pm == None:
-    print "arcDistPointOnBowXY: no midpoint: ",p1,p2,rad,dir
+    print( "arcDistPointOnBowXY: no midpoint: ",p1,p2,rad,dir )
     return None
    
   # quick hack:
@@ -448,12 +448,12 @@ def arcDistPointOnBowXY(p1,p2,rad,dir,px):
   pxp2=math.fabs(vecAngleDiffXY(vecExtract(pm,px),vecExtract(pm,p2)))
 
   if p1p2==0.0:
-    print "arcDistPointOnBowXY: length between p1 and p2 is 0.0"
+    print( "arcDistPointOnBowXY: length between p1 and p2 is 0.0" )
     return None
 
-#  print "pm:   ",pm
-#  print "p1p2: ",p1p2*360.0/(math.pi*2.0)
-#  print "pxp2: ",pxp2*360.0/(math.pi*2.0)
+#  print( "pm:   ",pm )
+#  print( "p1p2: ",p1p2*360.0/(math.pi*2.0) )
+#  print( "pxp2: ",pxp2*360.0/(math.pi*2.0) )
 
   erg=(p1p2-pxp2)/p1p2
 
@@ -485,10 +485,10 @@ def arcAngle(len,rad):
 def arcAngleAtPx(p1,p2,rad,dir,p):
   pm=arcCenter180XY(p1,p2,rad,dir)
   if pm == None:
-    print "arcAngleAtPx: no midpoint: ",p1,p2,rad,dir
+    print( "arcAngleAtPx: no midpoint: ",p1,p2,rad,dir )
     return None
   if p!='p1' and p!='p2':
-    print "arcAngleAtPx: point select is not \'p1\' or \'p2\': ",p
+    print( "arcAngleAtPx: point select is not \'p1\' or \'p2\': ",p )
     return None
   if p == 'p1':
     a=vecExtract(pm,p1)
@@ -513,10 +513,10 @@ def arcAngleAtPx(p1,p2,rad,dir,p):
 def arcVectorAtPx(p1,p2,rad,dir,p):
   pm=arcCenter180XY(p1,p2,rad,dir)
   if pm == None:
-    print "arcAngleAtPx: no midpoint: ",p1,p2,rad,dir
+    print( "arcAngleAtPx: no midpoint: ",p1,p2,rad,dir )
     return None
   if p!='p1' and p!='p2':
-    print "arcAngleAtPx: point select is not \'p1\' or \'p2\': ",p
+    print( "arcAngleAtPx: point select is not \'p1\' or \'p2\': ",p )
     return None
   if p == 'p1':
     a=vecExtract(pm,p1)
@@ -546,7 +546,7 @@ def arcCenter180XY(p1,p2,rad,dir):
   pp2=(p2[0],p2[1],0)
   dist=vecLength(pp1,pp2)
   if rad < dist/2.0:
-    print "arcCenter180XY: rad < dist"
+    print( "arcCenter180XY: rad < dist" )
     return None
   pm=vecExtract(pp1,pp2)			# get the direction vector
   an=arcAngle(dist,rad)
