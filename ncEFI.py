@@ -2,12 +2,9 @@
 
 # ncEFI
 # Some stupid G-Code ideas I had about 25 years ago.
+# Yes, really, really stupid.
 # FMMT666/ASkr 1995..2021 lol
 
-
-# I guess we don't need these anymore :)
-#import string
-#import sys
 
 import pickle
 import math
@@ -15,25 +12,28 @@ import math
 from ncVec import *
 
 
-GCODE_RAPID="G00"
-GCODE_LINE="G01"
-GCODE_ARC_CW="G02"
-GCODE_ARC_CC="G03"
+GCODE_RAPID        = "G00"
+GCODE_LINE         = "G01"
+GCODE_ARC_CW       = "G02"
+GCODE_ARC_CC       = "G03"
 
-GCODE_PRG_FEEDUNIT='G94 (feedrate in \'units\' per minute)'
-GCODE_PRG_UNITS='G21 (units are millimeters)'
-GCODE_PRG_PLANE='G17 (working in/on xy-plane)'
-GCODE_PRG_PATHMODE='G64P0.05 (continuous mode with \'p\' as tolerance)'
-GCODE_PRG_INIT1='T1M06'
-GCODE_PRG_INIT2='G00X0Y0 S2000 M03'
-GCODE_PRG_INIT3='F900'
+# TODO
+# Just some stupid default values for now.
+GCODE_PRG_FEEDUNIT = 'G94 (feedrate in \'units\' per minute)'
+GCODE_PRG_UNITS    = 'G21 (units are millimeters)'
+GCODE_PRG_PLANE    = 'G17 (working in/on xy-plane)'
+GCODE_PRG_PATHMODE = 'G64P0.05 (continuous mode with \'p\' as tolerance)'
+GCODE_PRG_INIT1    = 'T1M06'
+GCODE_PRG_INIT2    = 'G00X0Y0 S6000 M03'
+GCODE_PRG_INIT3    = 'F900'
 
-GCODE_PRG_ENDPOS='G00X0Y0'
-GCODE_PRG_END='M02'
+GCODE_PRG_ENDPOS   = 'G00X0Y0'
+GCODE_PRG_END      = 'M02'
 
-GCODE_OP_SAVEZ='10'
+GCODE_OP_SAVEZ     = '10'
 
-TOOL_CONTINUOUS_TOLERANCE=0.001      # in units; if mm, this makes 1um...
+TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
+
 
 
 #############################################################################
@@ -65,6 +65,21 @@ TOOL_CONTINUOUS_TOLERANCE=0.001      # in units; if mm, this makes 1um...
 
 
 #############################################################################
+### extraAddExtra
+###
+#############################################################################
+def extraAddExtra(elem,extra):
+  for i in extra:
+    if i=='pNr':
+      elem['pNr']=extra['pNr']
+    if i=='pNext':
+      elem['pNext']=extra['pNext']
+    if i=='pPrev':
+      elem['pPrev']=extra['pPrev']
+
+
+
+#############################################################################
 ### elemCreateVertex
 ###
 #############################################################################
@@ -72,13 +87,7 @@ def elemCreateVertex(p1,extra={}):
   if isinstance(p1,tuple) == False:
     return {}
   ret={'type':'v','p1':p1}
-  for i in extra:
-    if i=='pNr':
-      ret['pNr']=extra['pNr']
-    if i=='pNext':
-      ret['pNext']=extra['pNext']
-    if i=='pPrev':
-      ret['pPrev']=extra['pPrev']
+  extraAddExtra(ret,extra)
   return ret
 
 
@@ -96,22 +105,42 @@ def elemCreateLine(p1,p2,extra={}):
     print( "ERR: elemCreateLine: p1 == p2: ",p1 )
     return {}
   ret={'type':'l','p1':p1,'p2':p2}
-  for i in extra:
-    if i=='pNr':
-      ret['pNr']=extra['pNr']
-    if i=='pNext':
-      ret['pNext']=extra['pNext']
-    if i=='pPrev':
-      ret['pPrev']=extra['pPrev']
+  extraAddExtra(ret,extra)
   return ret
 
-  
-  
+
+
+#############################################################################
+### elemCreateLineTo
+###
+#############################################################################
+def elemCreateLineTo(l1,p2,extra={}):
+
+  if isinstance(l1['p2'],tuple) == False:
+    print( "ERR: elemCreateLineTo: l1 has no tuple in p2" )
+    return {}
+
+  if isinstance(p2,tuple) == False:
+    print( "ERR: elemCreateLine: p2 not tuple" )
+    return {}
+
+#  if p1 == p2:
+#    print( "ERR: elemCreateLine: p1 == p2: ",p1 )
+#    return {}
+
+  ret={'type':'l','p1':l1['p2'],'p2':p2}
+  extraAddExtra(ret,extra)
+  return ret
+
+
+
 #############################################################################
 ### elemCreateArc180
 ###
 ### While rad is taken from a projection to the xy-plane, z may vary but
 ### will be stepped through linear.
+### If 'rad' is below the possible minimum to create an arc, it is set to
+### the minimum value, half of the distance between p1 and p2.
 #############################################################################
 def elemCreateArc180(p1,p2,rad,dir,extra={}):
   # ToDo:
@@ -130,31 +159,48 @@ def elemCreateArc180(p1,p2,rad,dir,extra={}):
     return {}
   dist=vecLength((p1[0],p1[1],0),(p2[0],p2[1],0))
   if rad < dist/2.0:
-    # "precision" hack:
-#    if rad+0.0000001 > dist/2.0:
-#      rad+=0.0000001
-    if rad+RADTOL > dist/2.0:
-      rad+=RADTOL
+    rad = dist/2.0
+    if rad + RADTOL > dist / 2.0:
+      rad += RADTOL
     else:
       print( "ERR: elemCreateArc180: rad less than dist/2: rad, dist/2",rad,dist/2.0 )
       return {}
   ret={'type':'a','p1':p1,'p2':p2,'rad':rad,'dir':dir}
-  for i in extra:
-    if i=='pNr':
-      ret['pNr']=extra['pNr']
-    if i=='pNext':
-      ret['pNext']=extra['pNext']
-    if i=='pPrev':
-      ret['pPrev']=extra['pPrev']
+  extraAddExtra(ret,extra)
   return ret
 
 
+#############################################################################
+### elemCreateArc180To
+###
+### Just calls elemCreateArc180 with an already known element position.
+#############################################################################
+def elemCreateArc180To(elem1,p2,rad,dir,extra={}):
+  if isinstance(elem1['p2'],tuple) == False:
+    print( "ERR: elemCreateArc180To: elem1 has no tuple in p2" )
+    return {}
+  return elemCreateArc180(elem1['p2'],p2,rad,dir,extra)
 
+
+
+#############################################################################
+### elemCreateArc360
+###
+###
+#############################################################################
 def elemCreateArc360(p1,p2,rad,dir):
   pass
 
+
+
+#############################################################################
+### elemCreateCircle
+###
+###
+#############################################################################
 def elemCreateCircle(p1,rad,dir):
   pass
+
 
 
 #############################################################################
@@ -170,9 +216,37 @@ def elemCopy(el):
 
 
 
+#############################################################################
+### elemRotateZ
+###
+### Rotates an element around the z-axis at (0,0)
+### (or physically correct (0,0,1) :-)
+#############################################################################
+def elemRotateZ(elem, ang):
+  # TODO: probably not necessary to copy the element here
+  elemn={}
+  for i in elem:
+    elemn[i]=elem[i]
+  if   elemn['type'] == 'v':
+    elemn['p1']=vecRotateZ(elemn['p1'],ang)
+    return elemn
+  elif elemn['type'] == 'l':
+    print( "ERR: elemRotateZ: arcs not implemented yet" )
+    return {}
+  elif elemn['type'] == 'a':
+    print( "ERR: elemRotateZ: arcs not implemented yet" )
+    return {}
 
-def elemRotate(elem, ang):
+
+
+#############################################################################
+### elemRotateZAt
+###
+### Rotates an element around the z-axis at a given center.
+#############################################################################
+def elemRotateZAt(elem, ang, center):
   pass
+
 
 
 #############################################################################
@@ -180,6 +254,7 @@ def elemRotate(elem, ang):
 ###
 #############################################################################
 def elemMove(elem, vec):
+  # TODO: probably not necessary to copy the element here
   elemn={}
   for i in elem:
     elemn[i]=elem[i]
@@ -305,7 +380,6 @@ def elemIntersectsElemXY(e1,e2):
     return hits
 
   return []
-    
 
 
 
@@ -339,6 +413,7 @@ def elemNextAngle(e1,e2):
   return a
 
 
+
 #############################################################################
 ### elemDebugPrint
 ###
@@ -346,17 +421,27 @@ def elemNextAngle(e1,e2):
 def elemDebugPrint(e1):
   prt=''
 
+  if 'pNr' in e1:
+    pNr = e1['pNr']
+  else:
+    pNr = -1
+
   if e1['type'] == 'l':
-    print( "LINE %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f)" % (e1['pNr'], \
+    print( "LINE   %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f)" % (pNr, \
       e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2]) )
     return
 
   if e1['type'] == 'a':
-    print( "ARC  %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f) %8.3f %s" % (e1['pNr'], \
+    print( "ARC    %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f) %8.3f %s" % (pNr, \
       e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2],e1['rad'],e1['dir']) )
     return
-  
-  print( "UEO  %4d of type %c " % (e1['pNr'],e1['type']) )
+
+  if e1['type'] == 'v':
+    print( "VERTEX %4d: (%8.3f %8.3f %8.2f)" % (pNr, \
+      e1['p1'][0],e1['p1'][1],e1['p1'][2] ) )
+    return
+
+  print( "UEO    %4d of type %c " % (e1['pNr'],e1['type']) )
 
 
 
@@ -1661,7 +1746,54 @@ def toolCreateFromPart(part):
     tops.append(cxyz)
 
   return tops
-  
+
+
+
+
+v1 = elemCreateVertex( (10,0,0) )
+
+for i in range(11):
+  v1 = elemRotateZ(v1, i*math.pi/22)
+  elemDebugPrint(v1)
+
+
+sys.exit(0)
+
+
+
+l1 = elemCreateLine((0,0,0), (50,50,0))
+a1 = elemCreateArc180To(l1,vecAdd((50,50,0),vecRotateZ((10,0,0),math.pi/4) ),0,'cw')
+l2 = elemMove( elemCopy(l1), vecRotateZ((10,0,0),math.pi/4) )
+l2 = elemReverse(l2)
+
+elemDebugPrint(l1)
+elemDebugPrint(a1)
+elemDebugPrint(l2)
+
+p1=partCreate('pups')
+
+p1=partAddElement(p1,l1,1)
+p1=partAddElement(p1,a1,2)
+p1=partAddElement(p1,l2,3)
+
+f=open('gcode.nc','w+t')
+for i in toolCreateSimpleHeader():
+  f.write(i+'\n')
+
+for i in toolRapidToNextPart(p1):
+  f.write(i+'\n')
+for i in toolCreateFromPart(p1):
+  f.write(i+'\n')
+
+for i in toolCreateSimpleFooter():
+  f.write(i+'\n')
+
+f.close()
+
+
+
+sys.exit(0)
+
 
 
 l1=elemCreateLine((-10,-10,0),   (100,-10,0))

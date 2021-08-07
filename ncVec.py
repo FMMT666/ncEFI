@@ -1,15 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 
-import string
 import pickle
 import math
 import sys
-import types
 
 
-LINTOL=0.001	# 100nm (if units are "mm")
-RADTOL=0.001    # < 1m Grad
+LINTOL = 0.001    # 100nm (if units are "mm")
+RADTOL = 0.001    # < 1m Grad
 
 
 
@@ -548,17 +546,17 @@ def arcCenter180XY(p1,p2,rad,dir):
   if rad < dist/2.0:
     print( "arcCenter180XY: rad < dist" )
     return None
-  pm=vecExtract(pp1,pp2)			# get the direction vector
+  pm=vecExtract(pp1,pp2)       # get the direction vector
   an=arcAngle(dist,rad)
   if an == None:
     return None
   if dir == 'cw':
 #    ann1=(math.pi-an)/2.0
-#    pm=vecRotateZ(pm,ann1)		# points to middle
+#    pm=vecRotateZ(pm,ann1)    # points to middle
     ann=(math.pi-an)/2.0
   else:
 #    ann2=-(math.pi-an)/2.0
-#    pm=vecRotateZ(pm,ann2)		# points to middle
+#    pm=vecRotateZ(pm,ann2)    # points to middle
     ann=-(math.pi-an)/2.0
 
   pm=vecRotateZ(pm,ann)

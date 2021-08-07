@@ -6,16 +6,17 @@ ncEFI
 
 A Python programmable G-Code generator for milling machines,  
 including a minimalistic OpenGL preview.  
-Well, er... Parts of :)
+Well, er... The remains of that :)
 
 I restored these Python fragments from an old CPIOed backup tape.  
 The only thing I remember is, that I implemented a quite cool, round
 pocket milling algorithm.
 
-As far as I can remember, that was my first contact with Python at all.  
+As far as I can remember, that was my first contact with Python at all,  
+sometime around 1995, lol.  
 That's also what the code looks like (o_O)
 
-But I want that in EMC2...
+But I want that in ~~EMC~~ ~~EMC2~~ LinuxCNC.
 
 
 ---
@@ -29,6 +30,8 @@ Move on, there is nothing to see here, yet...
 
 ### CHANGES 2021/08/XX
     - I have a stupid idea.
+    - ported ncEFI.py to Python 3.x (origins were Python 1.5, lmao)
+    - added some new functions
 
 ### CHANGES 2016/01/14
     - initial upload of this "whatever"

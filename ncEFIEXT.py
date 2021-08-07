@@ -1,9 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 
 #import ncEFITEST
 from ncEFITEST import *
-
 
 
 

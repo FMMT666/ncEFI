@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-# MKPPCAM v0.1
-# aka "Mein kleines, pisseliges Python CAM"
 
-import string
+#import string
+#import types
+
 import pickle
 import math
 import sys
-import types
 from ncVec import *
 
 

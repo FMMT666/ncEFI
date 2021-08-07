@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 
-# Just playing around with python...
-
 if __name__ == '__build__':
   raise Exception
 
@@ -40,15 +38,15 @@ def createArc180(p1,p2,rad,step,dir):
   dArc=[]
   sta_an=vecAngleXY((p1[0]-pm[0],p1[1]-pm[1],0))
   end_an=vecAngleXY((p2[0]-pm[0],p2[1]-pm[1],0))
-  spa_an=end_an-sta_an		# positive for clockwise direction
+  spa_an=end_an-sta_an    # positive for clockwise direction
 
-  if end_an==0.0 and dir=='cc':	# 2pi patch
+  if end_an==0.0 and dir=='cc':  # 2pi patch
     end_an=math.pi*2
-    spa_an=end_an-sta_an	# positive for clockwise direction
+    spa_an=end_an-sta_an  # positive for clockwise direction
 
   if sta_an==0.0 and dir =='cw':
     sta_an=2*math.pi
-    spa_an=end_an-sta_an	# positive for clockwise direction
+    spa_an=end_an-sta_an  # positive for clockwise direction
 
   # ToDo:
   # this sucks...
@@ -75,13 +73,13 @@ def createArc180(p1,p2,rad,step,dir):
   print( "spa_an: ",spa_an )
                
   count=2
-  lp=p1			# the last point
-  zs=p1[2]		# z start value
-  ze=p2[2]		# z end value
-  zi=(ze-zs)/step	# z increment
+  lp=p1      # the last point
+  zs=p1[2]    # z start value
+  ze=p2[2]    # z end value
+  zi=(ze-zs)/step  # z increment
   bp=vecExtract((pm[0],pm[1],0),(p1[0],p1[1],0))
   for i in range(1,step+1):
-    dp=vecRotateZ(bp,-i*stp_an)	# positive now means counter clockwise
+    dp=vecRotateZ(bp,-i*stp_an)  # positive now means counter clockwise
     dArc.append((lp[0],lp[1],lp[2]))
     lp=(pm[0]+dp[0],pm[1]+dp[1],lp[2]+zi)
     count+=1
