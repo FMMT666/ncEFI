@@ -1749,18 +1749,17 @@ def toolCreateFromPart(part):
 
 
 
+#---------------------------------------
+# v1 = elemCreateVertex( (10,0,0) )
 
-v1 = elemCreateVertex( (10,0,0) )
+# for i in range(11):
+#   v1 = elemRotateZ(v1, i*math.pi/22)
+#   elemDebugPrint(v1)
 
-for i in range(11):
-  v1 = elemRotateZ(v1, i*math.pi/22)
-  elemDebugPrint(v1)
-
-
-sys.exit(0)
-
+# sys.exit(0)
 
 
+#---------------------------------------
 l1 = elemCreateLine((0,0,0), (50,50,0))
 a1 = elemCreateArc180To(l1,vecAdd((50,50,0),vecRotateZ((10,0,0),math.pi/4) ),0,'cw')
 l2 = elemMove( elemCopy(l1), vecRotateZ((10,0,0),math.pi/4) )
@@ -1776,7 +1775,7 @@ p1=partAddElement(p1,l1,1)
 p1=partAddElement(p1,a1,2)
 p1=partAddElement(p1,l2,3)
 
-f=open('gcode.nc','w+t')
+f=open('ncEFI.nc','w+t')
 for i in toolCreateSimpleHeader():
   f.write(i+'\n')
 
@@ -1789,6 +1788,14 @@ for i in toolCreateSimpleFooter():
   f.write(i+'\n')
 
 f.close()
+
+
+partlist=[p1]
+
+f=open('ncEFI.dat','w+b')
+pickle.dump(partlist,f)
+f.close()
+
 
 
 
@@ -1879,7 +1886,7 @@ p8=partAddElements(p8,geomCreateCircRingHole((0,50,0),1,10,9,5,3,2,2,5,'cw'))
 
 
 
-f=open('gcode.nc','w+t')
+f=open('ncEFI.nc','w+t')
 for i in toolCreateSimpleHeader():
   f.write(i+'\n')
 
@@ -1965,7 +1972,7 @@ p63=partAddElements(p63,ss4)
 
 partlist=[p1,p61,p62]
 
-f=open('data.txt','w+b')
+f=open('ncEFI.dat','w+b')
 pickle.dump(partlist,f)
 f.close()
 

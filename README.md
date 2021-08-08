@@ -24,6 +24,25 @@ But I want that in ~~EMC~~ ~~EMC2~~ LinuxCNC.
 
 Move on, there is nothing to see here, yet...
 
+---
+## Requirements
+
+t.b.d...
+
+...
+
+Only for the viewer:
+ - PyOpenGL
+ - PyOpenGL_accelerate
+
+### Windows specific issues
+Installing PyOpenGL via pip will not work. Use the [binaries from here][1] instead
+and make sure they match your Python version AND your system. Either 32 or 64 bits.
+
+Install them with (Python 3.7 64-bit example here):
+
+    pip install PyOpenGL‑3.1.5‑cp37‑cp37m‑win_amd64.whl
+    pip install PyOpenGL_accelerate‑3.1.5‑cp37‑cp37m‑win_amd64.whl
 
 ---
 ## News
@@ -43,3 +62,8 @@ Move on, there is nothing to see here, yet...
 
 Have fun (with whatever)  
 FMMT666(ASkr)
+
+
+
+[1]: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopengl
+
