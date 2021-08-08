@@ -120,30 +120,11 @@ class myGLCanvas(GLCanvas):
 		self.leftDown  = False
 		self.rightDown = False
 
-	#-----------------------------------------------------------------------------------------------
-	def OnDraw(self):
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-		# all calls to glut... result in access violations under Windoze
-#		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, (0.5, 1.0, 0.5, 1.0))
-#		glutSolidSphere(0.5, 20, 20)
-#		glutSolidSierpinskiSponge(2,0,1)
-#		glutSolidCone(1,2,3,4)
-
-#		quadratic = gluNewQuadric()
-#		gluCylinder(quadratic, 10, 0.1, 10, 16, 2)
-#		gluDisk(quadratic, 2, 8, 5, 8)
-
-#		glOrtho(-10.0, 10.0, -10.0, 10.0, 10.0, -10.0)
-
-		# for nice cölörs
-		glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE )
-		glEnable ( GL_COLOR_MATERIAL )
-
-		glDisable( GL_LIGHTING )
-
-		# the axes
-		glLineWidth(3)
+	################################################################################################
+	### DrawAxes
+	################################################################################################
+	def DrawAxes(self):
 		glBegin(GL_LINES)
 		# x axis
 		glColor3f( 1, 0, 0 )
@@ -169,9 +150,89 @@ class myGLCanvas(GLCanvas):
 		# glutBitmapCharacter( GLUT_BITMAP_9_BY_15, ord('z') )
 
 
-#		glEnable( GL_LIGHTING )
+	################################################################################################
+	### DrawElement
+	################################################################################################
+	def DrawElement(self, elem ):
+		if elem['type']=='v':
+			p1=elem['p1']
+			glDisable(GL_LIGHTING)
+			glPushMatrix()
+			glBegin(GL_POINTS)
+			glVertex3f(p1[0],p1[1],p1[2])
+			glEnd()
+			glPopMatrix()
+			glEnable(GL_LIGHTING)
 
-		# the raster
+		if elem['type']=='l':
+			p1=elem['p1']
+			p2=elem['p2']
+			glDisable(GL_LIGHTING)
+			glPushMatrix()
+			glBegin(GL_LINES)
+			glVertex3f(p1[0],p1[1],p1[2])
+			glVertex3f(p2[0],p2[1],p2[2])
+			glEnd()
+			glPopMatrix()
+			glEnable(GL_LIGHTING)
+
+		if elem['type']=='a':
+			p1=elem['p1']
+			p2=elem['p2']
+			rad=elem['rad']
+			dir=elem['dir']
+#					print( "arc pNr: ",elem['pNr'],p1,p2 )
+			lines=createArc180(p1,p2,rad,10,dir)
+#					glColor3f(1, 1, 1)
+			glPushMatrix()
+			glBegin(GL_LINES)
+			for i in range(0,len(lines)-1):
+				glVertex3f(lines[i][0],lines[i][1],lines[i][2])
+				glVertex3f(lines[i+1][0],lines[i+1][1],lines[i+1][2])
+			glEnd()
+			glPopMatrix()
+			glEnable(GL_LIGHTING)
+
+
+	################################################################################################
+	### DrawPartList
+	################################################################################################
+	def DrawPartList(self):
+		for iPart in PartList:
+			if iPart == {}:
+				continue
+			# check if that's something we know
+			if 'type' not in iPart:
+				continue
+			if iPart['type'] != 'p':
+				# this seems to be an element, not a part list
+				if iPart['type'] == 'v' or iPart['type'] == 'l' or iPart['type'] == 'a':
+					self.DrawElement(iPart)
+				else:
+					continue
+			else:
+				# this could use some additional error checks, but well ...
+				for iElem in iPart['elements']:
+					self.DrawElement(iElem)
+
+
+	#-----------------------------------------------------------------------------------------------
+	def OnDraw(self):
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+		glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE )
+		glEnable ( GL_COLOR_MATERIAL )
+		glDisable( GL_LIGHTING )
+
+		#---------------------------------
+		# draw the axes
+		glLineWidth(3)
+		self.DrawAxes()
+
+		#---------------------------------
+		# draw the raster
+		glLineWidth(2)
+		glPointSize(1)
 		glColor3f( 0.5, 0.5, 1.0)
 		glBegin(GL_POINTS)
 		for x in range(-100,100,10):
@@ -179,39 +240,13 @@ class myGLCanvas(GLCanvas):
 				glVertex3f(x,y,0)
 		glEnd()
 
-		# the parts
-		glLineWidth(2)
-		for iPart in PartList:
-			for iElem in iPart['elements']:
-				if iElem['type']=='l':
-					p1=iElem['p1']
-					p2=iElem['p2']
-					glDisable(GL_LIGHTING)
-					glPushMatrix()
-					glBegin(GL_LINES)
-					glVertex3f(p1[0],p1[1],p1[2])
-					glVertex3f(p2[0],p2[1],p2[2])
-					glEnd()
-					glPopMatrix()
-					glEnable(GL_LIGHTING)
-
-				if iElem['type']=='a':
-					p1=iElem['p1']
-					p2=iElem['p2']
-					rad=iElem['rad']
-					dir=iElem['dir']
-#					print( "arc pNr: ",iElem['pNr'],p1,p2 )
-					lines=createArc180(p1,p2,rad,20,dir)
-					glDisable(GL_LIGHTING)
-#					glColor3f(1, 1, 1)
-					glPushMatrix()
-					glBegin(GL_LINES)
-					for i in range(0,len(lines)-1):
-						glVertex3f(lines[i][0],lines[i][1],lines[i][2])
-						glVertex3f(lines[i+1][0],lines[i+1][1],lines[i+1][2])
-					glEnd()
-					glPopMatrix()
-					glEnable(GL_LIGHTING)
+		#---------------------------------
+		# draw parts
+		if PartList is not None:
+			glLineWidth(2)
+			glPointSize(4)
+			glColor3f( 1.0, 1.0, 1.0)
+			self.DrawPartList()
 
 
 		self.SwapBuffers()
@@ -260,7 +295,9 @@ class myGLCanvas(GLCanvas):
 		nX =  self.viewX * math.cos( math.radians(self.alpha) ) + self.viewY * math.sin( math.radians(self.alpha) )
 		nY = -self.viewX * math.sin( math.radians(self.alpha) ) + self.viewY * math.cos( math.radians(self.alpha) )
 
-		# --- ok; not good, but somewhat working
+		# --- ok; not good, has some issues but somewhat working
+		#  - if rotated, the translation follows the model coordinates and not the screen
+		#  - if z is negative, translation is inverted
 		glTranslate(self.viewX, self.viewY, -self.distance)
 		glTranslate(-self.viewX, -self.viewY, 0)
 		glRotate(self.beta, 1.0, 0.0, 0.0)
@@ -284,7 +321,7 @@ class myGLCanvas(GLCanvas):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
 		glViewport(0, 0, self.width, self.height)
-		gluPerspective(45, ratio, 1, 1000)
+		gluPerspective(45, ratio, 1, 10000)
 
 		self.ChangeView()
 
@@ -331,10 +368,14 @@ class myGLCanvas(GLCanvas):
 
 
 	def OnWheel(self, event):
+		scrollFac = abs( self.distance * MOUSE_ZOOM_FACTOR_WHEEL )
+		if scrollFac < 10:
+			scrollFac = 10
 		if event.GetWheelRotation() > 0:
-			self.distance -= self.distance * MOUSE_ZOOM_FACTOR_WHEEL
+			self.distance -= scrollFac
 		else:
-			self.distance += self.distance * MOUSE_ZOOM_FACTOR_WHEEL
+			self.distance += scrollFac
+
 		self.ChangeView()
 
 

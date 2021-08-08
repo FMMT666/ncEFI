@@ -58,9 +58,9 @@ TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 #############################################################################
 # part
 # contains linked elements, _including_(!) extensions
-# p1={'name':'outer','elements':[l1,l2,l3,l4]}
-# p2={'name':'altc1','elements':[a1,l2,l3,l4]}
-# p3={'name':'altc2','elements':[l1,l2,a2,l4]}
+# p1={'type':'p', 'name':'outer','elements':[l1,l2,l3,l4]}
+# p2={'type':'p', 'name':'altc1','elements':[a1,l2,l3,l4]}
+# p3={'type':'p', 'name':'altc2','elements':[l1,l2,a2,l4]}
 
 
 
@@ -69,13 +69,13 @@ TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 ###
 #############################################################################
 def extraAddExtra(elem,extra):
-  for i in extra:
-    if i=='pNr':
-      elem['pNr']=extra['pNr']
-    if i=='pNext':
-      elem['pNext']=extra['pNext']
-    if i=='pPrev':
-      elem['pPrev']=extra['pPrev']
+	for i in extra:
+		if i=='pNr':
+			elem['pNr']=extra['pNr']
+		if i=='pNext':
+			elem['pNext']=extra['pNext']
+		if i=='pPrev':
+			elem['pPrev']=extra['pPrev']
 
 
 
@@ -84,11 +84,11 @@ def extraAddExtra(elem,extra):
 ###
 #############################################################################
 def elemCreateVertex(p1,extra={}):
-  if isinstance(p1,tuple) == False:
-    return {}
-  ret={'type':'v','p1':p1}
-  extraAddExtra(ret,extra)
-  return ret
+	if isinstance(p1,tuple) == False:
+		return {}
+	ret={'type':'v','p1':p1}
+	extraAddExtra(ret,extra)
+	return ret
 
 
 
@@ -98,15 +98,15 @@ def elemCreateVertex(p1,extra={}):
 #############################################################################
 def elemCreateLine(p1,p2,extra={}):
 
-  if isinstance(p1, tuple) == False or isinstance(p2,tuple) == False:
-    print( "ERR: elemCreateLine: p1 or p2 not tuples" )
-    return {}
-  if p1 == p2:
-    print( "ERR: elemCreateLine: p1 == p2: ",p1 )
-    return {}
-  ret={'type':'l','p1':p1,'p2':p2}
-  extraAddExtra(ret,extra)
-  return ret
+	if isinstance(p1, tuple) == False or isinstance(p2,tuple) == False:
+		print( "ERR: elemCreateLine: p1 or p2 not tuples" )
+		return {}
+	if p1 == p2:
+		print( "ERR: elemCreateLine: p1 == p2: ",p1 )
+		return {}
+	ret={'type':'l','p1':p1,'p2':p2}
+	extraAddExtra(ret,extra)
+	return ret
 
 
 
@@ -116,21 +116,21 @@ def elemCreateLine(p1,p2,extra={}):
 #############################################################################
 def elemCreateLineTo(l1,p2,extra={}):
 
-  if isinstance(l1['p2'],tuple) == False:
-    print( "ERR: elemCreateLineTo: l1 has no tuple in p2" )
-    return {}
+	if isinstance(l1['p2'],tuple) == False:
+		print( "ERR: elemCreateLineTo: l1 has no tuple in p2" )
+		return {}
 
-  if isinstance(p2,tuple) == False:
-    print( "ERR: elemCreateLine: p2 not tuple" )
-    return {}
+	if isinstance(p2,tuple) == False:
+		print( "ERR: elemCreateLine: p2 not tuple" )
+		return {}
 
 #  if p1 == p2:
 #    print( "ERR: elemCreateLine: p1 == p2: ",p1 )
 #    return {}
 
-  ret={'type':'l','p1':l1['p2'],'p2':p2}
-  extraAddExtra(ret,extra)
-  return ret
+	ret={'type':'l','p1':l1['p2'],'p2':p2}
+	extraAddExtra(ret,extra)
+	return ret
 
 
 
@@ -143,31 +143,31 @@ def elemCreateLineTo(l1,p2,extra={}):
 ### the minimum value, half of the distance between p1 and p2.
 #############################################################################
 def elemCreateArc180(p1,p2,rad,dir,extra={}):
-  # ToDo:
-  # - precision hack sucks...
-  if isinstance(p1,tuple) == False or isinstance(p2,tuple) == False:
-    print( "ERR: elemCreateArc180: no tuples" )
-    return {}
-  if p1 == p2:
-    print( "ERR: elemCreateArc180: p1==p2: ", p1,p2 )
-    return {}
-  if isinstance(dir,str) == False:
-    print( "ERR: elemCreateArc180: invalid dir format: ",dir )
-    return {}
-  if dir != 'cw' and dir != 'cc':
-    print( "ERR: elemCreateArc180: invalid dir command: ",dir )
-    return {}
-  dist=vecLength((p1[0],p1[1],0),(p2[0],p2[1],0))
-  if rad < dist/2.0:
-    rad = dist/2.0
-    if rad + RADTOL > dist / 2.0:
-      rad += RADTOL
-    else:
-      print( "ERR: elemCreateArc180: rad less than dist/2: rad, dist/2",rad,dist/2.0 )
-      return {}
-  ret={'type':'a','p1':p1,'p2':p2,'rad':rad,'dir':dir}
-  extraAddExtra(ret,extra)
-  return ret
+	# ToDo:
+	# - precision hack sucks...
+	if isinstance(p1,tuple) == False or isinstance(p2,tuple) == False:
+		print( "ERR: elemCreateArc180: no tuples" )
+		return {}
+	if p1 == p2:
+		print( "ERR: elemCreateArc180: p1==p2: ", p1,p2 )
+		return {}
+	if isinstance(dir,str) == False:
+		print( "ERR: elemCreateArc180: invalid dir format: ",dir )
+		return {}
+	if dir != 'cw' and dir != 'cc':
+		print( "ERR: elemCreateArc180: invalid dir command: ",dir )
+		return {}
+	dist=vecLength((p1[0],p1[1],0),(p2[0],p2[1],0))
+	if rad < dist/2.0:
+		rad = dist/2.0
+		if rad + RADTOL > dist / 2.0:
+			rad += RADTOL
+		else:
+			print( "ERR: elemCreateArc180: rad less than dist/2: rad, dist/2",rad,dist/2.0 )
+			return {}
+	ret={'type':'a','p1':p1,'p2':p2,'rad':rad,'dir':dir}
+	extraAddExtra(ret,extra)
+	return ret
 
 
 #############################################################################
@@ -176,10 +176,10 @@ def elemCreateArc180(p1,p2,rad,dir,extra={}):
 ### Just calls elemCreateArc180 with an already known element position.
 #############################################################################
 def elemCreateArc180To(elem1,p2,rad,dir,extra={}):
-  if isinstance(elem1['p2'],tuple) == False:
-    print( "ERR: elemCreateArc180To: elem1 has no tuple in p2" )
-    return {}
-  return elemCreateArc180(elem1['p2'],p2,rad,dir,extra)
+	if isinstance(elem1['p2'],tuple) == False:
+		print( "ERR: elemCreateArc180To: elem1 has no tuple in p2" )
+		return {}
+	return elemCreateArc180(elem1['p2'],p2,rad,dir,extra)
 
 
 
@@ -189,7 +189,7 @@ def elemCreateArc180To(elem1,p2,rad,dir,extra={}):
 ###
 #############################################################################
 def elemCreateArc360(p1,p2,rad,dir):
-  pass
+	pass
 
 
 
@@ -199,7 +199,7 @@ def elemCreateArc360(p1,p2,rad,dir):
 ###
 #############################################################################
 def elemCreateCircle(p1,rad,dir):
-  pass
+	pass
 
 
 
@@ -209,10 +209,10 @@ def elemCreateCircle(p1,rad,dir):
 ### Returns a new instance of the given element
 #############################################################################
 def elemCopy(el):
-  en={}
-  for i in el:
-    en[i]=el[i]
-  return en
+	en={}
+	for i in el:
+		en[i]=el[i]
+	return en
 
 
 
@@ -221,21 +221,24 @@ def elemCopy(el):
 ###
 ### Rotates an element around the z-axis at (0,0)
 ### (or physically correct (0,0,1) :-)
+### Returns a new instance.
 #############################################################################
 def elemRotateZ(elem, ang):
-  # TODO: probably not necessary to copy the element here
-  elemn={}
-  for i in elem:
-    elemn[i]=elem[i]
-  if   elemn['type'] == 'v':
-    elemn['p1']=vecRotateZ(elemn['p1'],ang)
-    return elemn
-  elif elemn['type'] == 'l':
-    print( "ERR: elemRotateZ: arcs not implemented yet" )
-    return {}
-  elif elemn['type'] == 'a':
-    print( "ERR: elemRotateZ: arcs not implemented yet" )
-    return {}
+	# TODO: probably not necessary to copy the element here
+	elemn={}
+	for i in elem:
+		elemn[i]=elem[i]
+	if   elemn['type'] == 'v':
+		elemn['p1']=vecRotateZ(elemn['p1'],ang)
+		return elemn
+	elif elemn['type'] == 'l':
+		elemn['p1']=vecRotateZ(elemn['p1'],ang)
+		elemn['p2']=vecRotateZ(elemn['p2'],ang)
+		return elemn
+	elif elemn['type'] == 'a':
+		elemn['p1']=vecRotateZ(elemn['p1'],ang)
+		elemn['p2']=vecRotateZ(elemn['p2'],ang)
+		return elemn
 
 
 
@@ -243,61 +246,74 @@ def elemRotateZ(elem, ang):
 ### elemRotateZAt
 ###
 ### Rotates an element around the z-axis at a given center.
+### Returns a new instance.
 #############################################################################
 def elemRotateZAt(elem, ang, center):
-  pass
+	# TODO: probably not necessary to copy the element here
+	elemn={}
+	for i in elem:
+		elemn[i]=elem[i]
+	vec = ( -1*center[0], -1*center[1], -1*center[2])
+	elemMove( elemn, vec)
+	elemn = elemRotateZ( elemn, ang )
+	elemn = elemMove(elemn, center)
+	return elemn 
 
 
 
 #############################################################################
 ### elemMove
 ###
+### Moves an element to a position specified by a vector (tuple)
+### Returns a new instance.
 #############################################################################
 def elemMove(elem, vec):
-  # TODO: probably not necessary to copy the element here
-  elemn={}
-  for i in elem:
-    elemn[i]=elem[i]
-  # every element has 'p1':
-  p1=vecAdd(elemn['p1'],vec)
-  elemn['p1']=p1
+	# TODO: probably not necessary to copy the element here
+	elemn={}
+	for i in elem:
+		elemn[i]=elem[i]
+	# every element has 'p1':
+	p1=vecAdd(elemn['p1'],vec)
+	elemn['p1']=p1
 
-  if 'p2' in elem:
-    p2=vecAdd(elemn['p2'],vec)
-    elemn['p2']=p2
+	if 'p2' in elem:
+		p2=vecAdd(elemn['p2'],vec)
+		elemn['p2']=p2
 
-  return elemn
+	return elemn
 
 
 
 #############################################################################
 ### elemReverse
 ###
+### Reverses the direction of an element, swapping 'p1' and 'p2'
+### Returns a new instance.
 #############################################################################
 def elemReverse(elem):
-  elemn={}
-  for i in elem:
-    elemn[i]=elem[i]
+	elemn={}
+	for i in elem:
+		elemn[i]=elem[i]
 
-  if elem['type']=='v':
-    return elemn
+	if elem['type']=='v':
+		return elemn
 
-  # future upgrades may require changes...
-  p1=elemn['p1']
-  p2=elemn['p2']
+	# future upgrades may require changes...
+	p1=elemn['p1']
+	p2=elemn['p2']
 
-  if elem['type']=='l':
-    elemn['p1']=p2
-    elemn['p2']=p1
+	if elem['type']=='l':
+		elemn['p1']=p2
+		elemn['p2']=p1
 
-  if elem['type']=='a':
-    elemn['p1']=p2
-    elemn['p2']=p1
-    if elemn['dir']=='cw':
-      elemn['dir']='cc'
-    else:
-      elemn['dir']='cw'
-  return elemn
+	if elem['type']=='a':
+		elemn['p1']=p2
+		elemn['p2']=p1
+		if elemn['dir']=='cw':
+			elemn['dir']='cc'
+		else:
+			elemn['dir']='cw'
+	return elemn
 
 
 
@@ -310,76 +326,76 @@ def elemReverse(elem):
 ### [ [<dist>,(<x>,<y>,<z>)],[<dist>, ...] ]
 #############################################################################
 def elemIntersectsElemXY(e1,e2):
-  hits=[]
+	hits=[]
 
-  # line on line
-  if e1['type']=='l' and e2['type']=='l':
-    isp=vecIntersectXY(e1['p1'],e1['p2'],e2['p1'],e2['p2'])
-    if isp == None:
-      return []
-    di=vecDistPointOnLineXY(e1['p1'],e1['p2'],isp)
-    if di == None:
-      return []
-    if 0.0 <= di <= 1.0:
-      di2=vecDistPointOnLineXY(e2['p1'],e2['p2'],isp)
-      if di2 is not None:
-        if 0.0 <= di2 <= 1.0:
-          return [[di,isp]]
-    return []
+	# line on line
+	if e1['type']=='l' and e2['type']=='l':
+		isp=vecIntersectXY(e1['p1'],e1['p2'],e2['p1'],e2['p2'])
+		if isp == None:
+			return []
+		di=vecDistPointOnLineXY(e1['p1'],e1['p2'],isp)
+		if di == None:
+			return []
+		if 0.0 <= di <= 1.0:
+			di2=vecDistPointOnLineXY(e2['p1'],e2['p2'],isp)
+			if di2 is not None:
+				if 0.0 <= di2 <= 1.0:
+					return [[di,isp]]
+		return []
 
-  # line on arc
-  if e1['type']=='l' and e2['type']=='a':
-    pm=arcCenter180XY(e2['p1'],e2['p2'],e2['rad'],e2['dir'])
-    if pm == None:
-      return []
-    isp=vecArcIntersectXY(e1['p1'],e1['p2'],pm,e2['rad'])
+	# line on arc
+	if e1['type']=='l' and e2['type']=='a':
+		pm=arcCenter180XY(e2['p1'],e2['p2'],e2['rad'],e2['dir'])
+		if pm == None:
+			return []
+		isp=vecArcIntersectXY(e1['p1'],e1['p2'],pm,e2['rad'])
 #    print( "l on a hits: ",isp )
-    if isp == None:
-      return []
-    for i in isp:
-      if arcHasPointInSegmentXY(e2['p1'],e2['p2'],e2['rad'],e2['dir'],i):
-        di=vecDistPointOnLineXY(e1['p1'],e1['p2'],i)
-        if 0.0 <= di <= 1.0:
-          hits.append([di,i])
-    return hits
+		if isp == None:
+			return []
+		for i in isp:
+			if arcHasPointInSegmentXY(e2['p1'],e2['p2'],e2['rad'],e2['dir'],i):
+				di=vecDistPointOnLineXY(e1['p1'],e1['p2'],i)
+				if 0.0 <= di <= 1.0:
+					hits.append([di,i])
+		return hits
 
-  # arc on line
-  if e1['type']=='a' and e2['type']=='l':
-    pm=arcCenter180XY(e1['p1'],e1['p2'],e1['rad'],e1['dir'])
-    if pm == None:
-      return []
-    isp=vecArcIntersectXY(e2['p1'],e2['p2'],pm,e1['rad'])
+	# arc on line
+	if e1['type']=='a' and e2['type']=='l':
+		pm=arcCenter180XY(e1['p1'],e1['p2'],e1['rad'],e1['dir'])
+		if pm == None:
+			return []
+		isp=vecArcIntersectXY(e2['p1'],e2['p2'],pm,e1['rad'])
 #    print( "a on l hits: ",isp )
-    if isp == None:
-      return []
-    for i in isp:
-      if arcHasPointInSegmentXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i):
-          di=vecDistPointOnLineXY(e2['p1'],e2['p2'],i)
-          if 0.0 <= di <= 1.0:
-            di=arcDistPointOnBowXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i)
-            hits.append([di,i])
-    return hits
+		if isp == None:
+			return []
+		for i in isp:
+			if arcHasPointInSegmentXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i):
+					di=vecDistPointOnLineXY(e2['p1'],e2['p2'],i)
+					if 0.0 <= di <= 1.0:
+						di=arcDistPointOnBowXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i)
+						hits.append([di,i])
+		return hits
 
-  # arc on arc
-  if e1['type']=='a' and e2['type']=='a':
-    pm1=arcCenter180XY(e1['p1'],e1['p2'],e1['rad'],e1['dir'])
-    if pm1 == None:
-      return []
-    pm2=arcCenter180XY(e2['p1'],e2['p2'],e2['rad'],e2['dir'])
-    if pm2 == None:
-      return []
-    isp=arcIntersectXY(pm1,e1['rad'],pm2,e2['rad'])
+	# arc on arc
+	if e1['type']=='a' and e2['type']=='a':
+		pm1=arcCenter180XY(e1['p1'],e1['p2'],e1['rad'],e1['dir'])
+		if pm1 == None:
+			return []
+		pm2=arcCenter180XY(e2['p1'],e2['p2'],e2['rad'],e2['dir'])
+		if pm2 == None:
+			return []
+		isp=arcIntersectXY(pm1,e1['rad'],pm2,e2['rad'])
 #    print( "a on a hits: ",isp )
-    if isp == None:
-      return []
-    for i in isp:
-      if  arcHasPointInSegmentXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i) \
-      and arcHasPointInSegmentXY(e2['p1'],e2['p2'],e2['rad'],e2['dir'],i):
-        di=arcDistPointOnBowXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i)
-        hits.append([di,i])
-    return hits
+		if isp == None:
+			return []
+		for i in isp:
+			if  arcHasPointInSegmentXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i) \
+			and arcHasPointInSegmentXY(e2['p1'],e2['p2'],e2['rad'],e2['dir'],i):
+				di=arcDistPointOnBowXY(e1['p1'],e1['p2'],e1['rad'],e1['dir'],i)
+				hits.append([di,i])
+		return hits
 
-  return []
+	return []
 
 
 
@@ -390,27 +406,27 @@ def elemIntersectsElemXY(e1,e2):
 #############################################################################
 def elemNextAngle(e1,e2):
 
-  if e1['type'] == 'l':
-    v1=(e1['p2'][0]-e1['p1'][0],e1['p2'][1]-e1['p1'][1],0)
-    
-  if e1['type'] == 'a':
-    v1=arcVectorAtPx(e1['p1'],e1['p2'],e1['rad'],e1['dir'],'p2')
+	if e1['type'] == 'l':
+		v1=(e1['p2'][0]-e1['p1'][0],e1['p2'][1]-e1['p1'][1],0)
+		
+	if e1['type'] == 'a':
+		v1=arcVectorAtPx(e1['p1'],e1['p2'],e1['rad'],e1['dir'],'p2')
 
-  if v1 == None:
-    return None
-  
-  if e2['type'] == 'l':
-    v2=(e2['p2'][0]-e2['p1'][0],e2['p2'][1]-e2['p1'][1],0)
-    
-  if e2['type'] == 'a':
-    v2=arcVectorAtPx(e2['p1'],e2['p2'],e2['rad'],e2['dir'],'p1')
+	if v1 == None:
+		return None
+	
+	if e2['type'] == 'l':
+		v2=(e2['p2'][0]-e2['p1'][0],e2['p2'][1]-e2['p1'][1],0)
+		
+	if e2['type'] == 'a':
+		v2=arcVectorAtPx(e2['p1'],e2['p2'],e2['rad'],e2['dir'],'p1')
 
-  if v2 == None:
-    return None
-  
-  a=vecAngleDiffXY(v1,v2)
+	if v2 == None:
+		return None
+	
+	a=vecAngleDiffXY(v1,v2)
 
-  return a
+	return a
 
 
 
@@ -419,36 +435,36 @@ def elemNextAngle(e1,e2):
 ###
 #############################################################################
 def elemDebugPrint(e1):
-  prt=''
+	prt=''
 
-  if 'pNr' in e1:
-    pNr = e1['pNr']
-  else:
-    pNr = -1
+	if 'pNr' in e1:
+		pNr = e1['pNr']
+	else:
+		pNr = -1
 
-  if e1['type'] == 'l':
-    print( "LINE   %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f)" % (pNr, \
-      e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2]) )
-    return
+	if e1['type'] == 'l':
+		print( "LINE   %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f)" % (pNr, \
+			e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2]) )
+		return
 
-  if e1['type'] == 'a':
-    print( "ARC    %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f) %8.3f %s" % (pNr, \
-      e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2],e1['rad'],e1['dir']) )
-    return
+	if e1['type'] == 'a':
+		print( "ARC    %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f) %8.3f %s" % (pNr, \
+			e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2],e1['rad'],e1['dir']) )
+		return
 
-  if e1['type'] == 'v':
-    print( "VERTEX %4d: (%8.3f %8.3f %8.2f)" % (pNr, \
-      e1['p1'][0],e1['p1'][1],e1['p1'][2] ) )
-    return
+	if e1['type'] == 'v':
+		print( "VERTEX %4d: (%8.3f %8.3f %8.2f)" % (pNr, \
+			e1['p1'][0],e1['p1'][1],e1['p1'][2] ) )
+		return
 
-  print( "UEO    %4d of type %c " % (e1['pNr'],e1['type']) )
+	print( "UEO    %4d of type %c " % (e1['pNr'],e1['type']) )
 
 
 
 
 def elemFindLinked(elem):
-  pass
-  
+	pass
+	
 
 
 
@@ -457,14 +473,14 @@ def elemFindLinked(elem):
 ###
 #############################################################################
 def partCreate(name, extras={}):
-  if isinstance(name,str) == False:
-    return {}
-  if len(name)<1:
-    return {}
-  ret={'name':name,'elements':[]}
-  for i in extras:
-    ret[i]=extras[i]
-  return ret
+	if isinstance(name,str) == False:
+		return {'name':"", 'type':'p'}
+	if len(name)<1:
+		return {'name':"", 'type':'p'}
+	ret={'name':name,'type':'p', 'elements':[]}
+	for i in extras:
+		ret[i]=extras[i]
+	return ret
 
 
 
@@ -473,10 +489,10 @@ def partCreate(name, extras={}):
 ###
 #############################################################################
 def partDeleteNumbers(part):
-  for i in range(0,len(part['elements'])):
-    if 'pNr' in part['elements'][i]:
-      del(part['elements'][i]['pNr'])
-  return part
+	for i in range(0,len(part['elements'])):
+		if 'pNr' in part['elements'][i]:
+			del(part['elements'][i]['pNr'])
+	return part
 
 
 
@@ -485,14 +501,14 @@ def partDeleteNumbers(part):
 ###
 #############################################################################
 def partGetFreeNumber(part):
-  nr=[]
-  for i in part['elements']:
-    if 'pNr' in i:
-      nr.append(i['pNr'])
-  nr.sort()
-  return nr[len(nr)-1]+1
+	nr=[]
+	for i in part['elements']:
+		if 'pNr' in i:
+			nr.append(i['pNr'])
+	nr.sort()
+	return nr[len(nr)-1]+1
 
-  
+	
 
 #############################################################################
 ### partAddElement
@@ -501,19 +517,19 @@ def partGetFreeNumber(part):
 ### number<0 -> no numbering
 #############################################################################
 def partAddElement(part, elem, number=0):
-  for i in part['elements']:
-    if 'pNr' in i:
-      if i['pNr'] == number:
-        number=0
-        continue
-  nelem=elem
-  if number == 0:
-    nelem['pNr']=partGetFreeNumber(part)
-  else:
-    if number > 0:
-      nelem['pNr']=number
-  part['elements'].append(nelem)
-  return part
+	for i in part['elements']:
+		if 'pNr' in i:
+			if i['pNr'] == number:
+				number=0
+				continue
+	nelem=elem
+	if number == 0:
+		nelem['pNr']=partGetFreeNumber(part)
+	else:
+		if number > 0:
+			nelem['pNr']=number
+	part['elements'].append(nelem)
+	return part
 
 
 
@@ -522,9 +538,9 @@ def partAddElement(part, elem, number=0):
 ###
 #############################################################################
 def partAddElements(part, elems):
-  for i in elems:
-    part=partAddElement(part,i,-1)
-  return part
+	for i in elems:
+		part=partAddElement(part,i,-1)
+	return part
 
 
 
@@ -533,11 +549,11 @@ def partAddElements(part, elems):
 ###
 #############################################################################
 def partGetElement(part, number):
-  for i in range(0,len(part['elements'])):
-    if 'pNr' in part['elements'][i]:
-      if part['elements'][i]['pNr'] == number:
-        return part['elements'][i]
-  return {}
+	for i in range(0,len(part['elements'])):
+		if 'pNr' in part['elements'][i]:
+			if part['elements'][i]['pNr'] == number:
+				return part['elements'][i]
+	return {}
 
 
 
@@ -546,31 +562,31 @@ def partGetElement(part, number):
 ###
 #############################################################################
 def partCheckNumber(part, number):
-  for i in range(0,len(part['elements'])):
-    if 'pNr' in part['elements'][i]:
-      if part['elements'][i]['pNr'] == number:
-        return True
-  return False
+	for i in range(0,len(part['elements'])):
+		if 'pNr' in part['elements'][i]:
+			if part['elements'][i]['pNr'] == number:
+				return True
+	return False
 
 
-  
+	
 #############################################################################
 ### partCheckUniqueNumbers
 ###
 #############################################################################
 def partCheckUniqueNumbers(part):
-  nrFound=[]
-  for i in range(0,len(part['elements'])):
-    if 'pNr' in part['elements'][i]:
-      if part['elements'][i]['pNr'] in nrFound:
-        print( "ERR: partCheckUniqueNumbers: already found nr: ",part['elements'][i]['pNr'] )
-        return False
-      else:
-        nrFound.append(part['elements'][0]['pNr'])
-    else:
-      print( "ERR: partCheckUniqueNumbers: element without \'pNr\' tag found!" )
-      return False
-  return True
+	nrFound=[]
+	for i in range(0,len(part['elements'])):
+		if 'pNr' in part['elements'][i]:
+			if part['elements'][i]['pNr'] in nrFound:
+				print( "ERR: partCheckUniqueNumbers: already found nr: ",part['elements'][i]['pNr'] )
+				return False
+			else:
+				nrFound.append(part['elements'][0]['pNr'])
+		else:
+			print( "ERR: partCheckUniqueNumbers: element without \'pNr\' tag found!" )
+			return False
+	return True
 
 
 
@@ -579,11 +595,11 @@ def partCheckUniqueNumbers(part):
 ###
 #############################################################################
 def partGetNumbers(part):
-  li=[]
-  for i in range(0,len(part['elements'])):
-    li.append(part['elements'][i]['pNr'])
-  li.sort()
-  return li
+	li=[]
+	for i in range(0,len(part['elements'])):
+		li.append(part['elements'][i]['pNr'])
+	li.sort()
+	return li
 
 
 
@@ -592,21 +608,21 @@ def partGetNumbers(part):
 ###
 #############################################################################
 def partGetLastPositionFromElements(elems):
-  li=[]
-  nr=0
-  el={}
-  for i in elems:
-    if 'pNr' in i:
-      if i['pNr'] > nr:
-        nr=i['pNr']
-        el=i
-  if len(el) == 0:
-    return None
-  if 'p2' in el:
-    return el['p2']
-  if 'p1' in el:
-    return el['p1']  
-  return None
+	li=[]
+	nr=0
+	el={}
+	for i in elems:
+		if 'pNr' in i:
+			if i['pNr'] > nr:
+				nr=i['pNr']
+				el=i
+	if len(el) == 0:
+		return None
+	if 'p2' in el:
+		return el['p2']
+	if 'p1' in el:
+		return el['p1']  
+	return None
 
 
 
@@ -615,15 +631,15 @@ def partGetLastPositionFromElements(elems):
 ###
 #############################################################################
 def partGetLastPosition(part):
-  li=partGetNumbers(part)
-  if len(li) == 0:
-    return None
-  el=partGetElement(part,li[len(li)-1])
-  if 'p2' in el:
-    return el['p2']
-  if 'p1' in el:
-    return el['p1']  
-  return None
+	li=partGetNumbers(part)
+	if len(li) == 0:
+		return None
+	el=partGetElement(part,li[len(li)-1])
+	if 'p2' in el:
+		return el['p2']
+	if 'p1' in el:
+		return el['p1']  
+	return None
 
 
 
@@ -632,13 +648,13 @@ def partGetLastPosition(part):
 ###
 #############################################################################
 def partGetFirstPosition(part):
-  li=partGetNumbers(part)
-  if len(li) == 0:
-    return None
-  el=partGetElement(part,li[0])
-  if 'p1' in el:
-    return el['p1']
-  return None
+	li=partGetNumbers(part)
+	if len(li) == 0:
+		return None
+	el=partGetElement(part,li[0])
+	if 'p1' in el:
+		return el['p1']
+	return None
 
 
 
@@ -647,15 +663,15 @@ def partGetFirstPosition(part):
 ###
 #############################################################################
 def partRenumber(part):
-  if not partCheckUniqueNumbers(part):
-    return part
-  li=[]
-  for i in range(0,len(part['elements'])):
-    li.append([part['elements'][i]['pNr'],i])
-  li.sort()
-  for i in range(0,len(li)):
-    part['elements'][li[i][1]]['pNr']=i+1
-  return part
+	if not partCheckUniqueNumbers(part):
+		return part
+	li=[]
+	for i in range(0,len(part['elements'])):
+		li.append([part['elements'][i]['pNr'],i])
+	li.sort()
+	for i in range(0,len(li)):
+		part['elements'][li[i][1]]['pNr']=i+1
+	return part
 
 
 
@@ -664,22 +680,22 @@ def partRenumber(part):
 ###
 #############################################################################
 def partSortByNumber(part):
-  if not partCheckUniqueNumbers(part):
-    return part
-  li=[]
-  for i in range(0,len(part['elements'])):
-    li.append([part['elements'][i]['pNr'],i])
-  li.sort()
-  oldelems=part['elements']
-  part['elements']=[]
-  for i in range(0,len(li)):
-    part=partAddElement(part,oldelems[li[i][1]],li[i][0])
-  return part
+	if not partCheckUniqueNumbers(part):
+		return part
+	li=[]
+	for i in range(0,len(part['elements'])):
+		li.append([part['elements'][i]['pNr'],i])
+	li.sort()
+	oldelems=part['elements']
+	part['elements']=[]
+	for i in range(0,len(li)):
+		part=partAddElement(part,oldelems[li[i][1]],li[i][0])
+	return part
 
 
 
 def PartSortByGeometry(part):
-  pass  
+	pass  
 
 
 
@@ -688,52 +704,52 @@ def PartSortByGeometry(part):
 ###
 #############################################################################
 def partCheckContinuous(part):
-  if not partCheckUniqueNumbers(part):
-    return False
-  li=partGetNumbers(part)
-  if len(li) == 0:
-    print( "ERR: partCheckContinuous: no elements in part!" )
-    return False
-  if len(li) == 1:
-    return True
-  e1=partGetElement(part,li[0])
-  if e1['type']=='v':
-    print( "ERR: partCheckContinuous: vertex found!" )
-    return False
-  for i in range(1,len(li)):
-    e2=partGetElement(part,li[i])
-    if e2['type']=='v':
-      print( "ERR: partCheckContinuous: vertex found!" )
-      return False
-    if not e1['p2']==e2['p1']:
-      ez=math.fabs(vecLength(e1['p2'],e2['p1']))
-      if ez > TOOL_CONTINUOUS_TOLERANCE:
-        print( "ERR: partCheckContinuous: p2!=p1 at number: ",i )
-        print( "                        : e1['p2']: ",e1['p2'] )
-        print( "                        : e2['p1']: ",e2['p1'] )
-        return False
-    e1=e2
-  return True
-    
-  
+	if not partCheckUniqueNumbers(part):
+		return False
+	li=partGetNumbers(part)
+	if len(li) == 0:
+		print( "ERR: partCheckContinuous: no elements in part!" )
+		return False
+	if len(li) == 1:
+		return True
+	e1=partGetElement(part,li[0])
+	if e1['type']=='v':
+		print( "ERR: partCheckContinuous: vertex found!" )
+		return False
+	for i in range(1,len(li)):
+		e2=partGetElement(part,li[i])
+		if e2['type']=='v':
+			print( "ERR: partCheckContinuous: vertex found!" )
+			return False
+		if not e1['p2']==e2['p1']:
+			ez=math.fabs(vecLength(e1['p2'],e2['p1']))
+			if ez > TOOL_CONTINUOUS_TOLERANCE:
+				print( "ERR: partCheckContinuous: p2!=p1 at number: ",i )
+				print( "                        : e1['p2']: ",e1['p2'] )
+				print( "                        : e2['p1']: ",e2['p1'] )
+				return False
+		e1=e2
+	return True
+		
+	
 
 #############################################################################
 ### partCheckClosed
 ###
 #############################################################################
 def partCheckClosed(part):
-  if not partCheckContinuous(part):
-    return False
-  li=partGetNumbers(part)
-  if len(li)<2:
-    return False
-  e1=partGetElement(part,li[0])
-  e2=partGetElement(part,li[-1])
-  if e1['type']=='v' or e2['type']=='v':
-    return False
-  if e2['p2']==e1['p1']:
-    return True
-  return False
+	if not partCheckContinuous(part):
+		return False
+	li=partGetNumbers(part)
+	if len(li)<2:
+		return False
+	e1=partGetElement(part,li[0])
+	e2=partGetElement(part,li[-1])
+	if e1['type']=='v' or e2['type']=='v':
+		return False
+	if e2['p2']==e1['p1']:
+		return True
+	return False
 
 
 
@@ -746,62 +762,62 @@ def partCheckClosed(part):
 ### is done by milling "down", not "up").
 #############################################################################
 def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
-  hel=[]
-  if depth == 0.0:
-    print( "ERR: geomCreateHelix: depth == 0" )
-    return []
-  if depthSteps < 1.0:
-    print( "ERR: geomCreateHelix: steps < 0" )
-    return []
-  if dia <= 0.0:
-    print( "ERR: geomCreateHelix: dia <= 0" )
-    return []
-  depthPerHalfRev=depth/(depthSteps*2.0)
-  x1=p1[0]
-  x2=p1[0]+dia
-  p2=(x2,p1[1],p1[2]-depthPerHalfRev)
-  if basNr==0:
-    nr=1
-  else:
-    nr=basNr
-  for i in range(0,depthSteps):
-    el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-    nr+=1
-    hel.append(el)
-    p1=p2
-    p2=(x1,p1[1],p1[2]-depthPerHalfRev)
-    el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-    nr+=1
-    hel.append(el)
-    p1=p2
-    if not i == depthSteps-1:
-      p2=(x2,p1[1],p1[2]-depthPerHalfRev)
-    else:
-      p2=(x2,p1[1],p1[2])
-  # end for all depthSteps
+	hel=[]
+	if depth == 0.0:
+		print( "ERR: geomCreateHelix: depth == 0" )
+		return []
+	if depthSteps < 1.0:
+		print( "ERR: geomCreateHelix: steps < 0" )
+		return []
+	if dia <= 0.0:
+		print( "ERR: geomCreateHelix: dia <= 0" )
+		return []
+	depthPerHalfRev=depth/(depthSteps*2.0)
+	x1=p1[0]
+	x2=p1[0]+dia
+	p2=(x2,p1[1],p1[2]-depthPerHalfRev)
+	if basNr==0:
+		nr=1
+	else:
+		nr=basNr
+	for i in range(0,depthSteps):
+		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		hel.append(el)
+		p1=p2
+		p2=(x1,p1[1],p1[2]-depthPerHalfRev)
+		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		hel.append(el)
+		p1=p2
+		if not i == depthSteps-1:
+			p2=(x2,p1[1],p1[2]-depthPerHalfRev)
+		else:
+			p2=(x2,p1[1],p1[2])
+	# end for all depthSteps
 
-  if not len(hel)==depthSteps*2:
-    print( "ERR: geomCreateHelix: skipped one or more arcs (helix)" )
-    return[]
+	if not len(hel)==depthSteps*2:
+		print( "ERR: geomCreateHelix: skipped one or more arcs (helix)" )
+		return[]
 
-  if finish=='finish':
-    el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-    nr+=1
-    if el==[]:
-      print( "ERR: geomCreateHelix: skipped first finishing arc" )
-      return []
-    hel.append(el)
+	if finish=='finish':
+		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		if el==[]:
+			print( "ERR: geomCreateHelix: skipped first finishing arc" )
+			return []
+		hel.append(el)
 
-    el=elemCreateArc180(p2,p1,dia/2.0,dir,{'pNr':nr})
-    nr+=1
-    if el==[]:
-      print( "ERR: geomCreateHelix: skipped second finishing arc" )
-      return []
-    hel.append(el)
-  # end if 'finish'
+		el=elemCreateArc180(p2,p1,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		if el==[]:
+			print( "ERR: geomCreateHelix: skipped second finishing arc" )
+			return []
+		hel.append(el)
+	# end if 'finish'
 
-  return hel
-    
+	return hel
+		
 
 
 #############################################################################
@@ -816,64 +832,64 @@ def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
 ### "milled".
 #############################################################################
 def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
-  con=[]
-  if diaStart <= 0.0:
-    print( "ERR: geomCreateConcentricCircles: diaStart <= 0" )
-    return []
-  if diaEnd <= 0.0:
-    print( "ERR: geomCreateConcentricCircles: diaStart <= 0" )
-    return []
-  if diaSteps < 1:
-    print( "ERR: geomCreateConcentricCircles: diaSteps < 1" )
-    return []
-  diaPerRev=(diaEnd-diaStart)/diaSteps
-  y=p1[1]
-  z=p1[2]
-  if basNr==0:
-    nr=1
-  else:
-    nr=basNr
-  # TOCHK (2021)
-  for i in range(0,int(diaSteps)):
-    x1=p1[0]-(i*diaPerRev/2.0)
-    x2=p1[0]+(i*diaPerRev/2.0)+diaStart
-    diaAct=diaStart+(i*diaPerRev)
-    el=elemCreateArc180((x1,y,z),(x2,y,z),math.fabs(diaAct/2.0),dir,{'pNr':nr})
-    nr+=1
-    con.append(el)
-    el=elemCreateArc180((x2,y,z),(x1,y,z),math.fabs(diaAct/2.0),dir,{'pNr':nr})
-    nr+=1
-    con.append(el)
-    if i < diaSteps-1:
-      x1=p1[0]-(i*diaPerRev/2.0)
-      x2=p1[0]-(i*diaPerRev/2.0)-diaPerRev/4.0
-      if diaPerRev > 0:
-        if dir == 'cw':
-          tdir='cc'
-        else:
-          tdir='cw'
-      else:
-        tdir=dir
-      el=elemCreateArc180((x1,y,z),(x2,y,z),math.fabs(diaPerRev)/8.0,tdir,{'pNr':nr})
-      nr+=1
-      con.append(el)
-      if diaPerRev < 0:
-        if dir == 'cw':
-          tdir='cc'
-        else:
-          tdir='cw'
-      else:
-        tdir=dir
-      x1=p1[0]-(i*diaPerRev/2.0)-diaPerRev/4.0
-      x2=p1[0]-(i*diaPerRev/2.0)-diaPerRev/2.0
-      el=elemCreateArc180((x1,y,z),(x2,y,z),math.fabs(diaPerRev)/8.0,tdir,{'pNr':nr})
-      nr+=1
-      con.append(el)
-  if not len(con)==(diaSteps*4)-2:
-    print( "ERR: geomCreateConcentricCircles: number of circles: needed vs. made. ",nr-1,len(con) )
-    return []
-  return con
-  
+	con=[]
+	if diaStart <= 0.0:
+		print( "ERR: geomCreateConcentricCircles: diaStart <= 0" )
+		return []
+	if diaEnd <= 0.0:
+		print( "ERR: geomCreateConcentricCircles: diaStart <= 0" )
+		return []
+	if diaSteps < 1:
+		print( "ERR: geomCreateConcentricCircles: diaSteps < 1" )
+		return []
+	diaPerRev=(diaEnd-diaStart)/diaSteps
+	y=p1[1]
+	z=p1[2]
+	if basNr==0:
+		nr=1
+	else:
+		nr=basNr
+	# TOCHK (2021)
+	for i in range(0,int(diaSteps)):
+		x1=p1[0]-(i*diaPerRev/2.0)
+		x2=p1[0]+(i*diaPerRev/2.0)+diaStart
+		diaAct=diaStart+(i*diaPerRev)
+		el=elemCreateArc180((x1,y,z),(x2,y,z),math.fabs(diaAct/2.0),dir,{'pNr':nr})
+		nr+=1
+		con.append(el)
+		el=elemCreateArc180((x2,y,z),(x1,y,z),math.fabs(diaAct/2.0),dir,{'pNr':nr})
+		nr+=1
+		con.append(el)
+		if i < diaSteps-1:
+			x1=p1[0]-(i*diaPerRev/2.0)
+			x2=p1[0]-(i*diaPerRev/2.0)-diaPerRev/4.0
+			if diaPerRev > 0:
+				if dir == 'cw':
+					tdir='cc'
+				else:
+					tdir='cw'
+			else:
+				tdir=dir
+			el=elemCreateArc180((x1,y,z),(x2,y,z),math.fabs(diaPerRev)/8.0,tdir,{'pNr':nr})
+			nr+=1
+			con.append(el)
+			if diaPerRev < 0:
+				if dir == 'cw':
+					tdir='cc'
+				else:
+					tdir='cw'
+			else:
+				tdir=dir
+			x1=p1[0]-(i*diaPerRev/2.0)-diaPerRev/4.0
+			x2=p1[0]-(i*diaPerRev/2.0)-diaPerRev/2.0
+			el=elemCreateArc180((x1,y,z),(x2,y,z),math.fabs(diaPerRev)/8.0,tdir,{'pNr':nr})
+			nr+=1
+			con.append(el)
+	if not len(con)==(diaSteps*4)-2:
+		print( "ERR: geomCreateConcentricCircles: number of circles: needed vs. made. ",nr-1,len(con) )
+		return []
+	return con
+	
 
 
 #############################################################################
@@ -884,94 +900,94 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 ### The helix is on top of this point!
 #############################################################################
 def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
-  if depth <= 0.0:
-    print( "ERR: geomCreateCircRingHole: depth <= 0 :",depth )
-    return []
-  if depthSt < 1:
-    print( "ERR: geomCreateCircRingHole: depthSt < 1 :",depthSt )
-    return []
-  if hDepth < 0:
-    print( "ERR: geomCreateCircRingHole: hDepth < 0 :",hDepth )
-    return []
-  if hDepthSt < 1:
-    print( "ERR: geomCreateCircRingHole: hDepthSt < 1 :",hDepthSt )
-    return []
-  if clear < p1[2]:
-    print( "ERR: geomCreateCircRingHole: clear < workpos :",clear,p1[2] )
-    return []
-  if diaStart <= 0:
-    print( "ERR: geomCreateCircRingHole: diaStart < 0 :",diaStart )
-    return []
-  if diaEnd <= 0:
-    print( "ERR: geomCreateCircRingHole: diaStart < 0 :",diaEnd )
-    return []
-  
-  if basNr==0:
-    nr=1
-  else:
-    nr=basNr
+	if depth <= 0.0:
+		print( "ERR: geomCreateCircRingHole: depth <= 0 :",depth )
+		return []
+	if depthSt < 1:
+		print( "ERR: geomCreateCircRingHole: depthSt < 1 :",depthSt )
+		return []
+	if hDepth < 0:
+		print( "ERR: geomCreateCircRingHole: hDepth < 0 :",hDepth )
+		return []
+	if hDepthSt < 1:
+		print( "ERR: geomCreateCircRingHole: hDepthSt < 1 :",hDepthSt )
+		return []
+	if clear < p1[2]:
+		print( "ERR: geomCreateCircRingHole: clear < workpos :",clear,p1[2] )
+		return []
+	if diaStart <= 0:
+		print( "ERR: geomCreateCircRingHole: diaStart < 0 :",diaStart )
+		return []
+	if diaEnd <= 0:
+		print( "ERR: geomCreateCircRingHole: diaStart < 0 :",diaEnd )
+		return []
+	
+	if basNr==0:
+		nr=1
+	else:
+		nr=basNr
 
-  ccrh=[]
-  
-  for i in range(0,depthSt):
-    # starting point for helix
-    pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+1)*(depth/(depthSt*1.0))))
-    hel=geomCreateHelix(pWork,diaStart,hDepth,hDepthSt  ,dir,nr,'nofinish')
-    if hel==[]:
-      print( "ERR: geomCreateCircRingHole: error creating helix" )
-      return []
-    # we are now on pWork(x,y) but already cut depth/depthSt of the material
-    for j in hel:
-      ccrh.append(j)
-    nr+=len(hel)
-  
-    pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]-((i+1)*(depth/(depthSt*1.0))))
-    poc=geomCreateConcentricCircles(pWork,diaStart,diaEnd,diaSt,dir,nr)
-    if poc==[]:
-      print( "ERR: geomCreateCircRingHole: error creating concentric circles" )
-      return []
-    # we are now on pWork(x,y), with i*(depth/depthSt) in reverse z-axis direction
-    for j in poc:
-      ccrh.append(j)
-    nr+=len(poc)
-    
-    if i < depthSt-1:
-      # now, "back" to the "next" helix
-      pWork1=partGetLastPositionFromElements(poc)
-      pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSt*1.0))
-      lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-      nr+=1
-      if lin==[]:
-        print( "ERR: geomCreateCircRingHole: error creating helix back line 1 in: ",i )
-        return []
-      ccrh.append(lin)
-      pWork1=pWork2
-      pWork2=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+2)*(depth/(depthSt*1.0))))
-      lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-      nr+=1
-      if lin==[]:
-        print( "ERR: geomCreateCircRingHole: error creating helix back line 2 in: ",i )
-        return []
-      ccrh.append(lin)
-    else:
-      # now, "back" to the starting point
-      pWork1=partGetLastPositionFromElements(poc)
-      pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSt*1.0)))
-      lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-      nr+=1
-      if lin==[]:
-        print( "ERR: geomCreateCircRingHole: error creating back line 1" )
-        return []
-      ccrh.append(lin)
-      pWork1=pWork2
-      pWork2=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((depth/(depthSt*1.0))))
-      lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-      nr+=1
-      if lin==[]:
-        print( "ERR: geomCreateCircRingHole: error creating back line 2" )
-        return []
-      ccrh.append(lin)
-  return ccrh
+	ccrh=[]
+	
+	for i in range(0,depthSt):
+		# starting point for helix
+		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+1)*(depth/(depthSt*1.0))))
+		hel=geomCreateHelix(pWork,diaStart,hDepth,hDepthSt  ,dir,nr,'nofinish')
+		if hel==[]:
+			print( "ERR: geomCreateCircRingHole: error creating helix" )
+			return []
+		# we are now on pWork(x,y) but already cut depth/depthSt of the material
+		for j in hel:
+			ccrh.append(j)
+		nr+=len(hel)
+	
+		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]-((i+1)*(depth/(depthSt*1.0))))
+		poc=geomCreateConcentricCircles(pWork,diaStart,diaEnd,diaSt,dir,nr)
+		if poc==[]:
+			print( "ERR: geomCreateCircRingHole: error creating concentric circles" )
+			return []
+		# we are now on pWork(x,y), with i*(depth/depthSt) in reverse z-axis direction
+		for j in poc:
+			ccrh.append(j)
+		nr+=len(poc)
+		
+		if i < depthSt-1:
+			# now, "back" to the "next" helix
+			pWork1=partGetLastPositionFromElements(poc)
+			pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSt*1.0))
+			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			nr+=1
+			if lin==[]:
+				print( "ERR: geomCreateCircRingHole: error creating helix back line 1 in: ",i )
+				return []
+			ccrh.append(lin)
+			pWork1=pWork2
+			pWork2=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+2)*(depth/(depthSt*1.0))))
+			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			nr+=1
+			if lin==[]:
+				print( "ERR: geomCreateCircRingHole: error creating helix back line 2 in: ",i )
+				return []
+			ccrh.append(lin)
+		else:
+			# now, "back" to the starting point
+			pWork1=partGetLastPositionFromElements(poc)
+			pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSt*1.0)))
+			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			nr+=1
+			if lin==[]:
+				print( "ERR: geomCreateCircRingHole: error creating back line 1" )
+				return []
+			ccrh.append(lin)
+			pWork1=pWork2
+			pWork2=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((depth/(depthSt*1.0))))
+			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			nr+=1
+			if lin==[]:
+				print( "ERR: geomCreateCircRingHole: error creating back line 2" )
+				return []
+			ccrh.append(lin)
+	return ccrh
 
 
 
@@ -984,45 +1000,45 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 ### dist < 0 means left and vice versa
 #############################################################################
 def geomCreateContour(part,dist):
-  if not partCheckContinuous(part):
-    print( "ERR: geomCreateContour: part not continuous" )
-    return []
-  if dist==0.0:
-    print( "ERR: geomCreateContour: distance is 0" )
-    return []
-  # ToDo:
-  partIsClosed=partCheckClosed(part)
+	if not partCheckContinuous(part):
+		print( "ERR: geomCreateContour: part not continuous" )
+		return []
+	if dist==0.0:
+		print( "ERR: geomCreateContour: distance is 0" )
+		return []
+	# ToDo:
+	partIsClosed=partCheckClosed(part)
 
-  CoarseCont=[]
+	CoarseCont=[]
 
-  for i in range(1,len(part['elements'])+1):
-    el=partGetElement(part,i)
-    if el==[]:
-      print( "ERR: geomCreateContour: empty element at pos.: ",i )
-      return []
+	for i in range(1,len(part['elements'])+1):
+		el=partGetElement(part,i)
+		if el==[]:
+			print( "ERR: geomCreateContour: empty element at pos.: ",i )
+			return []
 
-    eln={}
+		eln={}
 
-    # line
-    if el['type']=='l':
-      vecL=vecExtract(el['p1'],el['p2'])
-      if dist < 0.0:
-        an=-math.pi/2.0
-      else:
-        an=math.pi/2.0
-      vecN=vecRotateZ(vecL,an)
-      vecN=vecScale(vecN,0)
-      vecN=vecScale(vecN,math.fabs(dist))
-      eln=elemMove(el,vecN)
+		# line
+		if el['type']=='l':
+			vecL=vecExtract(el['p1'],el['p2'])
+			if dist < 0.0:
+				an=-math.pi/2.0
+			else:
+				an=math.pi/2.0
+			vecN=vecRotateZ(vecL,an)
+			vecN=vecScale(vecN,0)
+			vecN=vecScale(vecN,math.fabs(dist))
+			eln=elemMove(el,vecN)
 
-    # arc
-    if el['type']=='a':
-      pass 
-    
-    if not eln=={}:
-      CoarseCont.append(eln)
+		# arc
+		if el['type']=='a':
+			pass 
+		
+		if not eln=={}:
+			CoarseCont.append(eln)
 
-  return CoarseCont
+	return CoarseCont
 
 
 #############################################################################
@@ -1034,29 +1050,29 @@ def geomCreateContour(part,dist):
 #############################################################################
 def geomCreateSlotContour(part,dist,basNr=0):
 
-  if dist==0.0:
-    print( "ERR: geomCreateSlotContour: distance is 0" )
-    return []
-  
-  if basNr==0:
-    Nr=1
-  else:
-    Nr=basNr
+	if dist==0.0:
+		print( "ERR: geomCreateSlotContour: distance is 0" )
+		return []
+	
+	if basNr==0:
+		Nr=1
+	else:
+		Nr=basNr
 
-  slo=[]
+	slo=[]
 
-  for i in range(1,len(part['elements'])+1):
-    el=partGetElement(part,i)
-    if el==[]:
-      print( "ERR: geomCreateSlotContour: empty element at pos.: ",i )
-      return []
+	for i in range(1,len(part['elements'])+1):
+		el=partGetElement(part,i)
+		if el==[]:
+			print( "ERR: geomCreateSlotContour: empty element at pos.: ",i )
+			return []
 
-    sel=geomCreateSlotContourFromElement(el,dist,Nr)
-    Nr+=len(sel)
-    if not sel==[]:
-      slo+=sel
+		sel=geomCreateSlotContourFromElement(el,dist,Nr)
+		Nr+=len(sel)
+		if not sel==[]:
+			slo+=sel
 
-  return slo
+	return slo
 
 
 
@@ -1066,19 +1082,19 @@ def geomCreateSlotContour(part,dist,basNr=0):
 ### Extracts all first-two elements of the geometry.
 #############################################################################
 def geomExtractSlotDirVecs(geom):
-  gout=[]
-  i=1
-  j=0
-  for el in geom:
-    if j < 2:
-      el['pNr']=i
-      i+=1
-      gout.append(el)
-    j+=1
-    if j==4:
-      j=0
+	gout=[]
+	i=1
+	j=0
+	for el in geom:
+		if j < 2:
+			el['pNr']=i
+			i+=1
+			gout.append(el)
+		j+=1
+		if j==4:
+			j=0
 
-  return gout
+	return gout
 
 
 
@@ -1090,202 +1106,202 @@ def geomExtractSlotDirVecs(geom):
 ### element are given by "dist".
 #############################################################################
 def geomCreateSlotContourFromElement(el,dist,basNr=0):
-  con=[]
+	con=[]
 
-  if dist==0.0:
-    print( "ERR: geomCreateSlotContourFromElement: distance is 0" )
-    return []
+	if dist==0.0:
+		print( "ERR: geomCreateSlotContourFromElement: distance is 0" )
+		return []
 
-  if basNr==0:
-    Nr=1
-  else:
-    Nr=basNr
+	if basNr==0:
+		Nr=1
+	else:
+		Nr=basNr
 
-  # line
-  if el['type']=='l':
-    vecL=vecExtract(el['p1'],el['p2'])
-    # this will only work in a xy-plane projection!
-    vecL=(vecL[0],vecL[1],0)
-    if vecLength(vecL) <= 0.0:
-      print( "ERR: geomCreateSlotContourFromElement: no length in xy-plane projection" )
-      return []
-    if not el['p1'][2] == el['p2'][2]:
-      print( "ERR: geomCreateSlotContourFromElement: element not in xy-plane or parallel: ",el )
-      return []
-    
-    if dist < 0.0:
-      an=-math.pi/2.0
-    else:
-      an=math.pi/2.0
-    vecN=vecRotateZ(vecL,an)
-    vecN=vecScale(vecN,0)
-    vecN=vecScale(vecN,math.fabs(dist))
-    l1=elemMove(el,vecN)
-    l2=elemMove(el,vecReverse(vecN))
-    l2=elemReverse(l2)
-    if dist < 0.0:
-      dir='cw'
-    else:
-      dir='cc'
+	# line
+	if el['type']=='l':
+		vecL=vecExtract(el['p1'],el['p2'])
+		# this will only work in a xy-plane projection!
+		vecL=(vecL[0],vecL[1],0)
+		if vecLength(vecL) <= 0.0:
+			print( "ERR: geomCreateSlotContourFromElement: no length in xy-plane projection" )
+			return []
+		if not el['p1'][2] == el['p2'][2]:
+			print( "ERR: geomCreateSlotContourFromElement: element not in xy-plane or parallel: ",el )
+			return []
+		
+		if dist < 0.0:
+			an=-math.pi/2.0
+		else:
+			an=math.pi/2.0
+		vecN=vecRotateZ(vecL,an)
+		vecN=vecScale(vecN,0)
+		vecN=vecScale(vecN,math.fabs(dist))
+		l1=elemMove(el,vecN)
+		l2=elemMove(el,vecReverse(vecN))
+		l2=elemReverse(l2)
+		if dist < 0.0:
+			dir='cw'
+		else:
+			dir='cc'
 
-    a1=elemCreateArc180(l1['p2'],l2['p1'],math.fabs(dist),dir,{'pNr':0})
-    a2=elemCreateArc180(l2['p2'],l1['p1'],math.fabs(dist),dir,{'pNr':0})
+		a1=elemCreateArc180(l1['p2'],l2['p1'],math.fabs(dist),dir,{'pNr':0})
+		a2=elemCreateArc180(l2['p2'],l1['p1'],math.fabs(dist),dir,{'pNr':0})
 
-    if a1==[] or a2==[]:
-      print( "ERR: geomCreateSlotContourFromElement: error creating a1 with dir: ",dir )
-      if a1==[]:
-        print( "ERR: geomCreateSlotContourFromElement: error creating a1: ",l1['p2'],l2['p1'] )
-      else:
-        print( "ERR: geomCreateSlotContourFromElement: error creating a2: ",l2['p2'],l1['p1'] )
-      con=[]
-    else:
-      l1['pNr']=Nr
-      Nr+=1
-      a1['pNr']=Nr
-      Nr+=1
-      l2['pNr']=Nr
-      Nr+=1
-      a2['pNr']=Nr
-      con+=[l1,a1,l2,a2]
+		if a1==[] or a2==[]:
+			print( "ERR: geomCreateSlotContourFromElement: error creating a1 with dir: ",dir )
+			if a1==[]:
+				print( "ERR: geomCreateSlotContourFromElement: error creating a1: ",l1['p2'],l2['p1'] )
+			else:
+				print( "ERR: geomCreateSlotContourFromElement: error creating a2: ",l2['p2'],l1['p1'] )
+			con=[]
+		else:
+			l1['pNr']=Nr
+			Nr+=1
+			a1['pNr']=Nr
+			Nr+=1
+			l2['pNr']=Nr
+			Nr+=1
+			a2['pNr']=Nr
+			con+=[l1,a1,l2,a2]
 
-  # arc
-  if el['type']=='a':
-    # get midpoint
-    pm=arcCenter180XY(el['p1'],el['p2'],el['rad'],el['dir'])
-    if pm==None:
-      print( "ERR: geomCreateSlotContourFromElement: unable to calc arc mispoint from: ",el )
-      return []
+	# arc
+	if el['type']=='a':
+		# get midpoint
+		pm=arcCenter180XY(el['p1'],el['p2'],el['rad'],el['dir'])
+		if pm==None:
+			print( "ERR: geomCreateSlotContourFromElement: unable to calc arc mispoint from: ",el )
+			return []
 
-    vec1=vecExtract(el['p1'],pm)
-    vec1=(vec1[0],vec1[1],0)
-    vec2=vecExtract(el['p2'],pm)
-    vec2=(vec2[0],vec2[1],0)
-    if vecLength(vec1) <= 0.0 or vecLength(vec2) <= 0.0:
-      print( "ERR: geomCreateSlotContourFromElement: no length in xy-plane projection" )
-      return []
-    if not el['p1'][2] == el['p2'][2]:
-      print( "ERR: geomCreateSlotContourFromElement: element not in xy-plane or parallel: ",el )
-      return []
+		vec1=vecExtract(el['p1'],pm)
+		vec1=(vec1[0],vec1[1],0)
+		vec2=vecExtract(el['p2'],pm)
+		vec2=(vec2[0],vec2[1],0)
+		if vecLength(vec1) <= 0.0 or vecLength(vec2) <= 0.0:
+			print( "ERR: geomCreateSlotContourFromElement: no length in xy-plane projection" )
+			return []
+		if not el['p1'][2] == el['p2'][2]:
+			print( "ERR: geomCreateSlotContourFromElement: element not in xy-plane or parallel: ",el )
+			return []
 
-    vec1=vecScale(vec1,0)
-    vec1=vecScale(vec1,math.fabs(dist))
-    vec2=vecScale(vec2,0)
-    vec2=vecScale(vec2,math.fabs(dist))
+		vec1=vecScale(vec1,0)
+		vec1=vecScale(vec1,math.fabs(dist))
+		vec2=vecScale(vec2,0)
+		vec2=vecScale(vec2,math.fabs(dist))
 
-    if dist < 0.0 and el['dir']=='cc' or dist > 0.0 and el['dir']=='cw':
-      # arc #1
-      # points of arc move towards the midpoint
-      if dist == el['rad']:
-        # hack: we are exactly on the midpoint
-        a1=elemCreateVertex(pm,{'pNr':0})
-      else:
-        p1=vecAdd(el['p1'],vec1)
-        p2=vecAdd(el['p2'],vec2)
-        rad=el['rad']-math.fabs(dist)
-        if rad == 0.0:
-          # midpoint again hack
-          a1=elemCreateVertex(pm,{'pNr':0})
-        else:
-          if rad < 0.0:
-            if el['dir']=='cw':
-              dir='cc'
-            else:
-              dir='cw'
-            rad=math.fabs(rad)
-          else:
-            dir=el['dir']
-          a1=elemCreateArc180(p1,p2,rad,dir,{'pNr':0})
-      #arc #2
-      # points move away from midpoint
-      vec1=vecReverse(vec1)
-      vec2=vecReverse(vec2)
-      p1=vecAdd(el['p1'],vec1)
-      p2=vecAdd(el['p2'],vec2)
-      rad=el['rad']+math.fabs(dist)
-      if el['dir']=='cw':
-        dir='cc'
-      else:
-        dir='cw'
-      a2=elemCreateArc180(p2,p1,rad,dir,{'pNr':0})
-    else:
-      # arc #1
-      # points move away from midpoint
-      vec1=vecReverse(vec1)
-      vec2=vecReverse(vec2)
-      p1=vecAdd(el['p1'],vec1)
-      p2=vecAdd(el['p2'],vec2)
-      rad=el['rad']+math.fabs(dist)
-      a1=elemCreateArc180(p1,p2,rad,el['dir'],{'pNr':0})
-      # reorder
-      vec1=vecReverse(vec1)
-      vec2=vecReverse(vec2)
-      # arc #2
-      # points of arc move towards the midpoint
-      if dist == el['rad']:
-        # hack: we are exactly on the midpoint
-        a2=elemCreateVertex(pm,{'pNr':0})
-      else:
-        p1=vecAdd(el['p1'],vec1)
-        p2=vecAdd(el['p2'],vec2)
-        rad=el['rad']-math.fabs(dist)
-        if rad == 0.0:
-          # midpoint again hack
-          a2=elemCreateVertex(pm,{'pNr':0})
-        else:
-          if rad < 0.0:
-            dir=el['dir']
-            rad=math.fabs(rad)
-          else:
-            if el['dir']=='cw':
-              dir='cc'
-            else:
-              dir='cw'
-          a2=elemCreateArc180(p2,p1,rad,dir,{'pNr':0})
+		if dist < 0.0 and el['dir']=='cc' or dist > 0.0 and el['dir']=='cw':
+			# arc #1
+			# points of arc move towards the midpoint
+			if dist == el['rad']:
+				# hack: we are exactly on the midpoint
+				a1=elemCreateVertex(pm,{'pNr':0})
+			else:
+				p1=vecAdd(el['p1'],vec1)
+				p2=vecAdd(el['p2'],vec2)
+				rad=el['rad']-math.fabs(dist)
+				if rad == 0.0:
+					# midpoint again hack
+					a1=elemCreateVertex(pm,{'pNr':0})
+				else:
+					if rad < 0.0:
+						if el['dir']=='cw':
+							dir='cc'
+						else:
+							dir='cw'
+						rad=math.fabs(rad)
+					else:
+						dir=el['dir']
+					a1=elemCreateArc180(p1,p2,rad,dir,{'pNr':0})
+			#arc #2
+			# points move away from midpoint
+			vec1=vecReverse(vec1)
+			vec2=vecReverse(vec2)
+			p1=vecAdd(el['p1'],vec1)
+			p2=vecAdd(el['p2'],vec2)
+			rad=el['rad']+math.fabs(dist)
+			if el['dir']=='cw':
+				dir='cc'
+			else:
+				dir='cw'
+			a2=elemCreateArc180(p2,p1,rad,dir,{'pNr':0})
+		else:
+			# arc #1
+			# points move away from midpoint
+			vec1=vecReverse(vec1)
+			vec2=vecReverse(vec2)
+			p1=vecAdd(el['p1'],vec1)
+			p2=vecAdd(el['p2'],vec2)
+			rad=el['rad']+math.fabs(dist)
+			a1=elemCreateArc180(p1,p2,rad,el['dir'],{'pNr':0})
+			# reorder
+			vec1=vecReverse(vec1)
+			vec2=vecReverse(vec2)
+			# arc #2
+			# points of arc move towards the midpoint
+			if dist == el['rad']:
+				# hack: we are exactly on the midpoint
+				a2=elemCreateVertex(pm,{'pNr':0})
+			else:
+				p1=vecAdd(el['p1'],vec1)
+				p2=vecAdd(el['p2'],vec2)
+				rad=el['rad']-math.fabs(dist)
+				if rad == 0.0:
+					# midpoint again hack
+					a2=elemCreateVertex(pm,{'pNr':0})
+				else:
+					if rad < 0.0:
+						dir=el['dir']
+						rad=math.fabs(rad)
+					else:
+						if el['dir']=='cw':
+							dir='cc'
+						else:
+							dir='cw'
+					a2=elemCreateArc180(p2,p1,rad,dir,{'pNr':0})
 
-    # arc #3 (cap 1)
-    if not a1=={}:
-      if 'p2' in a1:   # could be a vertex
-        p1=a1['p2']
-      else:
-        p1=a1['p1']
-      p2=a2['p1']
-      if dist < 0.0:
-        dir='cw'
-      else:
-        dir='cc'
-      a3=elemCreateArc180(p1,p2,math.fabs(dist),dir,{'pNr':0})
+		# arc #3 (cap 1)
+		if not a1=={}:
+			if 'p2' in a1:   # could be a vertex
+				p1=a1['p2']
+			else:
+				p1=a1['p1']
+			p2=a2['p1']
+			if dist < 0.0:
+				dir='cw'
+			else:
+				dir='cc'
+			a3=elemCreateArc180(p1,p2,math.fabs(dist),dir,{'pNr':0})
 
-    # arc #4 (cap 2)
-    if not a2=={}:
-      if 'p2' in a2:   # could be a vertex
-        p1=a2['p2']
-      else:
-        p1=a2['p1']
-      p2=a1['p1']
-      if dist < 0.0:
-        dir='cw'
-      else:
-        dir='cc'
-      a4=elemCreateArc180(p1,p2,math.fabs(dist),dir,{'pNr':0})
-    
-    if not a1=={}:
-      a1['pNr']=Nr
-      Nr+=1
-      con.append(a1)
-    if not a3=={}:
-      a3['pNr']=Nr
-      Nr+=1
-      con.append(a3)
-    if not a2=={}:
-      a2['pNr']=Nr
-      Nr+=1
-      con.append(a2)
-    if not a4=={}:
-      a4['pNr']=Nr
-      con.append(a4)
-  # end el['type']=='a'
-    
-  return con
+		# arc #4 (cap 2)
+		if not a2=={}:
+			if 'p2' in a2:   # could be a vertex
+				p1=a2['p2']
+			else:
+				p1=a2['p1']
+			p2=a1['p1']
+			if dist < 0.0:
+				dir='cw'
+			else:
+				dir='cc'
+			a4=elemCreateArc180(p1,p2,math.fabs(dist),dir,{'pNr':0})
+		
+		if not a1=={}:
+			a1['pNr']=Nr
+			Nr+=1
+			con.append(a1)
+		if not a3=={}:
+			a3['pNr']=Nr
+			Nr+=1
+			con.append(a3)
+		if not a2=={}:
+			a2['pNr']=Nr
+			Nr+=1
+			con.append(a2)
+		if not a4=={}:
+			a4['pNr']=Nr
+			con.append(a4)
+	# end el['type']=='a'
+		
+	return con
 
 
 
@@ -1302,26 +1318,26 @@ def geomCreateSlotContourFromElement(el,dist,basNr=0):
 ### Elements have to be in the right order!
 #############################################################################
 def geomTrimPointsStartToEnd(elIn,isClosed='notClosed'):
-  elOut=[]
-  
-  for i in elIn:
-    elOut.append(i)
+	elOut=[]
+	
+	for i in elIn:
+		elOut.append(i)
 
-  maxLen=len(elOut)-1
+	maxLen=len(elOut)-1
 
-  for i in range(maxLen):
-    if 'p2' in elOut[i]:
-      elOut[i+1]['p1']=elOut[i]['p2']
-    else:
-      elOut[i+1]['p1']=elOut[i]['p1']
-    
-  if isClosed != 'notClosed':
-    if 'p2' in elOut[maxLen]:
-      elOut[0]['p1']=elOut[maxLen]['p2']
-    else:
-      elOut[0]['p1']=elOut[maxLen]['p1']
+	for i in range(maxLen):
+		if 'p2' in elOut[i]:
+			elOut[i+1]['p1']=elOut[i]['p2']
+		else:
+			elOut[i+1]['p1']=elOut[i]['p1']
+		
+	if isClosed != 'notClosed':
+		if 'p2' in elOut[maxLen]:
+			elOut[0]['p1']=elOut[maxLen]['p2']
+		else:
+			elOut[0]['p1']=elOut[maxLen]['p1']
 
-  return elOut
+	return elOut
 
 
 
@@ -1337,167 +1353,167 @@ def geomTrimPointsStartToEnd(elIn,isClosed='notClosed'):
 #############################################################################
 def geomCreateLeftContourBAK(part,dist,basNr=0):
 
-  conNr=1
-  con=[]
-  slo1=[]
-  slo2=[]
-  
-  totLen=len(part['elements'])
+	conNr=1
+	con=[]
+	slo1=[]
+	slo2=[]
+	
+	totLen=len(part['elements'])
 
-  if not dist < 0.0:
-    print( "ERR: geomCreateLeftContour: distance is not negative: ",dist )
-    return []
+	if not dist < 0.0:
+		print( "ERR: geomCreateLeftContour: distance is not negative: ",dist )
+		return []
 
-  for i in range(1,totLen+1):
-    # get element
+	for i in range(1,totLen+1):
+		# get element
 
-    # !!!future upgrade!!!
-    
+		# !!!future upgrade!!!
+		
 #    if con==[]:
 #      el1=partGetElement(part,i)
 #    else:
 #      el1=con[-1]
-    el1=partGetElement(part,i)
+		el1=partGetElement(part,i)
 
-    if el1==[]:
-      print( "ERR: geomCreateLeftContour: empty element at pos.: ",i )
-      return []
+		if el1==[]:
+			print( "ERR: geomCreateLeftContour: empty element at pos.: ",i )
+			return []
 
-    # create a slot around the first element
-    slo1=geomCreateSlotContourFromElement(el1,dist)
-    if slo1==[]:
-      print( "ERR: geomCreateLeftContour: unable to create slot for first element: ",i )
-      return []
+		# create a slot around the first element
+		slo1=geomCreateSlotContourFromElement(el1,dist)
+		if slo1==[]:
+			print( "ERR: geomCreateLeftContour: unable to create slot for first element: ",i )
+			return []
 
-    if len(slo1)!=4:
-      print( "ERR: geomCreateLeftContour: slot has less than 4 elements for first elem: ",i )
-      return []
+		if len(slo1)!=4:
+			print( "ERR: geomCreateLeftContour: slot has less than 4 elements for first elem: ",i )
+			return []
 
-    # get the second element
-    if i < totLen:
-      el2=partGetElement(part,i+1)
-    else:
-      if partCheckClosed(part):
-        # if part is closed, take first element to finish the operation
-        el2=partGetElement(part,1)
-      else:
-        # nothing more to do
-        break
+		# get the second element
+		if i < totLen:
+			el2=partGetElement(part,i+1)
+		else:
+			if partCheckClosed(part):
+				# if part is closed, take first element to finish the operation
+				el2=partGetElement(part,1)
+			else:
+				# nothing more to do
+				break
 
-    if el2==[]:
-      print( "ERR: geomCreateLeftContour: empty element at pos.: ",i+1 )
-      return []
+		if el2==[]:
+			print( "ERR: geomCreateLeftContour: empty element at pos.: ",i+1 )
+			return []
 
-    # create a slot around the second element
-    slo2=geomCreateSlotContourFromElement(el2,dist)
-    if slo2==[]:
-      print( "ERR: geomCreateLeftContour: unable to create slot for second element: ",i )
-      return []
+		# create a slot around the second element
+		slo2=geomCreateSlotContourFromElement(el2,dist)
+		if slo2==[]:
+			print( "ERR: geomCreateLeftContour: unable to create slot for second element: ",i )
+			return []
 
-    if len(slo2)!=4:
-      print( "ERR: geomCreateLeftContour: slot has less than 4 elements for second elem: ",i )
-      return []
+		if len(slo2)!=4:
+			print( "ERR: geomCreateLeftContour: slot has less than 4 elements for second elem: ",i )
+			return []
 
 
-    # determine the angle to the next element
-    #
-    # if a < 0: next element turns to the right
-    #   -> create a 'cw' circle to slo2[1]['p1']
-    #
-    # if a > 0: next element turns to the left
-    #   -> determine intersection on slo2[1] for normalized distance <= 1.0
-    #   -> determine intersection on slo2[2] for normalized distance <= 1.0
-    #   -> if intersections are beyond a norm. dist. of 1.0 -> follow slo2[1]
-    #   -> else follow slo2[1] or slo2[2] to slo2[1] from intersection
-    #
-    # if a== 0: no change of direction
-    #   -> simply follow slo2[1]
-    
-    # This _should_ work by calculating the values from the original element,
-    # not their representation by slot elements.
-    ang=elemNextAngle(el1,el2)
-    print( "*** angle: i,ang: ",i,ang*360/(2.0*math.pi) )
-    if ang==None:
-      print( "ERR: geomCreateLeftContour: no angle after element: ",i )
-      return []
+		# determine the angle to the next element
+		#
+		# if a < 0: next element turns to the right
+		#   -> create a 'cw' circle to slo2[1]['p1']
+		#
+		# if a > 0: next element turns to the left
+		#   -> determine intersection on slo2[1] for normalized distance <= 1.0
+		#   -> determine intersection on slo2[2] for normalized distance <= 1.0
+		#   -> if intersections are beyond a norm. dist. of 1.0 -> follow slo2[1]
+		#   -> else follow slo2[1] or slo2[2] to slo2[1] from intersection
+		#
+		# if a== 0: no change of direction
+		#   -> simply follow slo2[1]
+		
+		# This _should_ work by calculating the values from the original element,
+		# not their representation by slot elements.
+		ang=elemNextAngle(el1,el2)
+		print( "*** angle: i,ang: ",i,ang*360/(2.0*math.pi) )
+		if ang==None:
+			print( "ERR: geomCreateLeftContour: no angle after element: ",i )
+			return []
 
-    # easy operations first =)
-    if math.fabs(ang) < RADTOL:
-      print( "op == 0" )
-      ee=elemCopy(slo1[0])
-      ee['p2']=slo2[0]['p1']
-      ee['pNr']=conNr
-      conNr+=1
-      con.append(ee)
+		# easy operations first =)
+		if math.fabs(ang) < RADTOL:
+			print( "op == 0" )
+			ee=elemCopy(slo1[0])
+			ee['p2']=slo2[0]['p1']
+			ee['pNr']=conNr
+			conNr+=1
+			con.append(ee)
 
-    if ang <= -RADTOL:
-      print( "op < 0" )
-      ee=elemCopy(slo1[0])
-      ee['pNr']=conNr
-      conNr+=1
-      con.append(ee)
-      # ToDo:
-      # this circle may have an angle > pi!
-      ee=elemCreateArc180(slo1[0]['p2'],slo2[0]['p1'],math.fabs(dist),'cw',{'pNr':conNr})
-      conNr+=1
-      con.append(ee)
-    
-    if ang >= RADTOL:
-      print( "op > 0" )
+		if ang <= -RADTOL:
+			print( "op < 0" )
+			ee=elemCopy(slo1[0])
+			ee['pNr']=conNr
+			conNr+=1
+			con.append(ee)
+			# ToDo:
+			# this circle may have an angle > pi!
+			ee=elemCreateArc180(slo1[0]['p2'],slo2[0]['p1'],math.fabs(dist),'cw',{'pNr':conNr})
+			conNr+=1
+			con.append(ee)
+		
+		if ang >= RADTOL:
+			print( "op > 0" )
 
 #     old style
 #      hi=elemIntersectsElemXY(slo1[0],slo2[0])
 #      print( "hi: ",hi )
 
-      hi=elemIntersectsElemXY(slo1[0],slo2[1])
-      hiX=1
-      print( "hi(1): ",hi )
-      elemDebugPrint(slo1[0])      
-      elemDebugPrint(slo2[1])
+			hi=elemIntersectsElemXY(slo1[0],slo2[1])
+			hiX=1
+			print( "hi(1): ",hi )
+			elemDebugPrint(slo1[0])      
+			elemDebugPrint(slo2[1])
 
-      if hi==[]:
-        hi=elemIntersectsElemXY(slo1[0],slo2[0])
-        hiX=2
-        print( "hi(0): ",hi )
-        elemDebugPrint(slo1[0])      
-        elemDebugPrint(slo2[0])
+			if hi==[]:
+				hi=elemIntersectsElemXY(slo1[0],slo2[0])
+				hiX=2
+				print( "hi(0): ",hi )
+				elemDebugPrint(slo1[0])      
+				elemDebugPrint(slo2[0])
 
-      if hi==[]:
-        print( "ERR: geomCreateLeftContour: no intersections on left turn at elem nr: ",i )
-        return []
-      
-      phi=None
-      dhi=-1.0
-      for i in hi:
-        if i[0] > 0.0 and i[0] <= 1.0:
-          if i[0] > dhi:
-            dhi=i[0]
-            phi=i[1]
-        else:
-          if i[0]==None and slo1[0]['type']=='a':
-            phi=i[1]
-            break
+			if hi==[]:
+				print( "ERR: geomCreateLeftContour: no intersections on left turn at elem nr: ",i )
+				return []
+			
+			phi=None
+			dhi=-1.0
+			for i in hi:
+				if i[0] > 0.0 and i[0] <= 1.0:
+					if i[0] > dhi:
+						dhi=i[0]
+						phi=i[1]
+				else:
+					if i[0]==None and slo1[0]['type']=='a':
+						phi=i[1]
+						break
 
-      if phi != None:
-        ee=elemCopy(slo1[0])
-        ee['p2']=phi
-        ee['pNr']=conNr
-        conNr+=1
-        con.append(ee)
+			if phi != None:
+				ee=elemCopy(slo1[0])
+				ee['p2']=phi
+				ee['pNr']=conNr
+				conNr+=1
+				con.append(ee)
 
-    # end if ang==0
-  # end for        
+		# end if ang==0
+	# end for        
 
-    
-  if partCheckClosed(part) == True:
-    op='Closed'
-  else:
-    op='notClosed'
+		
+	if partCheckClosed(part) == True:
+		op='Closed'
+	else:
+		op='notClosed'
 
 #  con=geomTrimPointsStartToEnd(con,op)
 
 
-  return con
+	return con
 
 
 
@@ -1506,100 +1522,100 @@ def geomCreateLeftContourBAK(part,dist,basNr=0):
 ###
 #############################################################################
 def geomCreateLeftContour(part,dist,basNr=0):
-  con=[]
-  conNr=1
-  conSkip=-1
+	con=[]
+	conNr=1
+	conSkip=-1
 
-  slo=geomCreateSlotContour(part,dist)
-  
-  if slo==[]:
-    print( "ERR: geomCreateLeftContour: error while creating slot elements from part " )
-    return []
+	slo=geomCreateSlotContour(part,dist)
+	
+	if slo==[]:
+		print( "ERR: geomCreateLeftContour: error while creating slot elements from part " )
+		return []
 
-  slo=geomExtractSlotDirVecs(slo)
-  
-  print( "len(slo): ",len(slo) )
+	slo=geomExtractSlotDirVecs(slo)
+	
+	print( "len(slo): ",len(slo) )
 
-  # process all elements in the list
-  for i in range(len(slo)):
+	# process all elements in the list
+	for i in range(len(slo)):
 
-    if i < conSkip:
-      print( "." )
-      continue
-    
-    his=[]
+		if i < conSkip:
+			print( "." )
+			continue
+		
+		his=[]
 
-    for ii in slo:
-      elemDebugPrint(ii)
-
-
-    for j in range(i+1,i+len(slo)-2):
-      if j > len(slo)-1:
-        j-=len(slo)
-      his.append(elemIntersectsElemXY(slo[i],slo[j]))
-
-    # future upgrade =)
-    if True:
-      print( "**********" )
-      print( "*** NR ***",i )
-      elemDebugPrint(slo[i])
-  #    print( "len",len(his) )
-      
-      for j in his:
-        print( j )
-
-      sdi=999999999999999.9
-      eleCount=0
-      eleTarget=None
-      eleInt=None
-      
-      for j in his:
-        for k in j:
-          print( "k[0] / sdi ",k[0]," / ",sdi )
-          if k[0] <= sdi and k[0] >= 0.0 + LINTOL:
-            sdi=k[0]
-            eleInt=k[1]
-            eleTarget=eleCount
-        eleCount+=1
-        if eleCount > len(slo)-1:
-          eleCount-=len(slo)
-
-      if eleTarget==None:
-        eleTarget=i+1
-      else:
-        eleTarget+=i+1
-      
-      if eleTarget > len(slo)-1:
-        eleTarget-=len(slo)
-        
-      conSkip=eleTarget
-      
-      print( "FOUND El Nr:  ",eleTarget )
-      print( "FOUND eleInt: ",eleInt )
-
-      eleElem=elemCopy(slo[i])
-      eleElem['pNr']=conNr
-      conNr+=1
-      if eleInt != None:
-        # set new endpoint of current element
-        eleElem['p2']=eleInt
-        # set the limiting element's startpoint to this intersection, too
-        elemDebugPrint(slo[eleTarget])
-        slo[eleTarget]['p1']=eleInt
-        elemDebugPrint(slo[eleTarget])
-      con.append(eleElem)
-
-      if conSkip==0:
-        break        
+		for ii in slo:
+			elemDebugPrint(ii)
 
 
-  con=geomTrimPointsStartToEnd(con,partCheckClosed(part))
+		for j in range(i+1,i+len(slo)-2):
+			if j > len(slo)-1:
+				j-=len(slo)
+			his.append(elemIntersectsElemXY(slo[i],slo[j]))
 
-      
-  return con
+		# future upgrade =)
+		if True:
+			print( "**********" )
+			print( "*** NR ***",i )
+			elemDebugPrint(slo[i])
+	#    print( "len",len(his) )
+			
+			for j in his:
+				print( j )
+
+			sdi=999999999999999.9
+			eleCount=0
+			eleTarget=None
+			eleInt=None
+			
+			for j in his:
+				for k in j:
+					print( "k[0] / sdi ",k[0]," / ",sdi )
+					if k[0] <= sdi and k[0] >= 0.0 + LINTOL:
+						sdi=k[0]
+						eleInt=k[1]
+						eleTarget=eleCount
+				eleCount+=1
+				if eleCount > len(slo)-1:
+					eleCount-=len(slo)
+
+			if eleTarget==None:
+				eleTarget=i+1
+			else:
+				eleTarget+=i+1
+			
+			if eleTarget > len(slo)-1:
+				eleTarget-=len(slo)
+				
+			conSkip=eleTarget
+			
+			print( "FOUND El Nr:  ",eleTarget )
+			print( "FOUND eleInt: ",eleInt )
+
+			eleElem=elemCopy(slo[i])
+			eleElem['pNr']=conNr
+			conNr+=1
+			if eleInt != None:
+				# set new endpoint of current element
+				eleElem['p2']=eleInt
+				# set the limiting element's startpoint to this intersection, too
+				elemDebugPrint(slo[eleTarget])
+				slo[eleTarget]['p1']=eleInt
+				elemDebugPrint(slo[eleTarget])
+			con.append(eleElem)
+
+			if conSkip==0:
+				break        
 
 
-    
+	con=geomTrimPointsStartToEnd(con,partCheckClosed(part))
+
+			
+	return con
+
+
+		
 
 
 
@@ -1608,15 +1624,15 @@ def geomCreateLeftContour(part,dist,basNr=0):
 ###
 #############################################################################
 def toolCreateSimpleHeader():
-  head=[]
-  head.append(GCODE_PRG_UNITS)
-  head.append(GCODE_PRG_FEEDUNIT)
-  head.append(GCODE_PRG_PATHMODE)
-  head.append(GCODE_PRG_PLANE)
-  head.append(GCODE_PRG_INIT1)
-  head.append(GCODE_PRG_INIT2)
-  head.append(GCODE_PRG_INIT3)
-  return head
+	head=[]
+	head.append(GCODE_PRG_UNITS)
+	head.append(GCODE_PRG_FEEDUNIT)
+	head.append(GCODE_PRG_PATHMODE)
+	head.append(GCODE_PRG_PLANE)
+	head.append(GCODE_PRG_INIT1)
+	head.append(GCODE_PRG_INIT2)
+	head.append(GCODE_PRG_INIT3)
+	return head
 
 
 #############################################################################
@@ -1624,12 +1640,12 @@ def toolCreateSimpleHeader():
 ###
 #############################################################################
 def toolCreateSimpleFooter():
-  foot=[]
-  foot.append('(rapid to endposition)')
-  foot.append(GCODE_RAPID+'Z'+GCODE_OP_SAVEZ)
-  foot.append(GCODE_PRG_ENDPOS)
-  foot.append(GCODE_PRG_END)
-  return foot
+	foot=[]
+	foot.append('(rapid to endposition)')
+	foot.append(GCODE_RAPID+'Z'+GCODE_OP_SAVEZ)
+	foot.append(GCODE_PRG_ENDPOS)
+	foot.append(GCODE_PRG_END)
+	return foot
 
 
 
@@ -1638,27 +1654,27 @@ def toolCreateSimpleFooter():
 ###
 #############################################################################
 def toolRapidToNextPart(part):
-  rap=[]
+	rap=[]
 
-  p1=partGetFirstPosition(part)
-  
-  if p1==None:
-    print( "ERR: toolRapidToNextPart: part has no first point" )
-    return []
-    
-  if 'name' in part:
-    pname=part['name']
-  else:
-    pname='unnamed part'
+	p1=partGetFirstPosition(part)
+	
+	if p1==None:
+		print( "ERR: toolRapidToNextPart: part has no first point" )
+		return []
+		
+	if 'name' in part:
+		pname=part['name']
+	else:
+		pname='unnamed part'
 
-  rap.append('(rapid to: '+pname+')')
-  rap.append(GCODE_RAPID+'Z'+GCODE_OP_SAVEZ)
-  rap.append(GCODE_RAPID+'X'+str(p1[0])+'Y'+str(p1[1]))
-  rap.append(GCODE_RAPID+'Z'+str(p1[2]))
+	rap.append('(rapid to: '+pname+')')
+	rap.append(GCODE_RAPID+'Z'+GCODE_OP_SAVEZ)
+	rap.append(GCODE_RAPID+'X'+str(p1[0])+'Y'+str(p1[1]))
+	rap.append(GCODE_RAPID+'Z'+str(p1[2]))
 
-  return rap
+	return rap
 
-    
+		
 
 #############################################################################
 ### toolCreateFromPart
@@ -1667,96 +1683,115 @@ def toolRapidToNextPart(part):
 ###
 #############################################################################
 def toolCreateFromPart(part):
-  tops=[]
-  
-  if not partCheckContinuous(part):
-    print( "ERR: toolCreateFromPart: part \""+part['name']+"\" not continuous" )
-    return []
+	tops=[]
+	
+	if not partCheckContinuous(part):
+		print( "ERR: toolCreateFromPart: part \""+part['name']+"\" not continuous" )
+		return []
 
-  # If "partCheckContinuous" returned no error, it should (SHOULD!) be
-  # ok to skip further tests concerning the geometry...
-  part=partRenumber(part)
-  
-  if 'name' in part:
-    tops.append('('+part['name']+')')
-  else:
-    tops.append('(unnamed part)')
+	# If "partCheckContinuous" returned no error, it should (SHOULD!) be
+	# ok to skip further tests concerning the geometry...
+	part=partRenumber(part)
+	
+	if 'name' in part:
+		tops.append('('+part['name']+')')
+	else:
+		tops.append('(unnamed part)')
 
-  lastCmd=''
-  for i in range(1,len(part['elements'])+1):
-    el=partGetElement(part,i)
-    if len(el)==0:
-      print( "ERR: toolCreateFromPart: partGetElement returned zero length at ",i )
-      return[]
-      
-    # TOCHK (2021)
-    if not 'type' in el:
-      print( "ERR: toolCreateFromPart: element nr. ",i," has no \'type\' attribute" )
-      return[]
+	lastCmd=''
+	for i in range(1,len(part['elements'])+1):
+		el=partGetElement(part,i)
+		if len(el)==0:
+			print( "ERR: toolCreateFromPart: partGetElement returned zero length at ",i )
+			return[]
+			
+		# TOCHK (2021)
+		if not 'type' in el:
+			print( "ERR: toolCreateFromPart: element nr. ",i," has no \'type\' attribute" )
+			return[]
 
-    cxyz=''
-    if el['type']=='l':
-      # process X, Y and Z actions, only if different
-      if el['p1'][0]==el['p2'][0]:
-        cx=''
-      else:
-        cx='X'+str(el['p2'][0])
-      if el['p1'][1]==el['p2'][1]:
-        cy=''
-      else:
-        cy='Y'+str(el['p2'][1])
-      if el['p1'][2]==el['p2'][2]:
-        cz=''
-      else:
-        cz='Z'+str(el['p2'][2])
-      if lastCmd==GCODE_LINE:
-        cc=' '
-      else:
-        cc=GCODE_LINE
-      cxyz=cc+cx+cy+cz
-      lastCmd=GCODE_LINE
+		cxyz=''
+		if el['type']=='l':
+			# process X, Y and Z actions, only if different
+			if el['p1'][0]==el['p2'][0]:
+				cx=''
+			else:
+				cx='X'+str(el['p2'][0])
+			if el['p1'][1]==el['p2'][1]:
+				cy=''
+			else:
+				cy='Y'+str(el['p2'][1])
+			if el['p1'][2]==el['p2'][2]:
+				cz=''
+			else:
+				cz='Z'+str(el['p2'][2])
+			if lastCmd==GCODE_LINE:
+				cc=' '
+			else:
+				cc=GCODE_LINE
+			cxyz=cc+cx+cy+cz
+			lastCmd=GCODE_LINE
 
-    if el['type']=='a':
-      if el['dir']=='cw':
-        if lastCmd==GCODE_ARC_CW:
-          cc=' '
-        else:
-          cc=GCODE_ARC_CW
-      else:
-        if lastCmd==GCODE_ARC_CC:
-          cc=' '
-        else:
-          cc=GCODE_ARC_CC
+		if el['type']=='a':
+			if el['dir']=='cw':
+				if lastCmd==GCODE_ARC_CW:
+					cc=' '
+				else:
+					cc=GCODE_ARC_CW
+			else:
+				if lastCmd==GCODE_ARC_CC:
+					cc=' '
+				else:
+					cc=GCODE_ARC_CC
 
-      cx='X'+str(el['p2'][0])
-      cy='Y'+str(el['p2'][1])
-      cz='Z'+str(el['p2'][2])
-      cr='R'+str(el['rad'])
+			cx='X'+str(el['p2'][0])
+			cy='Y'+str(el['p2'][1])
+			cz='Z'+str(el['p2'][2])
+			cr='R'+str(el['rad'])
 
-      cxyz=cc+cx+cy+cz+cr
-      if el['dir']=='cw':
-        lastCmd=GCODE_ARC_CW
-      else:
-        lastCmd=GCODE_ARC_CC
-      
-    if cxyz == '':
-      print( "ERR: toolCreateFromPart: empty nc-code line at: ",el )
-      return[]
-    
-    tops.append(cxyz)
+			cxyz=cc+cx+cy+cz+cr
+			if el['dir']=='cw':
+				lastCmd=GCODE_ARC_CW
+			else:
+				lastCmd=GCODE_ARC_CC
+			
+		if cxyz == '':
+			print( "ERR: toolCreateFromPart: empty nc-code line at: ",el )
+			return[]
+		
+		tops.append(cxyz)
 
-  return tops
+	return tops
 
 
 
 #---------------------------------------
-# v1 = elemCreateVertex( (10,0,0) )
+e1 = elemCreateVertex( (10,0,0) )
+e1 = elemCreateArc180( (20,0,0), (25,-5,0), 0, 'cw' )
+e1 = elemCreateLine( (10,0,0), (20,0,0) )
 
-# for i in range(11):
-#   v1 = elemRotateZ(v1, i*math.pi/22)
-#   elemDebugPrint(v1)
+llist=[]
 
-# sys.exit(0)
+from random import randint
+
+for i in range(200):
+	center = (randint(-100,100), randint(-100,100), randint(-100,100) )
+	ang = 0
+	for i in range(24):
+		llist.append( elemRotateZAt( e1, math.radians(ang), center ) )
+		ang += 15
+
+partlist = llist
+
+f=open('ncEFI.dat','w+b')
+pickle.dump(partlist,f)
+f.close()
+
+import os
+os.system('python ncEFIDisp2.py ncEFI.dat')
+
+sys.exit(0)
+
 
 
 #---------------------------------------
@@ -1777,15 +1812,15 @@ p1=partAddElement(p1,l2,3)
 
 f=open('ncEFI.nc','w+t')
 for i in toolCreateSimpleHeader():
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 for i in toolRapidToNextPart(p1):
-  f.write(i+'\n')
+	f.write(i+'\n')
 for i in toolCreateFromPart(p1):
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 for i in toolCreateSimpleFooter():
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 f.close()
 
@@ -1797,6 +1832,8 @@ pickle.dump(partlist,f)
 f.close()
 
 
+import os
+os.system('python ncEFIDisp2.py ncEFI.dat')
 
 
 sys.exit(0)
@@ -1888,37 +1925,37 @@ p8=partAddElements(p8,geomCreateCircRingHole((0,50,0),1,10,9,5,3,2,2,5,'cw'))
 
 f=open('ncEFI.nc','w+t')
 for i in toolCreateSimpleHeader():
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 
 for i in toolRapidToNextPart(p1):
-  f.write(i+'\n')
+	f.write(i+'\n')
 for i in toolCreateFromPart(p1):
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 for i in toolRapidToNextPart(p6):
-  f.write(i+'\n')
+	f.write(i+'\n')
 for i in toolCreateFromPart(p6):
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 for i in toolRapidToNextPart(p7):
-  f.write(i+'\n')
+	f.write(i+'\n')
 for i in toolCreateFromPart(p7):
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 for i in toolRapidToNextPart(p8):
-  f.write(i+'\n')
+	f.write(i+'\n')
 for i in toolCreateFromPart(p8):
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 for i in toolRapidToNextPart(p1):
-  f.write(i+'\n')
+	f.write(i+'\n')
 for i in toolCreateFromPart(p1):
-  f.write(i+'\n')
+	f.write(i+'\n')
 
-  
+	
 for i in toolCreateSimpleFooter():
-  f.write(i+'\n')
+	f.write(i+'\n')
 
 f.close()
 
@@ -1939,7 +1976,7 @@ p20=partAddElements(p20,e20)
 #    break
 #  ips=elemIntersectsElemXY(e1,e2)
 #  print( "i: ",i," -> ",ips )
-  
+	
 
 #cc1=geomCreateLeftContour(p1,-5.0)
 #cc1=geomTrimPointsStartToEnd(cc1,'Closed')
@@ -1978,6 +2015,6 @@ f.close()
 
 print( "SLOT CONTOUR:" )
 for i in p62['elements']:
-  print( i )
-  
+	print( i )
+	
 
