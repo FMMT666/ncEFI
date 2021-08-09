@@ -13,6 +13,20 @@ import math
 MOUSE_ZOOM_FACTOR_WHEEL = 0.1
 MOUSE_DRAG_FACTOR       = 0.001
 
+ARC_LINES_INTERPOLATION = 10    # arcs are drawn with lines; this specifies how many are used per 180°
+
+DRAW_GRID_SIZE          = 1
+DRAW_GRID_COLOR         = ( 0.0, 0.5, 1.0 )
+
+DRAW_VERTEX_SIZE        = 4
+DRAW_VERTEX_COLOR       = ( 0.8, 0.8, 0.0 )
+DRAW_LINE_SIZE          = 1
+DRAW_LINE_COLOR         = ( 0.8, 0.8, 0.8 )
+DRAW_ARC_SIZE           = 1
+DRAW_ARC_COLOR          = ( 0.8, 0.8, 0.8 )
+
+
+
 
 # everyone loves global vars <3
 PartList = None
@@ -25,7 +39,7 @@ PartList = None
 ### Creates line elements that follow an arc path.
 ### Radius is given in x,y plane, Z will change it's height in a linear way.
 ### Angle is limited to 180 degrees
-###
+### Todo: This is slooow if many arc are in the part list.
 #############################################################################
 def createArc180(p1,p2,rad,step,dir):
 	pm=arcCenter180XY(p1,p2,rad,dir)
@@ -154,9 +168,15 @@ class myGLCanvas(GLCanvas):
 	### DrawElement
 	################################################################################################
 	def DrawElement(self, elem ):
+		# TODO: Actually it's not a super brilliant idea to have the colors in here.
+		#       Especially if (at any later point of development) parts or geometries
+		#       can be selected, this is more than hindering.
+		#       Mhh, otherwise one could use the 'extra' parameters for this ...
 		if elem['type']=='v':
 			p1=elem['p1']
 			glDisable(GL_LIGHTING)
+			glPointSize( DRAW_VERTEX_SIZE )
+			glColor3f( DRAW_VERTEX_COLOR[0], DRAW_VERTEX_COLOR[1], DRAW_VERTEX_COLOR[2] )
 			glPushMatrix()
 			glBegin(GL_POINTS)
 			glVertex3f(p1[0],p1[1],p1[2])
@@ -168,6 +188,8 @@ class myGLCanvas(GLCanvas):
 			p1=elem['p1']
 			p2=elem['p2']
 			glDisable(GL_LIGHTING)
+			glLineWidth( DRAW_LINE_SIZE )
+			glColor3f( DRAW_LINE_COLOR[0], DRAW_LINE_COLOR[1], DRAW_LINE_COLOR[2] )
 			glPushMatrix()
 			glBegin(GL_LINES)
 			glVertex3f(p1[0],p1[1],p1[2])
@@ -181,9 +203,11 @@ class myGLCanvas(GLCanvas):
 			p2=elem['p2']
 			rad=elem['rad']
 			dir=elem['dir']
-#					print( "arc pNr: ",elem['pNr'],p1,p2 )
-			lines=createArc180(p1,p2,rad,10,dir)
-#					glColor3f(1, 1, 1)
+			# TODO: adapt number of lines according to diameter (waste of resources)
+			lines = createArc180(p1,p2,rad,ARC_LINES_INTERPOLATION,dir)
+			glDisable(GL_LIGHTING)
+			glLineWidth( DRAW_ARC_SIZE )
+			glColor3f( DRAW_ARC_COLOR[0], DRAW_ARC_COLOR[1], DRAW_ARC_COLOR[2] )
 			glPushMatrix()
 			glBegin(GL_LINES)
 			for i in range(0,len(lines)-1):
@@ -196,6 +220,8 @@ class myGLCanvas(GLCanvas):
 
 	################################################################################################
 	### DrawPartList
+	### 
+	### For debug purposes, this now also supports elements in directories and elements in lists.
 	################################################################################################
 	def DrawPartList(self):
 		for iPart in PartList:
@@ -203,6 +229,12 @@ class myGLCanvas(GLCanvas):
 				continue
 			# check if that's something we know
 			if 'type' not in iPart:
+				# that's super ugly, yes; also not sure whether or not this works in all cases
+				if isinstance(iPart,list) and len(iPart) > 0:
+					for unp in iPart:
+						if 'type' in unp:
+							if unp['type'] == 'v' or unp['type'] == 'l' or unp['type'] == 'a':
+									self.DrawElement(unp)
 				continue
 			if iPart['type'] != 'p':
 				# this seems to be an element, not a part list
@@ -214,7 +246,6 @@ class myGLCanvas(GLCanvas):
 				# this could use some additional error checks, but well ...
 				for iElem in iPart['elements']:
 					self.DrawElement(iElem)
-
 
 	#-----------------------------------------------------------------------------------------------
 	def OnDraw(self):
@@ -230,10 +261,9 @@ class myGLCanvas(GLCanvas):
 		self.DrawAxes()
 
 		#---------------------------------
-		# draw the raster
-		glLineWidth(2)
-		glPointSize(1)
-		glColor3f( 0.5, 0.5, 1.0)
+		# draw the grid
+		glPointSize( DRAW_GRID_SIZE )
+		glColor3f( DRAW_GRID_COLOR[0], DRAW_GRID_COLOR[1], DRAW_GRID_COLOR[2] )
 		glBegin(GL_POINTS)
 		for x in range(-100,100,10):
 			for y in range(-100,100,10):
@@ -245,9 +275,8 @@ class myGLCanvas(GLCanvas):
 		if PartList is not None:
 			glLineWidth(2)
 			glPointSize(4)
-			glColor3f( 1.0, 1.0, 1.0)
+			glColor3f( 0.8, 0.8, 0.8)
 			self.DrawPartList()
-
 
 		self.SwapBuffers()
 

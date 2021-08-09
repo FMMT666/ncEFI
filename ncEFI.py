@@ -6,8 +6,25 @@
 # FMMT666/ASkr 1995..2021 lol
 
 
+# TODO:
+#  - add geomMoveTo       necessary at all?
+#  - add partMoveTo       necessary at all?
+#  - add geomCreateSpiral
+#  - add geomCreateZigZag
+#  - add geomCreateRect
+#  - add geomCreateCircle
+#  - change geomCreateConcentricCircles
+#      - rename to geomCreateConcentricCirclesConnected
+#      - add another approach to connect the circles via a spiral
+#      - make use of the new geomCreateCircle() function
+#  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
+#  - add elemCreateArc180by3Pts
+#      - could be handy to replace the spiral function's linear approximation
+
+
 import pickle
 import math
+from random import random
 
 from ncVec import *
 
@@ -22,7 +39,7 @@ GCODE_ARC_CC       = "G03"
 GCODE_PRG_FEEDUNIT = 'G94 (feedrate in \'units\' per minute)'
 GCODE_PRG_UNITS    = 'G21 (units are millimeters)'
 GCODE_PRG_PLANE    = 'G17 (working in/on xy-plane)'
-GCODE_PRG_PATHMODE = 'G64P0.05 (continuous mode with \'p\' as tolerance)'
+GCODE_PRG_PATHMODE = 'G64P0.05 (LinuxCNC, continuous mode with \'p\' as tolerance)'
 GCODE_PRG_INIT1    = 'T1M06'
 GCODE_PRG_INIT2    = 'G00X0Y0 S6000 M03'
 GCODE_PRG_INIT3    = 'F900'
@@ -38,29 +55,38 @@ TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 
 #############################################################################
 # elements
-# basic geometry
-# v1={'type':'v','p1':(0,0,0)}
-
-# l1={'type':'l','p1':(0,0,0),'p2':(100,0,0)}
-# l2={'type':'l','p1':(100,0,0),'p2':(100,50,0)}
-# l3={'type':'l','p1':(100,50,0),'p2':(0,50,0)}
-# l4={'type':'l','p1':(0,50,0),'p2':(0,0,0)}
-
-# a1={'type':'a','p1':(0,0,0),'p2':(100,0,0),'rad':70,'dir':'cw'}
-# a2={'type':'a','p1':(100,50,0),'p2':(0,50,0),'rad':70,'dir':'cw'}
-# allowed extensions:
-# pNr     <- number of element in part
-# pNext   <- if chained -> number of next element
-# pPrev   <- if chained -> number of previous element
-
-
+# a directory containing basic geometry; vertex, line or arc
+# vertex
+#   v1 = {'type':'v','p1':(0,0,0)}
+#
+# line
+#   l1 = {'type':'l','p1':(0,0,0),'p2':(100,0,0)}
+#   l2 = {'type':'l','p1':(100,0,0),'p2':(100,50,0)}
+#   l3 = {'type':'l','p1':(100,50,0),'p2':(0,50,0)}
+#   l4 = {'type':'l','p1':(0,50,0),'p2':(0,0,0)}
+#
+# arc 180° max
+#   a1 = {'type':'a','p1':(0,0,0),'p2':(100,0,0),'rad':70,'dir':'cw'}
+#   a2 = {'type':'a','p1':(100,50,0),'p2':(0,50,0),'rad':70,'dir':'cw'}
+#
+# allowed extensions, aka "extras"
+#   pNr     <- number of element in part
+#   pNext   <- if chained -> number of next element
+#   pPrev   <- if chained -> number of previous element
 
 #############################################################################
-# part
-# contains linked elements, _including_(!) extensions
-# p1={'type':'p', 'name':'outer','elements':[l1,l2,l3,l4]}
-# p2={'type':'p', 'name':'altc1','elements':[a1,l2,l3,l4]}
-# p3={'type':'p', 'name':'altc2','elements':[l1,l2,a2,l4]}
+# geometry
+# just a list of multiple elements; can directly be added to parts
+#   [ v1, l1, l2, a1 ... l21 ]
+#   [ {'type':'v','p1':(0,0,0)}, {'type':'l','p1':(100,0,0),'p2':(100,50,0)}, ... ]
+
+#############################################################################
+# parts
+# basically geometry in a directory; the geoms are in the 'elements' list.
+# Can be used to create toolpaths.
+#   p1={'type':'p', 'name':'outer','elements':[l1,l2,l3,l4]}
+#   p2={'type':'p', 'name':'altc1','elements':[a1,l2,l3,l4]}
+#   p3={'type':'p', 'name':'altc2','elements':[l1,l2,a2,l4]}
 
 
 
@@ -141,10 +167,9 @@ def elemCreateLineTo(l1,p2,extra={}):
 ### will be stepped through linear.
 ### If 'rad' is below the possible minimum to create an arc, it is set to
 ### the minimum value, half of the distance between p1 and p2.
+### TODO: Is the 'dir' parameter actually useful? Have p1 and p2 already!?
 #############################################################################
 def elemCreateArc180(p1,p2,rad,dir,extra={}):
-	# ToDo:
-	# - precision hack sucks...
 	if isinstance(p1,tuple) == False or isinstance(p2,tuple) == False:
 		print( "ERR: elemCreateArc180: no tuples" )
 		return {}
@@ -161,13 +186,14 @@ def elemCreateArc180(p1,p2,rad,dir,extra={}):
 	if rad < dist/2.0:
 		rad = dist/2.0
 		if rad + RADTOL > dist / 2.0:
-			rad += RADTOL
+			rad = dist/2.0
 		else:
 			print( "ERR: elemCreateArc180: rad less than dist/2: rad, dist/2",rad,dist/2.0 )
 			return {}
 	ret={'type':'a','p1':p1,'p2':p2,'rad':rad,'dir':dir}
 	extraAddExtra(ret,extra)
 	return ret
+
 
 
 #############################################################################
@@ -180,6 +206,42 @@ def elemCreateArc180To(elem1,p2,rad,dir,extra={}):
 		print( "ERR: elemCreateArc180To: elem1 has no tuple in p2" )
 		return {}
 	return elemCreateArc180(elem1['p2'],p2,rad,dir,extra)
+
+
+
+#############################################################################
+### elemCreateArc180by3Pts
+###
+### Creates a (max 180°) arc from p1 to p2, through pm.
+### Z will be stepped through linear from p1 to p2, ignoring any z value
+### specified for point pm.
+### It is an error if pm is too far away, resulting in an arc >180°.
+### The direction parameter 'dir' is automatically calculated.
+#############################################################################
+def elemCreateArc180by3Pts(p1,p2,pm,extra={}):
+	if not isinstance(p1,tuple) or not isinstance(p2,tuple) or not isinstance(p3,tuple):
+		print( "ERR: elemCreateArc180by3Pts: no tuples" )
+		return {}
+	if p1 == p2 or p1 == pm or p2 == pm:
+		print( "ERR: elemCreateArc180by3Pts: same coords for p1, p2, pm: ", p1,p2,pm )
+		return {}
+	# if not isinstance(dir,str):
+	# 	print( "ERR: elemCreateArc180by3Pts: invalid dir format: ",dir )
+	# 	return {}
+	# if dir != 'cw' and dir != 'cc':
+	# 	print( "ERR: elemCreateArc180by3Pts: invalid dir command: ",dir )
+	# 	return {}
+	center = arcCenter180XY3P( p1, p2, pm )
+	if center == None:
+		print( "ERR: elemCreateArc180by3Pts: no 180° arc possible with ", p1, p2, pm )
+		return {}
+	else:
+		# get 2D length (z=0) from mid to any point to obtain the radius
+		rad = abs(vecLength( (center[0],center[1],0), (p1[0],p1[1],0) ))
+		if rad < RADTOL:
+			print( "ERR: elemCreateArc180by3Pts: radius almost zero: ", rad )
+			return {}
+		return elemCreateArc180(p1,p2,rad,'cc',extra)
 
 
 
@@ -219,13 +281,14 @@ def elemCopy(el):
 #############################################################################
 ### elemRotateZ
 ###
-### Rotates an element around the z-axis at (0,0)
+### Rotates an element around the z-axis at (0,0). Angle 'ang' in degrees.
 ### (or physically correct (0,0,1) :-)
 ### Returns a new instance.
 #############################################################################
 def elemRotateZ(elem, ang):
 	# TODO: probably not necessary to copy the element here
 	elemn={}
+	ang = math.radians( ang )
 	for i in elem:
 		elemn[i]=elem[i]
 	if   elemn['type'] == 'v':
@@ -245,29 +308,30 @@ def elemRotateZ(elem, ang):
 #############################################################################
 ### elemRotateZAt
 ###
-### Rotates an element around the z-axis at a given center.
+### Rotates an element around the z-axis at a given center point.
+### Angle 'ang' in degrees.
 ### Returns a new instance.
 #############################################################################
 def elemRotateZAt(elem, ang, center):
 	# TODO: probably not necessary to copy the element here
 	elemn={}
 	for i in elem:
-		elemn[i]=elem[i]
-	vec = ( -1*center[0], -1*center[1], -1*center[2])
-	elemMove( elemn, vec)
+		elemn[i] = elem[i]
+	vec = vecReverse( center )
+	elemn = elemTranslate( elemn, vec )
 	elemn = elemRotateZ( elemn, ang )
-	elemn = elemMove(elemn, center)
+	elemn = elemTranslate( elemn, center )
 	return elemn 
 
 
 
 #############################################################################
-### elemMove
+### elemTranslate
 ###
-### Moves an element to a position specified by a vector (tuple)
+### Moves an element into the directions specified by a vector (tuple)
 ### Returns a new instance.
 #############################################################################
-def elemMove(elem, vec):
+def elemTranslate(elem, vec):
 	# TODO: probably not necessary to copy the element here
 	elemn={}
 	for i in elem:
@@ -281,6 +345,36 @@ def elemMove(elem, vec):
 		elemn['p2']=p2
 
 	return elemn
+
+
+
+#############################################################################
+### elemMoveTo
+###
+### Moves an element to a specific position. Reference is either 'p1' (default),
+### 'p2' or the midpoint between 'p1' and 'p2'.
+### Returns a new instance.
+#############################################################################
+def elemMoveTo(elem, pos, ref='p1'):
+	# TODO: probably not necessary to copy the element here
+	elemn={}
+	for i in elem:
+		elemn[i]=elem[i]
+	if   elemn['type'] == 'v':
+		elemn['p1'] = pos
+		return elemn
+	elif elemn['type'] == 'l' or elemn['type'] == 'a':
+		if ref == 'p1':
+			elemn['p1'] = pos
+			elemn['p2'] = vecAdd( elemn['p1'], vecExtract(  elem['p1'], elem['p2']  )  )
+		elif ref == 'p2':
+			elemn['p2'] = pos
+			elemn['p1'] = vecAdd( elemn['p2'], vecExtract(  elem['p2'], elem['p1']  )  )
+		elif ref == 'p1p2':
+			pm = vecExtractMid( elem['p1'], elem['p2'] ) 
+			elemn['p1'] = vecAdd( pos, vecReverse( pm ) )
+			elemn['p2'] = vecAdd( pos, pm )
+		return elemn
 
 
 
@@ -462,6 +556,10 @@ def elemDebugPrint(e1):
 
 
 
+#############################################################################
+### elemFindLinked
+###
+#############################################################################
 def elemFindLinked(elem):
 	pass
 	
@@ -817,7 +915,112 @@ def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
 	# end if 'finish'
 
 	return hel
-		
+
+
+
+#############################################################################
+### partTranslate
+###
+### Moves the part into the direction specified by a vector.
+### Returns a new instance
+#############################################################################
+def partTranslate( part, vec ):
+	partn = {}
+	for i in part:
+		# do not copy the elements; they are what wee need to translate in here
+		if i == 'elements':
+			partn['elements'] = []
+		else:
+			partn[i] = part[i]
+	if not isinstance( part, dict ):
+		print( "ERR: partTranslate: not a dict ", type(part) )
+		return []
+	if 'type' not in part:
+		print( "ERR: partTranslate: no 'type' in part" )
+		return []
+	if part['type'] != 'p':
+		print( "ERR: partTranslate: wrong 'type' in part:", part['type'] )
+		return []
+	if 'elements' not in part:
+		print( "ERR: partTranslate: no 'elements' in part" )
+		return []
+	# could also pass the list to 'geomTranslate()', but ok ...
+	for elem in part['elements']:
+		partn['elements'].append(  elemTranslate( elem, vec)  )
+	
+	return partn
+
+
+
+#############################################################################
+### partRotateZ
+###
+### Rotates the part around the center of the z-axis, vec(0,0,1)
+### Angle 'ang' in degrees.
+### Returns a new instance
+#############################################################################
+def partRotateZ( part, ang ):
+	partn = {}
+	for i in part:
+		# do not copy the elements; they are what wee need to translate in here
+		if i == 'elements':
+			partn['elements'] = []
+		else:
+			partn[i] = part[i]
+	if not isinstance( part, dict ):
+		print( "ERR: partRotateZ: not a dict ", type(part) )
+		return []
+	if 'type' not in part:
+		print( "ERR: partRotateZ: no 'type' in part" )
+		return []
+	if part['type'] != 'p':
+		print( "ERR: partRotateZ: wrong 'type' in part:", part['type'] )
+		return []
+	if 'elements' not in part:
+		print( "ERR: partRotateZ: no 'elements' in part" )
+		return []
+	# could also pass the list to 'geomRotateZ()', but ok ...
+	for elem in part['elements']:
+		partn['elements'].append(  elemRotateZ( elem, ang)  )
+	
+	return partn
+
+
+
+#############################################################################
+### partRotateZAt
+###
+### Rotates the part around the z-axis specified by a 'center' point.
+### Angle 'ang' in degrees.
+### Returns a new instance
+#############################################################################
+def partRotateZAt( part, ang, center ):
+	partn = {}
+	for i in part:
+		# do not copy the elements; they are what wee need to translate in here
+		if i == 'elements':
+			partn['elements'] = []
+		else:
+			partn[i] = part[i]
+	if not isinstance( part, dict ):
+		print( "ERR: partRotateZAt: not a dict ", type(part) )
+		return []
+	if 'type' not in part:
+		print( "ERR: partRotateZAt: no 'type' in part" )
+		return []
+	if part['type'] != 'p':
+		print( "ERR: partRotateZAt: wrong 'type' in part:", part['type'] )
+		return []
+	if 'elements' not in part:
+		print( "ERR: partRotateZAt: no 'elements' in part" )
+		return []
+	# could also pass the list to 'geomRotateZ()', but ok ...
+	for elem in part['elements']:
+		partn['elements'].append(  elemRotateZAt( elem, ang, center )  )
+	
+	return partn
+
+
 
 
 #############################################################################
@@ -992,6 +1195,19 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 
 
 #############################################################################
+### geomCreateSpiral
+###
+### Creates a spiral with a 'center' point, a starting point 'startPt',
+### an incremental radius parameter 'rad', the number of 'turns' and
+### a direction parameter 'dir', either clockwise 'cw' or counterclockwise 'cc'.
+### Stupid things might happen for stupid arguments :)
+#############################################################################
+def geomCreateSpiral(p1,center,startPt,rad,turns,dir,basNr=0):
+	pass
+
+
+
+#############################################################################
 ### geomCreateSimpleContour
 ###
 ### All elements in a part are moved along a perpendicular line, which length
@@ -1029,7 +1245,7 @@ def geomCreateContour(part,dist):
 			vecN=vecRotateZ(vecL,an)
 			vecN=vecScale(vecN,0)
 			vecN=vecScale(vecN,math.fabs(dist))
-			eln=elemMove(el,vecN)
+			eln=elemTranslate(el,vecN)
 
 		# arc
 		if el['type']=='a':
@@ -1136,8 +1352,8 @@ def geomCreateSlotContourFromElement(el,dist,basNr=0):
 		vecN=vecRotateZ(vecL,an)
 		vecN=vecScale(vecN,0)
 		vecN=vecScale(vecN,math.fabs(dist))
-		l1=elemMove(el,vecN)
-		l2=elemMove(el,vecReverse(vecN))
+		l1=elemTranslate(el,vecN)
+		l2=elemTranslate(el,vecReverse(vecN))
 		l2=elemReverse(l2)
 		if dist < 0.0:
 			dir='cw'
@@ -1302,42 +1518,6 @@ def geomCreateSlotContourFromElement(el,dist,basNr=0):
 	# end el['type']=='a'
 		
 	return con
-
-
-
-
-
-
-#############################################################################
-### geomTrimPointsStartToEnd
-###
-### Trims a list of elements:
-### The startpoint of the _next_ element is set to the end position of
-### the previous element.
-### No checks are done!
-### Elements have to be in the right order!
-#############################################################################
-def geomTrimPointsStartToEnd(elIn,isClosed='notClosed'):
-	elOut=[]
-	
-	for i in elIn:
-		elOut.append(i)
-
-	maxLen=len(elOut)-1
-
-	for i in range(maxLen):
-		if 'p2' in elOut[i]:
-			elOut[i+1]['p1']=elOut[i]['p2']
-		else:
-			elOut[i+1]['p1']=elOut[i]['p1']
-		
-	if isClosed != 'notClosed':
-		if 'p2' in elOut[maxLen]:
-			elOut[0]['p1']=elOut[maxLen]['p2']
-		else:
-			elOut[0]['p1']=elOut[maxLen]['p1']
-
-	return elOut
 
 
 
@@ -1615,7 +1795,132 @@ def geomCreateLeftContour(part,dist,basNr=0):
 	return con
 
 
+
+#############################################################################
+### geomTranslate
+###
+### Moves a geometry  into the direction specified by a vector.
+### Returns a new instance
+#############################################################################
+def geomTranslate( geom, vec ):
+	# TODO: probably not necessary to copy the element here
+	geomn=[]
+	for i in geomn:
+		geomn[i]=geomn[i]
+	if not isinstance( geom, list ):
+		print( "ERR: geomTranslate: 'geom' not a list" )
+		return []
+	for elem in geom:
+		if not isinstance( elem, dict ):
+			print( "ERR: geomTranslate: element is not a dict:", type(elem) )
+			return []
+		if 'type' not in elem:
+			print( "ERR: geomTranslate: no 'type' in element" )
+			return []
+		else:
+			if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
+				geomn.append( elemTranslate( elem, vec ) )
+			else:
+				print( "ERR: geomTranslate: unknown 'type' in element:", elem['type'] )
+				return []
+	return geomn
+
+
+
+#############################################################################
+### geomRotateZ
+###
+### Rotates a geometry around the center of the z-axis vec(0,0,1).
+### Returns a new instance
+#############################################################################
+def geomRotateZ( geom, ang ):
+	# TODO: probably not necessary to copy the element here
+	geomn=[]
+	# mhh, basically the same code as in geomTranslate above :-/
+	if not isinstance( geom, list ):
+		print( "ERR: geomRotateZ: 'geom' not a list" )
+		return []
+	for elem in geom:
+		if not isinstance( elem, dict ):
+			print( "ERR: geomRotateZ: element is not a dict:", type(elem) )
+			return []
+		if 'type' not in elem:
+			print( "ERR: geomRotateZ: no 'type' in element" )
+			return []
+		else:
+			if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
+				geomn.append( elemRotateZ( elem, ang ) )
+			else:
+				print( "ERR: geomRotateZ: unknown 'type' in element:", elem['type'] )
+				return []
+	return geomn
+
+
+
+#############################################################################
+### geomRotateZAt
+###
+### Rotates a geometry around a point given by 'vec'.
+### Returns a new instance
+#############################################################################
+def geomRotateZAt( geom, ang, center ):
+	# TODO: probably not necessary to copy the element here
+	geomn=[]
+	# mhh, basically the same code as in geomTranslate above :-/
+	if not isinstance( geom, list ):
+		print( "ERR: geomRotateZAt: 'geom' not a list" )
+		return []
+	for elem in geom:
+		if not isinstance( elem, dict ):
+			print( "ERR: geomRotateZAt: element is not a dict:", type(elem) )
+			return []
+		if 'type' not in elem:
+			print( "ERR: geomRotateZAt: no 'type' in element" )
+			return []
+		else:
+			if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
+				vec = vecReverse( center )
+				elemn = elemTranslate( elem, vec )
+				elemn = elemRotateZ( elemn, ang )
+				elemn = elemTranslate( elemn, center )
+				geomn.append( elemn )
+			else:
+				print( "ERR: geomRotateZAt: unknown 'type' in element:", elem['type'] )
+				return []
+	return geomn
+
+
+
+#############################################################################
+### geomTrimPointsStartToEnd
+###
+### Trims a list of elements:
+### The startpoint of the _next_ element is set to the end position of
+### the previous element.
+### No checks are done!
+### Elements have to be in the right order!
+#############################################################################
+def geomTrimPointsStartToEnd(elIn,isClosed='notClosed'):
+	elOut=[]
+	
+	for i in elIn:
+		elOut.append(i)
+
+	maxLen=len(elOut)-1
+
+	for i in range(maxLen):
+		if 'p2' in elOut[i]:
+			elOut[i+1]['p1']=elOut[i]['p2']
+		else:
+			elOut[i+1]['p1']=elOut[i]['p1']
 		
+	if isClosed != 'notClosed':
+		if 'p2' in elOut[maxLen]:
+			elOut[0]['p1']=elOut[maxLen]['p2']
+		else:
+			elOut[0]['p1']=elOut[maxLen]['p1']
+
+	return elOut
 
 
 
@@ -1765,88 +2070,212 @@ def toolCreateFromPart(part):
 
 
 
+#############################################################################
+### debugShowViewer
+###
+### Writes all elements to the standard output file 'ncEFI.dat' and
+### calls the OpenGL debug view app.
+#############################################################################
+def debugShowViewer( llist ):
+	f=open('ncEFI.dat','w+b')
+	pickle.dump(llist,f)
+	f.close()
+	import os
+	os.system('python ncEFIDisp2.py ncEFI.dat')
+
+
+
+
+
+llist = []
+p1 = ( 2,1,0)
+p2 = ( 8,3,0)
+p3 = ( 3,5,0)
+c1 = elemCreateArc180by3Pts( p1, p3, p2 )
+p1 = elemCreateVertex( p1 )
+p2 = elemCreateVertex( p2 )
+p3 = elemCreateVertex( p3 )
+llist.append( [p1, p2, p3, c1 ] )
+debugShowViewer( llist )
+sys.exit()
+
+
 #---------------------------------------
-e1 = elemCreateVertex( (10,0,0) )
-e1 = elemCreateArc180( (20,0,0), (25,-5,0), 0, 'cw' )
-e1 = elemCreateLine( (10,0,0), (20,0,0) )
-
-llist=[]
-
-from random import randint
-
-for i in range(200):
-	center = (randint(-100,100), randint(-100,100), randint(-100,100) )
-	ang = 0
-	for i in range(24):
-		llist.append( elemRotateZAt( e1, math.radians(ang), center ) )
-		ang += 15
-
-partlist = llist
-
-f=open('ncEFI.dat','w+b')
-pickle.dump(partlist,f)
-f.close()
-
-import os
-os.system('python ncEFIDisp2.py ncEFI.dat')
-
-sys.exit(0)
+# llist = []
+# for x in range(7):
+# 	for y in range(7):
+# 		p1 = ( random()*60-30 - 100+200/6*x, random()*60-30 - 100+200/6*y, 0 )
+# 		p2 = ( random()*60-30 - 100+200/6*x, random()*60-30 - 100+200/6*y, 0 )
+# 		p3 = ( random()*60-30 - 100+200/6*x, random()*60-30 - 100+200/6*y, 0 )
+# 		c1 = elemCreateArc180by3Pts( p1, p2, p3, 'cw')
+# 		c2 = elemCreateArc180by3Pts( p1, p2, p3, 'cc')
+# 		p1 = elemCreateVertex( p1 )
+# 		p2 = elemCreateVertex( p2 )
+# 		p3 = elemCreateVertex( p3 )
+# 		llist.append( [p1, p2, p3, c1, c2] )
+# debugShowViewer( llist )
+# sys.exit()
 
 
 
 #---------------------------------------
-l1 = elemCreateLine((0,0,0), (50,50,0))
-a1 = elemCreateArc180To(l1,vecAdd((50,50,0),vecRotateZ((10,0,0),math.pi/4) ),0,'cw')
-l2 = elemMove( elemCopy(l1), vecRotateZ((10,0,0),math.pi/4) )
-l2 = elemReverse(l2)
-
-elemDebugPrint(l1)
-elemDebugPrint(a1)
-elemDebugPrint(l2)
-
-p1=partCreate('pups')
-
-p1=partAddElement(p1,l1,1)
-p1=partAddElement(p1,a1,2)
-p1=partAddElement(p1,l2,3)
-
-f=open('ncEFI.nc','w+t')
-for i in toolCreateSimpleHeader():
-	f.write(i+'\n')
-
-for i in toolRapidToNextPart(p1):
-	f.write(i+'\n')
-for i in toolCreateFromPart(p1):
-	f.write(i+'\n')
-
-for i in toolCreateSimpleFooter():
-	f.write(i+'\n')
-
-f.close()
-
-
-partlist=[p1]
-
-f=open('ncEFI.dat','w+b')
-pickle.dump(partlist,f)
-f.close()
-
-
-import os
-os.system('python ncEFIDisp2.py ncEFI.dat')
-
-
-sys.exit(0)
+# cc1 = geomCreateConcentricCircles( (-5,0,0),  10,50,5, 'cc')
+# debugShowViewer( [cc1] )
+# sys.exit(0)
 
 
 
+#---------------------------------------
+# from random import randint
+# from random import random
+# llist=[]
+# p1 = partCreate('Hole')
+# # def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+# p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+# for i in range(6):
+# #	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
+# #	llist.append(  partRotateZ(p1, 360/5 * i)  )
+# 	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
+# partlist = llist
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+# sys.exit(0)
+
+
+
+
+
+
+#---------------------------------------
+# from random import randint
+# from random import random
+# llist=[]
+# g1 = geomCreateHelix( (0,0,0),5, 10, 5, 'cw', 0, 'nofinish' )
+# g1 = geomCreateCircRingHole( (10,0,0), 10, 30, 3, 10, 1, 10, 5, 0, 'cc')
+# for n in range(6):
+# 	gn = geomRotateZAt( g1, n, (50,30,0))
+# 	llist.append( gn )
+# partlist = llist
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+# sys.exit(0)
+
+
+
+#---------------------------------------
+# from random import randint
+# from random import random
+# llist=[]
+# for x in range(-10,11):
+# 	for y in range(-10,11):
+# 		dia = randint(1,7)
+# 		llist.append( geomCreateHelix( (x*10-dia/2.0,y*10,0),dia,randint(1,30),randint(1,10),'cw',0,'nofinish') )
+# partlist = llist
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+# sys.exit(0)
+
+
+#---------------------------------------
+# from random import randint
+# from random import random
+# p1 = partCreate("holes")
+# for x in range(-10,11):
+# 	for y in range(-10,11):
+# 		dia = randint(1,7)
+# 		p1 = partAddElements(p1, geomCreateHelix( (x*10-dia/2.0,y*10,0),dia,randint(1,30),randint(1,10),'cw',0,'nofinish') )
+# partlist = [ p1 ]
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+# sys.exit(0)
+
+
+
+#---------------------------------------
+# g1 = geomCreateCircRingHole( (0,0,0), 10, 30, 3, 10, 1, 10, 5, 0, 'cc')
+# partlist = g1
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+# sys.exit(0)
+
+
+
+
+#---------------------------------------
+# e1 = elemCreateLine( (10,0,0), (20,0,0) )
+# e1 = elemCreateArc180( (20,0,0), (25,-5,0), 0, 'cw' )
+# e1 = elemCreateVertex( (10,0,0) )
+# llist=[]
+# from random import randint
+# from random import random
+# n = 0
+# for x in range(-10,11):
+# 	for y in range(-10,11):
+# #		for z in range(-10,0):
+# 		z = 0
+# 		llist.append( elemMoveTo(    elemRotateZ( e1, random()*math.pi*2.0 ),    (10*x,10*y,10*z), 'p1p2' )    )
+# partlist = llist
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+# sys.exit(0)
+
+
+
+#---------------------------------------
+# l1 = elemCreateLine((0,0,0), (50,50,0))
+# a1 = elemCreateArc180To(l1,vecAdd((50,50,0),vecRotateZ((10,0,0),math.pi/4) ),0,'cw')
+# l2 = elemTranslate( elemCopy(l1), vecRotateZ((10,0,0),math.pi/4) )
+# l2 = elemReverse(l2)
+# p1=partCreate('pups')
+# p1=partAddElement(p1,l1,1)
+# p1=partAddElement(p1,a1,2)
+# p1=partAddElement(p1,l2,3)
+# f=open('ncEFI.nc','w+t')
+# for i in toolCreateSimpleHeader():
+# 	f.write(i+'\n')
+# for i in toolRapidToNextPart(p1):
+# 	f.write(i+'\n')
+# for i in toolCreateFromPart(p1):
+# 	f.write(i+'\n')
+# for i in toolCreateSimpleFooter():
+# 	f.write(i+'\n')
+# f.close()
+# partlist=[p1]
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
+
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
+
+# sys.exit(0)
+
+
+#---------------------------------------
 l1=elemCreateLine((-10,-10,0),   (100,-10,0))
 l2=elemCreateLine((100,-10,0), (130,60,0))
 l3=elemCreateLine((130,60,0),(-50,30,0))
 a1=elemCreateArc180((-50,30,0),(-60,-20,0),30,'cw')
 a2=elemCreateArc180((-60,-20,0),(-30,10,0),50,'cw')
 l4=elemCreateLine((-30,10,0),  (-10,-10,0))
-
 
 
 #a1=elemCreateArc180((0,0,0),(50,0,0),40,'cw')
@@ -1909,9 +2338,6 @@ p7=partAddElements(p7,geomCreateCircRingHole((100,50,0),10,1,9,5,3,2,2,5,'cw'))
 
 p8=partCreate('Hole4')
 p8=partAddElements(p8,geomCreateCircRingHole((0,50,0),1,10,9,5,3,2,2,5,'cw'))
-
-
-
 
 
 
@@ -2016,5 +2442,9 @@ f.close()
 print( "SLOT CONTOUR:" )
 for i in p62['elements']:
 	print( i )
-	
+
+import os
+os.system('python ncEFIDisp2.py ncEFI.dat')
+
+sys.exit(0)
 
