@@ -44,7 +44,15 @@ def vecExtractMid(p1,p2):
 ###
 #############################################################################
 def vecAdd(p1,p2):
-	return (p2[0]+p1[0],p2[1]+p1[1],p2[2]+p1[2])
+	return (p1[0]+p2[0],p1[1]+p2[1],p1[2]+p2[2])
+
+
+#############################################################################
+### vecSub
+###
+#############################################################################
+def vecSub(p1,p2):
+	return (p1[0]-p2[0],p1[1]-p2[1],p1[2]-p2[2])
 
 
 #############################################################################
@@ -80,6 +88,17 @@ def vecRotateZ(p1,ang):
 
 
 #############################################################################
+### vecCrossProduct
+###
+#############################################################################
+def vecCrossProduct(v1, v2):
+	cp = (	v1[1]*v2[2] - v1[2]*v2[1],
+			v1[2]*v2[0] - v1[0]*v2[2],
+			v1[0]*v2[1] - v1[1]*v2[0] )
+	return cp
+
+
+#############################################################################
 ### vecScale
 ### 0 = normalized
 #############################################################################
@@ -87,12 +106,23 @@ def vecScale(p1,fac):
 	if fac != 0:
 		pr=(p1[0]*fac,p1[1]*fac,p1[2]*fac) 
 		return pr
-	else:
-		len=vecLength(p1)
-		if len == 0:
-			return (0,0,0)
-		else:
-			return (p1[0]/len,p1[1]/len,p1[2]/len)
+
+	len = vecLength(p1)
+	if len == 0:
+		return (0,0,0)
+
+	return (p1[0]/len,p1[1]/len,p1[2]/len)
+
+
+#############################################################################
+### vecSetLength
+###
+#############################################################################
+def vecSetLength(p1,len):
+	if len == 0:
+		return (0,0,0)
+	v1 = vecScale(p1,0)
+	return vecScale(v1,len)
 
 
 #############################################################################
@@ -245,6 +275,22 @@ def vecHasPointOnLineXY(p1,p2,px):
 		return False
 
 
+#############################################################################
+### vecHasPointLeftOrRight
+###
+### Ignores any z-values; only xy plane!
+### Returns if a point 'px' is on the left or the right of a line,
+### a point 'p1' with a direction 'v1'.
+### If viewed, on the vec, from p1 to p2:
+###   d < 0: pt is to the left
+###   d = 0: pt is "exactly" [tm] on the vector
+###   d > 0: pt is to the right
+#############################################################################
+def vecHasPointLeftOrRight(p1,v1,px):
+	# normalize vector and also shift point
+	ptx = vecAdd( px, vecReverse(p1) )
+	return -vecAngleDiffXY( v1, ptx )
+
 
 #############################################################################
 ### vecGetParameter
@@ -363,6 +409,34 @@ def arcIntersectXY(p1,r1,p2,r2):
 	ys2=(y2+y1)/2.0+((y2-y1)*(r1**2-r2**2))/(2*(d**2))-(x2-x1)/(2*(d**2))*c
 
 	return [(xs1,ys1,p1[2]),(xs2,ys2,p2[2])]
+
+
+
+#############################################################################
+### circleHasPointXY
+###
+### Checks if a point is on a circle
+#############################################################################
+def circleHasPointXY(center,rad,pt):
+	if rad < RADTOL:
+		if vecLength( center, pt ) < LINTOL:
+			# trololol, but true :)
+			return True
+		return False
+	if center[2] != pt[2]:
+		# TODO: This might be an issue. Should use LINTOL
+		print( "INF: arcHasPoint: arcs and point in same plane or height (xy)" )
+		return False
+
+	# this simplifies our equations a lot =)
+	xm,ym,zm = center
+	x1,y1,z1 = pt
+
+	d = math.sqrt( (x1-xm)**2 + (y1-ym)**2 )
+	if d+RADTOL > rad and d-RADTOL < rad:
+		return True
+	else:
+		return False
 
 
 

@@ -6,10 +6,22 @@
 # FMMT666/ASkr 1995..2021 lol
 
 
+
 # TODO:
+#
+#  - find a solution to the "geoms are lists" and cannot have 'type', 'p1' or 'p2' keys.
+#       - the points would be really useful
+#       - adding type and points would actually transform them into parts, which already
+#         have this feature, so nothing would be gained
+#       - so a geom just stays a geom, an ordered list, and start and end point are
+#         already defined
+#
+#  - change degree-step parameter in spiral
+#  - fix 'dia'
+#    just noticed that there are "hundreds" of (well, "some") 'dia'-labeled parameters and
+#    references which should be named 'rad' instead.
 #  - add geomMoveTo       necessary at all?
 #  - add partMoveTo       necessary at all?
-#  - add geomCreateSpiral
 #  - add geomCreateZigZag
 #  - add geomCreateRect
 #  - add geomCreateCircle
@@ -18,8 +30,6 @@
 #      - add another approach to connect the circles via a spiral
 #      - make use of the new geomCreateCircle() function
 #  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
-#  - add elemCreateArc180by3Pts
-#      - could be handy to replace the spiral function's linear approximation
 
 
 import pickle
@@ -140,21 +150,29 @@ def elemCreateLine(p1,p2,extra={}):
 ### elemCreateLineTo
 ###
 #############################################################################
-def elemCreateLineTo(l1,p2,extra={}):
+def elemCreateLineTo(e1,p2,extra={}):
 
-	if isinstance(l1['p2'],tuple) == False:
-		print( "ERR: elemCreateLineTo: l1 has no tuple in p2" )
+	if not 'type' in e1:
+		print( "ERR: elemCreateLineTo: element 'e1' has no 'type'" )
+		return {}
+
+	if   e1['type'] == 'v':
+		pt = e1['p1']
+	elif e1['type'] == 'l' or e1['type'] == 'a':
+		pt = e1['p2']
+	else:
+		print( "ERR: elemCreateLineTo: unknown 'type' in 'e1':", e1['type'] )
 		return {}
 
 	if isinstance(p2,tuple) == False:
 		print( "ERR: elemCreateLine: p2 not tuple" )
 		return {}
 
-#  if p1 == p2:
-#    print( "ERR: elemCreateLine: p1 == p2: ",p1 )
-#    return {}
+	if pt == p2:
+		print( "ERR: elemCreateLine: pt == p2: ",pt )
+		return {}
 
-	ret={'type':'l','p1':l1['p2'],'p2':p2}
+	ret={'type':'l','p1':pt,'p2':p2}
 	extraAddExtra(ret,extra)
 	return ret
 
@@ -212,25 +230,41 @@ def elemCreateArc180To(elem1,p2,rad,dir,extra={}):
 #############################################################################
 ### elemCreateArc180by3Pts
 ###
-### Creates a (max 180°) arc from p1 to p2, through pm.
+### Creates a (max 180°) arc from p1 to p2, "through pm".
+### Notice that 'pm' might not be on the visible part of the arc, but
+### either behind 'p1' or 'p2'. Invalid arcs, which might occur if 'pm'
+### (or the resulting center of the arc) is on the wrong side of the
+### vector p1->p2, will not be allowd.
 ### Z will be stepped through linear from p1 to p2, ignoring any z value
 ### specified for point pm.
 ### It is an error if pm is too far away, resulting in an arc >180°.
-### The direction parameter 'dir' is automatically calculated.
 #############################################################################
-def elemCreateArc180by3Pts(p1,p2,pm,extra={}):
-	if not isinstance(p1,tuple) or not isinstance(p2,tuple) or not isinstance(p3,tuple):
+def elemCreateArc180by3Pts(p1,p2,pm,dir,extra={}):
+	if not isinstance(p1,tuple) or not isinstance(p2,tuple) or not isinstance(pm,tuple):
 		print( "ERR: elemCreateArc180by3Pts: no tuples" )
 		return {}
 	if p1 == p2 or p1 == pm or p2 == pm:
 		print( "ERR: elemCreateArc180by3Pts: same coords for p1, p2, pm: ", p1,p2,pm )
 		return {}
-	# if not isinstance(dir,str):
-	# 	print( "ERR: elemCreateArc180by3Pts: invalid dir format: ",dir )
-	# 	return {}
-	# if dir != 'cw' and dir != 'cc':
-	# 	print( "ERR: elemCreateArc180by3Pts: invalid dir command: ",dir )
-	# 	return {}
+	if not isinstance(dir,str):
+		print( "ERR: elemCreateArc180by3Pts: invalid dir format: ",dir )
+		return {}
+	if dir != 'cw' and dir != 'cc':
+		print( "ERR: elemCreateArc180by3Pts: invalid dir command: ",dir )
+		return {}
+	# As "elemCreateArc180()" requires a radius to create an arc, we obtain it
+	# from the from the length of any of the points-to-center vectors.
+	# Depending on the situation, a wrong center might be calculated here, considering
+	# that we also specify the direction of the arc.
+	# Here are two situations (ommitted z-values):
+	# A) p1=(2,1) to p2=(3,5) via pm=(4,3)  'cc' -> center=(1.83, 3.17), possible and okay
+	# B) p1=(2,1) to p2=(3,5) via pm=(8,3)  'cc' -> center=(4.86, 2.41), impossible for this arc, but a valid center, now on the right
+	# This "flipping" center, depending on whether stupid things are being asked for or not, will
+	# result in a wrong arc, because we draw it from p1 to p2, but with the wrong radius, because the length of
+	# center->p1, center->p2, center->pm refer to a wrong position (for this arc). As a result, only p1 and p2 will
+	# be on the arc. pm is (obviously) somwhere else.
+	# Solution: Check the correct location of the center point instead.
+	# For a 'cc' arc, the center point should be to the left of the p1->p2 vector and on the right side for 'cw'.
 	center = arcCenter180XY3P( p1, p2, pm )
 	if center == None:
 		print( "ERR: elemCreateArc180by3Pts: no 180° arc possible with ", p1, p2, pm )
@@ -241,7 +275,35 @@ def elemCreateArc180by3Pts(p1,p2,pm,extra={}):
 		if rad < RADTOL:
 			print( "ERR: elemCreateArc180by3Pts: radius almost zero: ", rad )
 			return {}
-		return elemCreateArc180(p1,p2,rad,'cc',extra)
+		pos = vecHasPointLeftOrRight( p1, vecSub(p2,p1), center )
+		if pos < 0 and dir == 'cc' or pos > 0 and dir == 'cw':
+			return elemCreateArc180(p1,p2,rad,dir,extra)
+		else:
+			print( "ERR: elemCreateArc180by3Pts: point pm not on arc: ", pm )
+			return {}
+
+
+
+#############################################################################
+### elemCreateArc180To
+###
+### Just calls elemCreateArc180 with an already known element position.
+#############################################################################
+def elemCreateArc180by3PtsTo(e1,p2,pm,dir,extra={}):
+
+	if not 'type' in e1:
+		print( "ERR: elemCreateArc180by3PtsTo: element 'e1' has no 'type'" )
+		return {}
+
+	if   e1['type'] == 'v':
+		pt = e1['p1']
+	elif e1['type'] == 'l' or e1['type'] == 'a':
+		pt = e1['p2']
+	else:
+		print( "ERR: elemCreateArc180by3PtsTo: unknown 'type' in 'e1':", e1['type'] )
+		return {}
+
+	return elemCreateArc180by3Pts(pt,p2,pm,dir,extra)
 
 
 
@@ -1195,15 +1257,68 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 
 
 #############################################################################
-### geomCreateSpiral
+### geomCreateSpiralHelix
 ###
-### Creates a spiral with a 'center' point, a starting point 'startPt',
-### an incremental radius parameter 'rad', the number of 'turns' and
-### a direction parameter 'dir', either clockwise 'cw' or counterclockwise 'cc'.
-### Stupid things might happen for stupid arguments :)
+### Creates a spiral or a helix or both, depending on the radial or height
+### increments. Parameters include the 'center' point, a starting point
+### 'startPt', an incremental radius parameter 'radInc', a height parameter
+### 'heightInc', the number of 'turns' and a direction parameter 'dir',
+### either clockwise 'cw' or counterclockwise 'cc'.
+### If the direction of the spiral is set inwards, with a negative 'radInc'
+### parameter, the spiral is aborted, so that the shape does not form
+### a double cone. If that's required, set 'stopAtZero' to False.
 #############################################################################
-def geomCreateSpiral(p1,center,startPt,rad,turns,dir,basNr=0):
-	pass
+def geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,basNr=0,stopAtZero=True):
+
+	if dir != 'cc' and dir != 'cw':
+		print( "ERR: geomCreateSpiral: invalid 'dir' parameter: ", dir )
+		return []
+
+	# TODO: Check what happens if we have z!=0 or even different ones in center ans startPt!
+	# normalize to center as we create everything around (0,0,n)
+	if center != (0,0,0):
+		vecSub( startPt, center )
+
+	geom = []
+
+	maxGrad      = 5.0
+	stepsPerTurn = 360 / maxGrad
+	stepRad      = 2*math.pi / stepsPerTurn
+
+	if dir == 'cc':
+		stepRad *= -1
+
+	vec    = startPt
+	vecLen = vecLength( vec )
+	e   = elemCreateVertex( startPt )
+	
+	# only for the "stop at zero" check
+	lenMin = 99999999999.9
+
+	for i in range( 1, 1 + int( turns * stepsPerTurn) ):
+		v = vecRotateZ( vec, i * stepRad )
+
+		radAdd = i * (radInc / stepsPerTurn)
+		v = vecSetLength( v, vecLen + radAdd )
+
+		if radInc < 0 and stopAtZero == True:
+			vl = vecLength( v )
+			if vl < lenMin:
+				lenMin = vl
+			else:
+				# if vl suddenly starts growing again, we need to stop here
+				# TODO: Shall we make the last step to (0,0,0)?
+				break
+
+		v = ( v[0], v[1], v[2] + i * (heightInc / stepsPerTurn ) )
+		e   = elemCreateLineTo( e, v )
+		geom.append( e )
+
+
+	if center != (0,0,0):
+		geom = geomTranslate( geom, center )
+
+	return geom
 
 
 
@@ -1805,8 +1920,6 @@ def geomCreateLeftContour(part,dist,basNr=0):
 def geomTranslate( geom, vec ):
 	# TODO: probably not necessary to copy the element here
 	geomn=[]
-	for i in geomn:
-		geomn[i]=geomn[i]
 	if not isinstance( geom, list ):
 		print( "ERR: geomTranslate: 'geom' not a list" )
 		return []
@@ -2085,19 +2198,100 @@ def debugShowViewer( llist ):
 
 
 
-
-
-llist = []
-p1 = ( 2,1,0)
-p2 = ( 8,3,0)
-p3 = ( 3,5,0)
-c1 = elemCreateArc180by3Pts( p1, p3, p2 )
-p1 = elemCreateVertex( p1 )
-p2 = elemCreateVertex( p2 )
-p3 = elemCreateVertex( p3 )
-llist.append( [p1, p2, p3, c1 ] )
-debugShowViewer( llist )
+#---------------------------------------
+e = geomCreateSpiralHelix( (-10,-10,0), (10,0,0), 5, -1, 10, 'cc', stopAtZero=False )
+debugShowViewer( e )
 sys.exit()
+
+
+
+
+
+
+#---------------------------------------
+# vec = ( 20,0,0 )
+# e = elemCreateVertex( vec )
+# llist = [ e ]
+# hStep = 0.0
+# for i in range(0,100,2):
+# 	vec = ( vec[0], vec[1], -i )
+# 	vecMid = vecRotateZ( vec, math.radians( -(i+1)*22.5) )
+# #	vecMid = vecScale( vecMid, 1 + hStep )
+# #	hStep += 1
+# 	vecEnd = vecRotateZ( vec, math.radians( -(i+1)*45.0) )
+# 	vecEnd = vecScale( vecEnd, 1 + hStep )
+# 	hStep += 0.01
+# 	e = elemCreateArc180by3PtsTo( e, vecEnd, vecMid, 'cc' ) 
+# 	llist.append( e )
+# debugShowViewer( llist )
+# sys.exit()
+
+
+
+#---------------------------------------
+# vec = ( 20,0,0 )
+# e = elemCreateVertex( vec )
+# llist = [ e ]
+# for i in range(10):
+# 	e = elemCreateLineTo( e, vecRotateZ(  vec, math.radians( -(i+1)*22.5) )  )
+# 	llist.append( e )
+# debugShowViewer( llist )
+# sys.exit()
+
+
+
+
+
+#---------------------------------------
+# llist = []
+# for i in range(1000000):
+# 	x = random() * 20 + 10
+# 	y = random() * 20 
+# 	pt = (x,y,0)
+# 	if arcHasPoint( (20,10,0), 5, pt ):
+# 		llist.append( elemCreateVertex( pt ) )
+# debugShowViewer( llist )
+# sys.exit()
+
+
+
+
+#---------------------------------------
+# llist = []
+# for i in range(10000):
+# 	x = random() * 200 - 100
+# 	y = random() * 200 - 100
+# 	pt = (x,y,0)
+# 	cp = vecHasPointLeftOrRight( (-50,30,0) ,(-30,-10,0),pt)
+# 	if cp < 0:
+# 		llist.append( elemCreateVertex( pt ) )
+# debugShowViewer( llist )
+# sys.exit()
+
+
+
+
+
+
+#---------------------------------------
+# llist = []
+# p1 = ( 2,1,0)
+# p2 = ( 4,3,0)
+# p3 = ( 3,5,0)
+# c1 = elemCreateArc180by3Pts( p1, p3, p2, 'cc' )
+# p1 = elemCreateVertex( p1 )
+# p2 = elemCreateVertex( p2 )
+# p3 = elemCreateVertex( p3 )
+# llist.append( [p1, p2, p3, c1 ] )
+# debugShowViewer( llist )
+# sys.exit()
+
+
+
+
+
+
+
 
 
 #---------------------------------------
@@ -2107,12 +2301,24 @@ sys.exit()
 # 		p1 = ( random()*60-30 - 100+200/6*x, random()*60-30 - 100+200/6*y, 0 )
 # 		p2 = ( random()*60-30 - 100+200/6*x, random()*60-30 - 100+200/6*y, 0 )
 # 		p3 = ( random()*60-30 - 100+200/6*x, random()*60-30 - 100+200/6*y, 0 )
-# 		c1 = elemCreateArc180by3Pts( p1, p2, p3, 'cw')
-# 		c2 = elemCreateArc180by3Pts( p1, p2, p3, 'cc')
+# 		if random() > 0.5:
+# 			c1 = elemCreateArc180by3Pts( p1, p2, p3, 'cc')
+# 			c2 = elemCreateArc180by3Pts( p1, p3, p2, 'cc')
+# 			c3 = elemCreateArc180by3Pts( p2, p1, p3, 'cc')
+# 			c4 = elemCreateArc180by3Pts( p2, p3, p1, 'cc')
+# 			c5 = elemCreateArc180by3Pts( p3, p1, p2, 'cc')
+# 			c6 = elemCreateArc180by3Pts( p3, p2, p1, 'cc')
+# 		else:
+# 			c1 = elemCreateArc180by3Pts( p1, p2, p3, 'cw')
+# 			c2 = elemCreateArc180by3Pts( p1, p3, p2, 'cw')
+# 			c3 = elemCreateArc180by3Pts( p2, p1, p3, 'cw')
+# 			c4 = elemCreateArc180by3Pts( p2, p3, p1, 'cw')
+# 			c5 = elemCreateArc180by3Pts( p3, p1, p2, 'cw')
+# 			c6 = elemCreateArc180by3Pts( p3, p2, p1, 'cw')
 # 		p1 = elemCreateVertex( p1 )
 # 		p2 = elemCreateVertex( p2 )
 # 		p3 = elemCreateVertex( p3 )
-# 		llist.append( [p1, p2, p3, c1, c2] )
+# 		llist.append( [p1, p2, p3, c1, c2, c3, c4, c5, c6 ] )
 # debugShowViewer( llist )
 # sys.exit()
 
