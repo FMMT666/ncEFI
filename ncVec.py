@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 
-import pickle
 import math
-import sys
 
 
 LINTOL = 0.0001  # 100nm (if units are "mm")
@@ -85,6 +84,27 @@ def vecRotateZ(p1,ang):
 	x=p1[0]*math.cos(ang)+p1[1]*math.sin(ang)
 	y=-p1[0]*math.sin(ang)+p1[1]*math.cos(ang)
 	return (x,y,p1[2])
+
+
+#############################################################################
+### vecPointsInDirectionXY
+###
+#############################################################################
+def vecPointsInDirectionXY(v1):
+	ang = vecAngleXY(v1)
+	if ang == None:
+		return '0'
+
+	ffd = math.pi / 8.0
+	if ang < 1 * ffd or  ang > 7 * ffd:
+		return '+x'
+	if ang < 3 * ffd and ang > 1 * ffd:
+		return '+y'
+	if ang < 5 * ffd and ang > 3 * ffd:
+		return '-x'
+	if ang < 7 * ffd and ang > 5 * ffd:
+		return '-y'
+	return '0'
 
 
 #############################################################################

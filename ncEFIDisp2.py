@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 
 from OpenGL.GLUT import *
 from OpenGL.GLU  import *
@@ -25,6 +27,12 @@ DRAW_LINE_COLOR         = ( 0.8, 0.8, 0.8 )
 DRAW_ARC_SIZE           = 1
 DRAW_ARC_COLOR          = ( 0.8, 0.8, 0.8 )
 
+
+
+# TODO
+#  - interface and settings for all the vars
+#  - variables for grid settings
+#  - a lot more
 
 
 
@@ -265,8 +273,8 @@ class myGLCanvas(GLCanvas):
 		glPointSize( DRAW_GRID_SIZE )
 		glColor3f( DRAW_GRID_COLOR[0], DRAW_GRID_COLOR[1], DRAW_GRID_COLOR[2] )
 		glBegin(GL_POINTS)
-		for x in range(-100,100,10):
-			for y in range(-100,100,10):
+		for x in range(-100,110,10):
+			for y in range(-100,110,10):
 				glVertex3f(x,y,0)
 		glEnd()
 

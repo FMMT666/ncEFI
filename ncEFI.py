@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 
 # ncEFI
 # Some stupid G-Code ideas I had about 25 years ago.
@@ -8,13 +10,6 @@
 
 
 # TODO:
-#
-#  - find a solution to the "geoms are lists" and cannot have 'type', 'p1' or 'p2' keys.
-#       - the points would be really useful
-#       - adding type and points would actually transform them into parts, which already
-#         have this feature, so nothing would be gained
-#       - so a geom just stays a geom, an ordered list, and start and end point are
-#         already defined
 #
 #  - change degree-step parameter in spiral
 #  - fix 'dia'
@@ -30,10 +25,17 @@
 #      - add another approach to connect the circles via a spiral
 #      - make use of the new geomCreateCircle() function
 #  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
+#  - find a solution to the "geoms are lists" and cannot have 'type', 'p1' or 'p2' keys.
+#       - the points would be really useful
+#       - adding type and points would actually transform them into parts, which already
+#         have this feature, so nothing would be gained
+#       - so a geom just stays a geom, an ordered list, and start and end point are
+#         already defined
 
 
-import pickle
+import sys
 import math
+import pickle
 from random import random
 
 from ncVec import *
@@ -1260,15 +1262,21 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 ### geomCreateSpiralHelix
 ###
 ### Creates a spiral or a helix or both, depending on the radial or height
-### increments. Parameters include the 'center' point, a starting point
+### increments. The geometry is interpolated with lines.
+### Parameters include the 'center' point, a starting point
 ### 'startPt', an incremental radius parameter 'radInc', a height parameter
 ### 'heightInc', the number of 'turns' and a direction parameter 'dir',
 ### either clockwise 'cw' or counterclockwise 'cc'.
 ### If the direction of the spiral is set inwards, with a negative 'radInc'
 ### parameter, the spiral is aborted, so that the shape does not form
 ### a double cone. If that's required, set 'stopAtZero' to False.
+### The parameter 'maxGrad' defines the maximum angle of one line segment.
+### Smaller values result in finer resolutions; with larger values, eg 120°
+### or 90°, it's possible to shape "low poly" geometries.
+### By default, 'startPt' is relative to the center. this can be changed by
+### setting 'startPtIsAbs' to 'True'.
 #############################################################################
-def geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,basNr=0,stopAtZero=True):
+def geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,stopAtZero=True,maxGrad=5.0,startPtIsAbs=False,basNr=0):
 
 	if dir != 'cc' and dir != 'cw':
 		print( "ERR: geomCreateSpiral: invalid 'dir' parameter: ", dir )
@@ -1276,12 +1284,11 @@ def geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,basNr=0,stop
 
 	# TODO: Check what happens if we have z!=0 or even different ones in center ans startPt!
 	# normalize to center as we create everything around (0,0,n)
-	if center != (0,0,0):
-		vecSub( startPt, center )
+	if startPtIsAbs and center != (0,0,0):
+		startPt = vecSub( startPt, center )
 
 	geom = []
 
-	maxGrad      = 5.0
 	stepsPerTurn = 360 / maxGrad
 	stepRad      = 2*math.pi / stepsPerTurn
 
@@ -1319,6 +1326,111 @@ def geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,basNr=0,stop
 		geom = geomTranslate( geom, center )
 
 	return geom
+
+
+
+#############################################################################
+### geomCreateZigZag
+###
+### Creates a "zig zag", flat milling shape, defined by two points, a step
+### parameter and a selection which axis shall move first.
+### The amount of steps is calculated from the distance to travel, divided by
+### the increment per step 'incStep', rounded up!
+### For stupid values, a positive 'incStep' value but "more negative" end
+### point coordinates, at least the first move is always executed. A linear
+### move or a slot (if milled).
+### Height (z) is takes from StartPt.
+#############################################################################
+def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
+	geom =  []
+
+	if incStep < 0:
+		print( "INF: geomCreateZigZag: inverted negative 'incStep' value" )
+		incStep *= -1
+
+	# use z from startPt
+	z = startPt[2]
+
+	# a marker for the direction of movement
+	movX = endPt[0] - startPt[0]
+	movY = endPt[1] - startPt[1]
+
+	# a sign marker
+	sigX = 1 if movX > 1 else -1
+	sigY = 1 if movY > 1 else -1
+
+	# always execute the first move
+	if yFirst == 0:
+		# x is going to move first
+		e = elemCreateLine( startPt, ( endPt[0], startPt[1], z) )
+		if incStep == 0:
+			return [e]
+		steps = movY / incStep
+	else:
+		# y is going to move first
+		e = elemCreateLine( startPt, ( startPt[0], endPt[1], z) )
+		if incStep == 0:
+			return [e]
+		steps = movX / incStep
+
+	geom.append( e )
+
+	steps = abs( math.ceil( steps ) )
+
+	# splitting this in x and y is redundant, but easier to follow
+	for n in range( steps ):
+
+		# for x moves and step over y
+		if yFirst == 0:
+			yn = startPt[1] + (n+1) * incStep * sigY
+			if n % 2 == 0:
+				# 0, 2, 4, ...: move x back
+				if movY > 0:
+					aDir = 'cc' if movX > 0 else 'cw'
+				else:
+					aDir = 'cw' if movX > 0 else 'cc'
+				e = elemCreateArc180To( e, ( endPt[0], yn, z ), 0, aDir )
+				geom.append( e )
+				e = elemCreateLineTo( e, ( startPt[0], yn, z ) )
+				geom.append( e )
+			else:
+				# 1, 3, 5, ...: move x forward
+				if movY > 0:
+					aDir = 'cw' if movX > 0 else 'cc'
+				else:
+					aDir = 'cc' if movX > 0 else 'cw'
+				e = elemCreateArc180To( e, ( startPt[0], yn, z ), 0, aDir )
+				geom.append( e )
+				e = elemCreateLineTo( e, ( endPt[0], yn, z ) )
+				geom.append( e )
+
+		# move y, then step through x
+		else:
+			xn = startPt[0] + (n+1) * incStep * sigX
+			if n % 2 == 0:
+				# 0, 2, 4, ...: move y back
+				if movX > 0:
+					aDir = 'cw' if movY > 0 else 'cc'
+				else:
+					aDir = 'cc' if movY > 0 else 'cw'
+				e = elemCreateArc180To( e, ( xn, endPt[1], z ), 0, aDir )
+				geom.append( e )
+				e = elemCreateLineTo( e, ( xn, startPt[1], z ) )
+				geom.append( e )
+			else:
+				# 1, 3, 5, ...: move x forward
+				if movX > 0:
+					aDir = 'cc' if movY > 0 else 'cw'
+				else:
+					aDir = 'cw' if movY > 0 else 'cc'
+				e = elemCreateArc180To( e, ( xn, startPt[1], z ), 0, aDir )
+				geom.append( e )
+				e = elemCreateLineTo( e, ( xn,  endPt[1], z ) )
+				geom.append( e )
+
+
+	return geom
+
 
 
 
@@ -1370,6 +1482,7 @@ def geomCreateContour(part,dist):
 			CoarseCont.append(eln)
 
 	return CoarseCont
+
 
 
 #############################################################################
@@ -2197,13 +2310,54 @@ def debugShowViewer( llist ):
 	os.system('python ncEFIDisp2.py ncEFI.dat')
 
 
+#---------------------------------------
+# e = geomCreateZigZag( ( -50,-50, 0), (50, 50, 0), 5, False )
+# e = geomRotateZ( e, 22.5 )
+# e += geomCreateZigZag( ( -100,-90, 0), (100, -90, 0), 0, False )
+
+# e += geomCreateZigZag( ( -100,-100, 0), (00, 00, 0), 5, False )
+# e += geomCreateZigZag( (  0, 0 , 0), (100, 100,0), 5, False )
+# e += geomCreateZigZag( ( 20, 10, 0), ( 10, 20, 0), 2, True )
+# e += geomCreateZigZag( ( 50, 10, 0), ( 60,  0, 0), 2, True )
+# e += geomCreateZigZag( ( 60, 30, 0), ( 50, 20, 0), 2, True )
+# e += geomCreateZigZag( (-30, 10, 0), (-40, 20, 0), 2, True )
+# e += geomCreateZigZag( (-20, 10, 0), (-10, 20, 0), 2, True )
+# e += geomCreateZigZag( (-50, 10, 0), (-60,  0, 0), 2, True )
+# e += geomCreateZigZag( (-60, 30, 0), (-50, 20, 0), 2, True )
+# e += geomCreateZigZag( (-30,-10, 0), (-40,-20, 0), 2, True )
+# e += geomCreateZigZag( (-20,-10, 0), (-10,-20, 0), 2, True )
+# e += geomCreateZigZag( (-50,-10, 0), (-60,  0, 0), 2, True )
+# e += geomCreateZigZag( (-60,-30, 0), (-50,-20, 0), 2, True )
+# e += geomCreateZigZag( ( 30,-10, 0), ( 40,-20, 0), 2, True )
+# e += geomCreateZigZag( ( 20,-10, 0), ( 10,-20, 0), 2, True )
+# e += geomCreateZigZag( ( 50,-10, 0), ( 60,  0, 0), 2, True )
+# e += geomCreateZigZag( ( 60,-30, 0), ( 50,-20, 0), 2, True )
+
+
+
+# debugShowViewer( e )
+# sys.exit()
+
+
 
 #---------------------------------------
-e = geomCreateSpiralHelix( (-10,-10,0), (10,0,0), 5, -1, 10, 'cc', stopAtZero=False )
+e  = geomCreateSpiralHelix( (-50,-50,0), (10,0,0), 5, -4, 10, 'cc', maxGrad=120, stopAtZero=False )
+e += geomCreateSpiralHelix( (-50, 50,0), (10,0,0), 0, -4, 10, 'cc', maxGrad=120, stopAtZero=False )
+e += geomCreateSpiralHelix( ( 50, 50,0), (10,0,0), 5, -4, 10, 'cc', maxGrad=3, stopAtZero=False )
+e += geomCreateSpiralHelix( ( 50,-50,0), (10,0,0), 0, -4, 10, 'cc', maxGrad=3, stopAtZero=False )
+e += geomCreateSpiralHelix( ( 50,-50,0), (30,-50,0), 0, -4, 10, 'cc', maxGrad=3, startPtIsAbs=True, stopAtZero=False )
 debugShowViewer( e )
 sys.exit()
 
 
+
+
+
+
+#---------------------------------------
+# e = geomCreateSpiralHelix( (-10,-10,0), (10,0,0), 5, -1, 10, 'cc', stopAtZero=False )
+# debugShowViewer( e )
+# sys.exit()
 
 
 
