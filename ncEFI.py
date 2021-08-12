@@ -9,28 +9,20 @@
 
 
 
+# TODO (MAYBE):
+#  - add geomCreateCircle    necessary at all? could use geomCreateSpiralHelix
+#  - add geomCreateRect      necessary at all? better to create a general 3- or 4pt pocket milling option
 # TODO:
-#
-#  - change degree-step parameter in spiral
-#  - fix 'dia'
-#    just noticed that there are "hundreds" of (well, "some") 'dia'-labeled parameters and
-#    references which should be named 'rad' instead.
-#  - add geomMoveTo       necessary at all?
-#  - add partMoveTo       necessary at all?
-#  - add geomCreateZigZag
-#  - add geomCreateRect
-#  - add geomCreateCircle
+#  - add geomCreateArcSlot
+#  - add geomMoveTo; should be a 3-liner (theoretically :)
+#  - add spiral pocket geom (using SpiralHelix and Circle)
+#  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
+#  - split ncEFI into several files, maybe elem, geom, part, tool?
 #  - change geomCreateConcentricCircles
 #      - rename to geomCreateConcentricCirclesConnected
 #      - add another approach to connect the circles via a spiral
 #      - make use of the new geomCreateCircle() function
 #  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
-#  - find a solution to the "geoms are lists" and cannot have 'type', 'p1' or 'p2' keys.
-#       - the points would be really useful
-#       - adding type and points would actually transform them into parts, which already
-#         have this feature, so nothing would be gained
-#       - so a geom just stays a geom, an ordered list, and start and end point are
-#         already defined
 
 
 import sys
@@ -1428,9 +1420,84 @@ def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
 				e = elemCreateLineTo( e, ( xn,  endPt[1], z ) )
 				geom.append( e )
 
-
 	return geom
 
+
+#############################################################################
+### geomCreateSlot
+###
+### Creates a single slot from startPt to endPt. The depth (if any) is
+### calculated from the difference of endPt-StartPt depth. The max depth per
+### cut can be specified by "depthPerMove". 
+### If the z height of the end point is greater (more positive) than the
+### starting point, the moves will be done up. Might only be useful for
+### form endmills, e.g. a slot-mill, etc.
+#############################################################################
+def geomCreateSlotLine(startPt,endPt,depthPerMove,basNr=0):
+	geom = []
+
+	if startPt == endPt:
+		print( "ERR: geomCreateSlot: startPt == endPt: ", startPt )
+		return []
+
+	if depthPerMove < 0:
+		print( "INF: geomCreateSlot: correcting negative depthPerMove value to positive; was: ", depthPerMove )
+		depthPerMove = abs( depthPerMove )
+
+	totDepth = endPt[2] - startPt[2]
+
+	if depthPerMove > abs( totDepth ):
+		print( "ERR: geomCreateSlot: depthPerMove is greater than z-difference of points: ", depthPerMove, totDepth )
+		return []
+
+	if abs( totDepth ) > 0 and depthPerMove == 0:
+		# this is done automatically by the algorithm below
+		print( "INF: geomCreateSlot: depthPerMove is 0, but z-values differ; moving without change of z-height" )
+
+	curDepth = startPt[2] - depthPerMove
+	sPt   = startPt
+	ePt   = ( endPt[0], endPt[1], curDepth)
+	pos   = 2
+
+	# always make the first move
+	e = elemCreateLine( sPt, ePt )
+	geom.append( e )
+
+	if depthPerMove == 0 or totDepth == 0:
+		return geom
+
+	while( True ):
+
+		if totDepth < 0:
+			curDepth -= depthPerMove
+			if curDepth < totDepth:
+				curDepth = totDepth
+		else:
+			curDepth += depthPerMove
+			if curDepth > totDepth:
+				curDepth = totDepth
+
+		if pos == 2:
+			sPt = ( sPt[0], sPt[1], curDepth )
+			e = elemCreateLineTo( e, sPt )
+			pos = 1
+		else:
+			ePt = ( ePt[0], ePt[1], curDepth )
+			e = elemCreateLineTo( e, ePt )
+			pos = 2
+
+		geom.append( e )
+
+		if curDepth == totDepth:
+			if pos == 1:
+				lastPt = ( ePt[0], ePt[1], totDepth )
+			else:
+				lastPt = ( sPt[0], sPt[1], totDepth )
+			e = elemCreateLineTo( e, lastPt )
+			geom.append( e )
+			break
+
+	return geom
 
 
 
@@ -2310,6 +2377,18 @@ def debugShowViewer( llist ):
 	os.system('python ncEFIDisp2.py ncEFI.dat')
 
 
+
+
+
+
+e  = geomCreateSlotLine( (-20,-10,5), (50,30,-10), 4)
+e += geomCreateSlotLine( (-50,-10,0), (-10,-10,-10), 0)
+
+debugShowViewer( e )
+sys.exit()
+
+
+
 #---------------------------------------
 # e = geomCreateZigZag( ( -50,-50, 0), (50, 50, 0), 5, False )
 # e = geomRotateZ( e, 22.5 )
@@ -2333,23 +2412,24 @@ def debugShowViewer( llist ):
 # e += geomCreateZigZag( ( 50,-10, 0), ( 60,  0, 0), 2, True )
 # e += geomCreateZigZag( ( 60,-30, 0), ( 50,-20, 0), 2, True )
 
-
-
 # debugShowViewer( e )
 # sys.exit()
 
 
-
 #---------------------------------------
-e  = geomCreateSpiralHelix( (-50,-50,0), (10,0,0), 5, -4, 10, 'cc', maxGrad=120, stopAtZero=False )
-e += geomCreateSpiralHelix( (-50, 50,0), (10,0,0), 0, -4, 10, 'cc', maxGrad=120, stopAtZero=False )
-e += geomCreateSpiralHelix( ( 50, 50,0), (10,0,0), 5, -4, 10, 'cc', maxGrad=3, stopAtZero=False )
-e += geomCreateSpiralHelix( ( 50,-50,0), (10,0,0), 0, -4, 10, 'cc', maxGrad=3, stopAtZero=False )
-e += geomCreateSpiralHelix( ( 50,-50,0), (30,-50,0), 0, -4, 10, 'cc', maxGrad=3, startPtIsAbs=True, stopAtZero=False )
-debugShowViewer( e )
-sys.exit()
+#e  = geomCreateSpiralHelix( ( 0, 0, 0), (50,0,0), -5, 0, 10, 'cc', maxGrad=90, stopAtZero=False )
+#debugShowViewer( e )
+#sys.exit()
 
 
+
+# e  = geomCreateSpiralHelix( (-50,-50,0), (10,0,0), 5, -4, 10, 'cc', maxGrad=120, stopAtZero=False )
+# e += geomCreateSpiralHelix( (-50, 50,0), (10,0,0), 0, -4, 10, 'cc', maxGrad=120, stopAtZero=False )
+# e += geomCreateSpiralHelix( ( 50, 50,0), (10,0,0), 5, -4, 10, 'cc', maxGrad=3, stopAtZero=False )
+# e += geomCreateSpiralHelix( ( 50,-50,0), (10,0,0), 0, -4, 10, 'cc', maxGrad=3, stopAtZero=False )
+# e += geomCreateSpiralHelix( ( 50,-50,0), (30,-50,0), 0, -4, 10, 'cc', maxGrad=3, startPtIsAbs=True, stopAtZero=False )
+# debugShowViewer( e )
+# sys.exit()
 
 
 
