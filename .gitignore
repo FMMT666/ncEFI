@@ -1,18 +1,14 @@
 *
 
 !.gitignore
-!/pix
-!/pix/*
 
 !ncEFI.py
-!ncEFIDisp.py
-!ncEFIDisp2.py
-!ncEFIEXT.py
-!ncEFITEST.py
-!ncVec.py
-!PyMillCam.py
-
-!README.md
-
 !ncEFI.dat
 !ncEFI.nc
+
+!ncEFIDisp2.py
+!ncVec.py
+
+!ncEFITest.py
+
+!README.md
