@@ -13,6 +13,10 @@
 #  - add geomCreateCircle    necessary at all? could use geomCreateSpiralHelix
 #  - add geomCreateRect      necessary at all? better to create a general 3- or 4pt pocket milling option
 # TODO:
+#  - nicer G-Code output:
+#      - space after command
+#  - geomCreateSlotLine seems to cut double the max depth upon every 2nd move
+#  - avoid putting out arc z moves in toolCreate if z didn't change
 #  - add geomCreateCircle
 #  - add neEFIDisp2 support for circle
 #  - add tool support for circle
@@ -29,7 +33,7 @@
 #  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
 
 
-import sys
+import os
 import math
 import pickle
 from random import random
@@ -56,6 +60,8 @@ GCODE_PRG_ENDPOS   = 'G00X0Y0'
 GCODE_PRG_END      = 'M02'
 
 GCODE_OP_SAVEZ     = '10'
+
+
 
 TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 
@@ -630,14 +636,20 @@ def elemFindLinked(elem):
 ### partCreate
 ###
 #############################################################################
-def partCreate(name, extras={}):
-	if isinstance(name,str) == False:
-		return {'name':"", 'type':'p'}
-	if len(name)<1:
-		return {'name':"", 'type':'p'}
-	ret={'name':name,'type':'p', 'elements':[]}
+def partCreate( name="", elems = None, extras={} ):
+	if elems == None:
+		elems = []
+
+	# TODO: check what to do if the part creation fails; return {} or an empty part??
+
+	if not isinstance( elems, list ):
+		print( "ERR: partCreate: elems is not a list; ignoring: ", type(elems) )
+		elems = []
+	
+	ret = { 'name':name, 'type':'p', 'elements':elems }
 	for i in extras:
-		ret[i]=extras[i]
+		ret[i] = extras[i]
+
 	return ret
 
 
@@ -657,36 +669,42 @@ def partDeleteNumbers(part):
 #############################################################################
 ### partGetFreeNumber
 ###
+### Returns the next free number in a part or -1 if not a single number
+### was found.
 #############################################################################
-def partGetFreeNumber(part):
-	nr=[]
+def partGetFreeNumber( part ):
+	nr = []
 	for i in part['elements']:
 		if 'pNr' in i:
-			nr.append(i['pNr'])
-	nr.sort()
-	return nr[len(nr)-1]+1
+			nr.append( i['pNr'] )
+	if nr != []:
+		nr.sort()
+		return nr[ len(nr) - 1 ] + 1
+	else:
+		return 0
 
-	
+
 
 #############################################################################
 ### partAddElement
 ###
-### number=0 -> auto numbering
-### number<0 -> no numbering
+### Adds an element to a part
+### number = 0 -> auto numbering
+### number < 0 -> no numbering
 #############################################################################
-def partAddElement(part, elem, number=0):
+def partAddElement( part, elem, number=0 ):
 	for i in part['elements']:
 		if 'pNr' in i:
 			if i['pNr'] == number:
-				number=0
+				number = 0
 				continue
-	nelem=elem
+	nelem = elem
 	if number == 0:
-		nelem['pNr']=partGetFreeNumber(part)
+		nelem['pNr'] = partGetFreeNumber( part )
 	else:
 		if number > 0:
-			nelem['pNr']=number
-	part['elements'].append(nelem)
+			nelem['pNr'] = number
+	part['elements'].append( nelem )
 	return part
 
 
@@ -697,7 +715,9 @@ def partAddElement(part, elem, number=0):
 #############################################################################
 def partAddElements(part, elems):
 	for i in elems:
-		part=partAddElement(part,i,-1)
+		# TODO: TOCHK: changed 8/2021, auto numbering for AddElements
+		# part=partAddElement( part, i, -1 )
+		part=partAddElement( part, i, 0 )
 	return part
 
 
@@ -732,9 +752,9 @@ def partCheckNumber(part, number):
 ### partCheckUniqueNumbers
 ###
 #############################################################################
-def partCheckUniqueNumbers(part):
-	nrFound=[]
-	for i in range(0,len(part['elements'])):
+def partCheckUniqueNumbers( part ):
+	nrFound = []
+	for i in range( 0, len(part['elements']) ):
 		if 'pNr' in part['elements'][i]:
 			if part['elements'][i]['pNr'] in nrFound:
 				print( "ERR: partCheckUniqueNumbers: already found nr: ",part['elements'][i]['pNr'] )
@@ -753,9 +773,9 @@ def partCheckUniqueNumbers(part):
 ###
 #############################################################################
 def partGetNumbers(part):
-	li=[]
-	for i in range(0,len(part['elements'])):
-		li.append(part['elements'][i]['pNr'])
+	li = []
+	for i in range( 0, len(part['elements']) ):
+		li.append( part['elements'][i]['pNr'] )
 	li.sort()
 	return li
 
@@ -820,15 +840,15 @@ def partGetFirstPosition(part):
 ### partRenumber
 ###
 #############################################################################
-def partRenumber(part):
-	if not partCheckUniqueNumbers(part):
+def partRenumber( part ):
+	if not partCheckUniqueNumbers( part ):
 		return part
-	li=[]
-	for i in range(0,len(part['elements'])):
-		li.append([part['elements'][i]['pNr'],i])
+	li = []
+	for i in range( 0, len(part['elements']) ):
+		li.append( [part['elements'][i]['pNr'], i] )
 	li.sort()
-	for i in range(0,len(li)):
-		part['elements'][li[i][1]]['pNr']=i+1
+	for i in range( 0, len(li) ):
+		part['elements'][li[i][1]]['pNr'] = i + 1
 	return part
 
 
@@ -837,23 +857,18 @@ def partRenumber(part):
 ### partSortByNumber
 ###
 #############################################################################
-def partSortByNumber(part):
-	if not partCheckUniqueNumbers(part):
+def partSortByNumber( part ):
+	if not partCheckUniqueNumbers( part ):
 		return part
-	li=[]
-	for i in range(0,len(part['elements'])):
-		li.append([part['elements'][i]['pNr'],i])
+	li = []
+	for i in range( 0, len(part['elements']) ):
+		li.append( [part['elements'][i]['pNr'], i] )
 	li.sort()
-	oldelems=part['elements']
-	part['elements']=[]
-	for i in range(0,len(li)):
-		part=partAddElement(part,oldelems[li[i][1]],li[i][0])
+	oldelems = part['elements']
+	part['elements'] = []
+	for i in range( 0, len(li) ):
+		part = partAddElement( part, oldelems[ li[i][1] ], li[i][0] )
 	return part
-
-
-
-def PartSortByGeometry(part):
-	pass  
 
 
 
@@ -861,32 +876,32 @@ def PartSortByGeometry(part):
 ### partCheckContinuous
 ###
 #############################################################################
-def partCheckContinuous(part):
-	if not partCheckUniqueNumbers(part):
+def partCheckContinuous( part ):
+	if not partCheckUniqueNumbers( part ):
 		return False
-	li=partGetNumbers(part)
+	li = partGetNumbers( part )
 	if len(li) == 0:
 		print( "ERR: partCheckContinuous: no elements in part!" )
 		return False
 	if len(li) == 1:
 		return True
-	e1=partGetElement(part,li[0])
+	e1 = partGetElement( part, li[0] )
 	if e1['type']=='v':
 		print( "ERR: partCheckContinuous: vertex found!" )
 		return False
-	for i in range(1,len(li)):
-		e2=partGetElement(part,li[i])
-		if e2['type']=='v':
+	for i in range( 1, len(li) ):
+		e2 = partGetElement( part, li[i] )
+		if e2['type'] == 'v':
 			print( "ERR: partCheckContinuous: vertex found!" )
 			return False
-		if not e1['p2']==e2['p1']:
-			ez=math.fabs(vecLength(e1['p2'],e2['p1']))
+		if not e1['p2'] == e2['p1']:
+			ez=math.fabs( vecLength( e1['p2'], e2['p1'] ) )
 			if ez > TOOL_CONTINUOUS_TOLERANCE:
-				print( "ERR: partCheckContinuous: p2!=p1 at number: ",i )
-				print( "                        : e1['p2']: ",e1['p2'] )
-				print( "                        : e2['p1']: ",e2['p1'] )
+				print( "ERR: partCheckContinuous: p2!=p1 at number: ", i )
+				print( "                        : e1['p2']: ", e1['p2'] )
+				print( "                        : e2['p1']: ", e2['p1'] )
 				return False
-		e1=e2
+		e1 = e2
 	return True
 		
 	
@@ -895,86 +910,19 @@ def partCheckContinuous(part):
 ### partCheckClosed
 ###
 #############################################################################
-def partCheckClosed(part):
-	if not partCheckContinuous(part):
+def partCheckClosed( part ):
+	if not partCheckContinuous( part ): 
 		return False
-	li=partGetNumbers(part)
-	if len(li)<2:
+	li=partGetNumbers( part )
+	if len(li) < 2:
 		return False
-	e1=partGetElement(part,li[0])
-	e2=partGetElement(part,li[-1])
-	if e1['type']=='v' or e2['type']=='v':
+	e1 = partGetElement( part, li[0] )
+	e2 = partGetElement( part, li[-1] )
+	if e1['type'] == 'v' or e2['type'] == 'v':
 		return False
-	if e2['p2']==e1['p1']:
+	if e2['p2'] == e1['p1']:
 		return True
 	return False
-
-
-
-#############################################################################
-### geomCreateHelix
-### 
-### p1's position is the most left position on the helix (xy-plane).
-### Endpoint is p1's (x,y)-position (z is depth).
-### "depth" is positive for negative z-axis values (milling a hole usually
-### is done by milling "down", not "up").
-#############################################################################
-def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
-	hel=[]
-	if depth == 0.0:
-		print( "ERR: geomCreateHelix: depth == 0" )
-		return []
-	if depthSteps < 1.0:
-		print( "ERR: geomCreateHelix: steps < 0" )
-		return []
-	if dia <= 0.0:
-		print( "ERR: geomCreateHelix: dia <= 0" )
-		return []
-	depthPerHalfRev=depth/(depthSteps*2.0)
-	x1=p1[0]
-	x2=p1[0]+dia
-	p2=(x2,p1[1],p1[2]-depthPerHalfRev)
-	if basNr==0:
-		nr=1
-	else:
-		nr=basNr
-	for i in range(0,depthSteps):
-		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		hel.append(el)
-		p1=p2
-		p2=(x1,p1[1],p1[2]-depthPerHalfRev)
-		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		hel.append(el)
-		p1=p2
-		if not i == depthSteps-1:
-			p2=(x2,p1[1],p1[2]-depthPerHalfRev)
-		else:
-			p2=(x2,p1[1],p1[2])
-	# end for all depthSteps
-
-	if not len(hel)==depthSteps*2:
-		print( "ERR: geomCreateHelix: skipped one or more arcs (helix)" )
-		return[]
-
-	if finish=='finish':
-		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		if el==[]:
-			print( "ERR: geomCreateHelix: skipped first finishing arc" )
-			return []
-		hel.append(el)
-
-		el=elemCreateArc180(p2,p1,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		if el==[]:
-			print( "ERR: geomCreateHelix: skipped second finishing arc" )
-			return []
-		hel.append(el)
-	# end if 'finish'
-
-	return hel
 
 
 
@@ -1080,6 +1028,72 @@ def partRotateZAt( part, ang, center ):
 	
 	return partn
 
+
+
+#############################################################################
+### geomCreateHelix
+### 
+### p1's position is the most left position on the helix (xy-plane).
+### Endpoint is p1's (x,y)-position (z is depth).
+### "depth" is positive for negative z-axis values (milling a hole usually
+### is done by milling "down", not "up").
+#############################################################################
+def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
+	hel=[]
+	if depth == 0.0:
+		print( "ERR: geomCreateHelix: depth == 0" )
+		return []
+	if depthSteps < 1.0:
+		print( "ERR: geomCreateHelix: steps < 0" )
+		return []
+	if dia <= 0.0:
+		print( "ERR: geomCreateHelix: dia <= 0" )
+		return []
+	depthPerHalfRev=depth/(depthSteps*2.0)
+	x1=p1[0]
+	x2=p1[0]+dia
+	p2=(x2,p1[1],p1[2]-depthPerHalfRev)
+	if basNr==0:
+		nr=1
+	else:
+		nr=basNr
+	for i in range(0,depthSteps):
+		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		hel.append(el)
+		p1=p2
+		p2=(x1,p1[1],p1[2]-depthPerHalfRev)
+		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		hel.append(el)
+		p1=p2
+		if not i == depthSteps-1:
+			p2=(x2,p1[1],p1[2]-depthPerHalfRev)
+		else:
+			p2=(x2,p1[1],p1[2])
+	# end for all depthSteps
+
+	if not len(hel)==depthSteps*2:
+		print( "ERR: geomCreateHelix: skipped one or more arcs (helix)" )
+		return[]
+
+	if finish=='finish':
+		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		if el==[]:
+			print( "ERR: geomCreateHelix: skipped first finishing arc" )
+			return []
+		hel.append(el)
+
+		el=elemCreateArc180(p2,p1,dia/2.0,dir,{'pNr':nr})
+		nr+=1
+		if el==[]:
+			print( "ERR: geomCreateHelix: skipped second finishing arc" )
+			return []
+		hel.append(el)
+	# end if 'finish'
+
+	return hel
 
 
 
@@ -1428,7 +1442,7 @@ def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
 
 
 #############################################################################
-### geomCreateSlot
+### geomCreateSlotLine
 ###
 ### Creates a single slot from startPt to endPt. The depth (if any) is
 ### calculated from the difference of endPt-StartPt depth. The max depth per
@@ -1983,14 +1997,7 @@ def geomCreateLeftContourBAK(part,dist,basNr=0):
 		# end if ang==0
 	# end for        
 
-		
-	if partCheckClosed(part) == True:
-		op='Closed'
-	else:
-		op='notClosed'
-
-#  con=geomTrimPointsStartToEnd(con,op)
-
+	# con = geomTrimPointsStartToEnd( con, partCheckClosed(part) )
 
 	return con
 
@@ -2000,18 +2007,18 @@ def geomCreateLeftContourBAK(part,dist,basNr=0):
 ### geomCreateLeftContour
 ###
 #############################################################################
-def geomCreateLeftContour(part,dist,basNr=0):
+def geomCreateLeftContour( part, dist, basNr=0 ):
 	con=[]
 	conNr=1
 	conSkip=-1
 
-	slo=geomCreateSlotContour(part,dist)
+	slo = geomCreateSlotContour(part,dist)
 	
-	if slo==[]:
+	if slo == []:
 		print( "ERR: geomCreateLeftContour: error while creating slot elements from part " )
 		return []
 
-	slo=geomExtractSlotDirVecs(slo)
+	slo = geomExtractSlotDirVecs(slo)
 	
 	print( "len(slo): ",len(slo) )
 
@@ -2026,7 +2033,6 @@ def geomCreateLeftContour(part,dist,basNr=0):
 
 		for ii in slo:
 			elemDebugPrint(ii)
-
 
 		for j in range(i+1,i+len(slo)-2):
 			if j > len(slo)-1:
@@ -2043,10 +2049,10 @@ def geomCreateLeftContour(part,dist,basNr=0):
 			for j in his:
 				print( j )
 
-			sdi=999999999999999.9
-			eleCount=0
-			eleTarget=None
-			eleInt=None
+			sdi = 999999999999999.9
+			eleCount = 0
+			eleTarget = None
+			eleInt = None
 			
 			for j in his:
 				for k in j:
@@ -2088,7 +2094,7 @@ def geomCreateLeftContour(part,dist,basNr=0):
 				break        
 
 
-	con=geomTrimPointsStartToEnd(con,partCheckClosed(part))
+	con = geomTrimPointsStartToEnd( con, partCheckClosed(part) )
 
 			
 	return con
@@ -2197,7 +2203,7 @@ def geomRotateZAt( geom, ang, center ):
 ### No checks are done!
 ### Elements have to be in the right order!
 #############################################################################
-def geomTrimPointsStartToEnd(elIn,isClosed='notClosed'):
+def geomTrimPointsStartToEnd( elIn, isClosed=False ):
 	elOut=[]
 	
 	for i in elIn:
@@ -2211,7 +2217,7 @@ def geomTrimPointsStartToEnd(elIn,isClosed='notClosed'):
 		else:
 			elOut[i+1]['p1']=elOut[i]['p1']
 		
-	if isClosed != 'notClosed':
+	if isClosed:
 		if 'p2' in elOut[maxLen]:
 			elOut[0]['p1']=elOut[maxLen]['p2']
 		else:
@@ -2282,10 +2288,9 @@ def toolRapidToNextPart(part):
 ### toolCreateFromPart
 ###
 ### Creates an toolpath (naked move commands) from a part.
-###
 #############################################################################
-def toolCreateFromPart(part):
-	tops=[]
+def toolCreateFromPart( part ):
+	tops = []
 	
 	if not partCheckContinuous(part):
 		print( "ERR: toolCreateFromPart: part \""+part['name']+"\" not continuous" )
@@ -2293,77 +2298,114 @@ def toolCreateFromPart(part):
 
 	# If "partCheckContinuous" returned no error, it should (SHOULD!) be
 	# ok to skip further tests concerning the geometry...
-	part=partRenumber(part)
+	part = partRenumber( part )
 	
 	if 'name' in part:
 		tops.append('('+part['name']+')')
 	else:
 		tops.append('(unnamed part)')
 
-	lastCmd=''
-	for i in range(1,len(part['elements'])+1):
-		el=partGetElement(part,i)
-		if len(el)==0:
-			print( "ERR: toolCreateFromPart: partGetElement returned zero length at ",i )
+	lastCmd = ''
+	for i in range( 1, len(part['elements']) + 1 ):
+		el = partGetElement( part, i )
+		if len(el) == 0:
+			print( "ERR: toolCreateFromPart: partGetElement returned zero length at ", i )
 			return[]
 			
 		# TOCHK (2021)
 		if not 'type' in el:
-			print( "ERR: toolCreateFromPart: element nr. ",i," has no \'type\' attribute" )
+			print( "ERR: toolCreateFromPart: element nr. ", i," has no \'type\' attribute" )
 			return[]
 
-		cxyz=''
-		if el['type']=='l':
+		cxyz = ''
+		if el['type'] == 'l':
 			# process X, Y and Z actions, only if different
-			if el['p1'][0]==el['p2'][0]:
-				cx=''
+			if el['p1'][0] == el['p2'][0]:
+				cx = ''
 			else:
-				cx='X'+str(el['p2'][0])
-			if el['p1'][1]==el['p2'][1]:
-				cy=''
+				# format() avoids exponents (was str() before)
+				cx = 'X' + format( el['p2'][0], 'f' )
+			if el['p1'][1] == el['p2'][1]:
+				cy = ''
 			else:
-				cy='Y'+str(el['p2'][1])
-			if el['p1'][2]==el['p2'][2]:
-				cz=''
+				cy = 'Y' + format( el['p2'][1], 'f' )
+			if el['p1'][2] == el['p2'][2]:
+				cz = ''
 			else:
-				cz='Z'+str(el['p2'][2])
-			if lastCmd==GCODE_LINE:
-				cc=' '
+				cz = 'Z' + format( el['p2'][2], 'f' )
+			if lastCmd == GCODE_LINE:
+				cc = ' '
 			else:
-				cc=GCODE_LINE
-			cxyz=cc+cx+cy+cz
-			lastCmd=GCODE_LINE
+				cc = GCODE_LINE
+			cxyz = cc + cx + ' ' + cy + ' ' + cz
+			lastCmd = GCODE_LINE
 
-		if el['type']=='a':
-			if el['dir']=='cw':
-				if lastCmd==GCODE_ARC_CW:
-					cc=' '
+		if el['type'] == 'a':
+			if el['dir'] == 'cw':
+				if lastCmd == GCODE_ARC_CW:
+					cc = ' '
 				else:
-					cc=GCODE_ARC_CW
+					cc = GCODE_ARC_CW
 			else:
-				if lastCmd==GCODE_ARC_CC:
-					cc=' '
+				if lastCmd == GCODE_ARC_CC:
+					cc = ' '
 				else:
-					cc=GCODE_ARC_CC
+					cc = GCODE_ARC_CC
 
-			cx='X'+str(el['p2'][0])
-			cy='Y'+str(el['p2'][1])
-			cz='Z'+str(el['p2'][2])
-			cr='R'+str(el['rad'])
+			# avoids exponent in output (was str() before)
+			cx = 'X' + format( el['p2'][0], 'f' )
+			cy = 'Y' + format( el['p2'][1], 'f' )
+			cz = 'Z' + format( el['p2'][2], 'f' )
+			cr = 'R' + format( el['rad'],   'f' )
 
-			cxyz=cc+cx+cy+cz+cr
-			if el['dir']=='cw':
-				lastCmd=GCODE_ARC_CW
+			cxyz = cc + cx + ' ' + cy + ' ' + cz + ' ' + cr
+			if el['dir'] == 'cw':
+				lastCmd = GCODE_ARC_CW
 			else:
-				lastCmd=GCODE_ARC_CC
+				lastCmd = GCODE_ARC_CC
 			
 		if cxyz == '':
-			print( "ERR: toolCreateFromPart: empty nc-code line at: ",el )
+			print( "ERR: toolCreateFromPart: empty nc-code line at: ", el )
 			return[]
 		
-		tops.append(cxyz)
+		tops.append( cxyz )
 
 	return tops
+
+
+
+#############################################################################
+### toolFileCreate
+###
+### Writes the toolpath to a file.
+#############################################################################
+def toolFileWrite( tools, fname='ncEFI.nc', append=False ):
+
+	if not isinstance( tools, list ):
+		print( "ERR: toolFileWrite: 'tools' is not a list: ", type(tools) )
+		return False
+
+	try:
+		f = open( fname, 'w+t' if append == False else 'a+t' )
+	except:
+		print( "ERR: toolFileWrite: unable to open file: ", fname )
+		return False
+
+	for tool in tools:
+		f.write( tool + '\n' )
+
+	f.close()
+	return True
+
+
+
+#############################################################################
+### toolFileAppend
+###
+### Writes the toolpath to a file.
+#############################################################################
+def toolFileAppend( tools, fname='ncEFI.nc' ):
+	return toolFileWrite( tools, fname, append=True)
 
 
 
@@ -2377,7 +2419,5 @@ def debugShowViewer( llist ):
 	f=open('ncEFI.dat','w+b')
 	pickle.dump(llist,f)
 	f.close()
-	import os
 	os.system('python ncEFIDisp2.py ncEFI.dat')
-
 

@@ -1,25 +1,52 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
+import sys
+import os
 from ncEFI import *
 
 
 
+e1 = geomCreateSpiralHelix( ( 0, 0, 0), (50,0,0), -5, -5, 10, 'cc' )
+e2 = geomCreateCircRingHole((0,0,0),20.0,20.0,1.0,5,3,2,2,5,'cw')
 
-e  = geomCreateSlotLine( (-20,-10,5), (50,30,-10), 4)
-e += geomCreateSlotLine( (-50,-10,0), (-10,-10,-10), 0)
+debugShowViewer( [e1, e2] )
 
-debugShowViewer( e )
-sys.exit()
 
+p1 = partCreate( "helix 1" )
+partAddElements( p1, e1 )
+
+p2 = partCreate( "hole 1" )
+partAddElements( p2, e2 )
+
+
+tool = []
+
+# tool += toolCreateSimpleHeader()
+tool += toolRapidToNextPart(p1)
+tool += toolCreateFromPart(p1)
+tool += toolRapidToNextPart(p2)
+tool += toolCreateFromPart(p2)
+# tool += toolCreateSimpleFooter()
+
+toolFileWrite( tool )
+
+sys.exit(0)
+
+
+
+
+#---------------------------------------
+# e  = geomCreateSlotLine( (-20,-10,5), (50,30,-10), 4)
+# e += geomCreateSlotLine( (-50,-10,0), (-10,-10,-10), 0)
+# debugShowViewer( e )
+# sys.exit()
 
 
 #---------------------------------------
 # e = geomCreateZigZag( ( -50,-50, 0), (50, 50, 0), 5, False )
 # e = geomRotateZ( e, 22.5 )
 # e += geomCreateZigZag( ( -100,-90, 0), (100, -90, 0), 0, False )
-
 # e += geomCreateZigZag( ( -100,-100, 0), (00, 00, 0), 5, False )
 # e += geomCreateZigZag( (  0, 0 , 0), (100, 100,0), 5, False )
 # e += geomCreateZigZag( ( 20, 10, 0), ( 10, 20, 0), 2, True )
@@ -37,7 +64,6 @@ sys.exit()
 # e += geomCreateZigZag( ( 20,-10, 0), ( 10,-20, 0), 2, True )
 # e += geomCreateZigZag( ( 50,-10, 0), ( 60,  0, 0), 2, True )
 # e += geomCreateZigZag( ( 60,-30, 0), ( 50,-20, 0), 2, True )
-
 # debugShowViewer( e )
 # sys.exit()
 
@@ -87,7 +113,6 @@ sys.exit()
 # sys.exit()
 
 
-
 #---------------------------------------
 # vec = ( 20,0,0 )
 # e = elemCreateVertex( vec )
@@ -97,9 +122,6 @@ sys.exit()
 # 	llist.append( e )
 # debugShowViewer( llist )
 # sys.exit()
-
-
-
 
 
 #---------------------------------------
@@ -112,8 +134,6 @@ sys.exit()
 # 		llist.append( elemCreateVertex( pt ) )
 # debugShowViewer( llist )
 # sys.exit()
-
-
 
 
 #---------------------------------------
@@ -129,10 +149,6 @@ sys.exit()
 # sys.exit()
 
 
-
-
-
-
 #---------------------------------------
 # llist = []
 # p1 = ( 2,1,0)
@@ -145,13 +161,6 @@ sys.exit()
 # llist.append( [p1, p2, p3, c1 ] )
 # debugShowViewer( llist )
 # sys.exit()
-
-
-
-
-
-
-
 
 
 #---------------------------------------
@@ -183,12 +192,10 @@ sys.exit()
 # sys.exit()
 
 
-
 #---------------------------------------
 # cc1 = geomCreateConcentricCircles( (-5,0,0),  10,50,5, 'cc')
 # debugShowViewer( [cc1] )
 # sys.exit(0)
-
 
 
 #---------------------------------------
@@ -211,10 +218,6 @@ sys.exit()
 # sys.exit(0)
 
 
-
-
-
-
 #---------------------------------------
 # from random import randint
 # from random import random
@@ -231,7 +234,6 @@ sys.exit()
 # import os
 # os.system('python ncEFIDisp2.py ncEFI.dat')
 # sys.exit(0)
-
 
 
 #---------------------------------------
@@ -268,7 +270,6 @@ sys.exit()
 # sys.exit(0)
 
 
-
 #---------------------------------------
 # g1 = geomCreateCircRingHole( (0,0,0), 10, 30, 3, 10, 1, 10, 5, 0, 'cc')
 # partlist = g1
@@ -278,8 +279,6 @@ sys.exit()
 # import os
 # os.system('python ncEFIDisp2.py ncEFI.dat')
 # sys.exit(0)
-
-
 
 
 #---------------------------------------
@@ -302,7 +301,6 @@ sys.exit()
 # import os
 # os.system('python ncEFIDisp2.py ncEFI.dat')
 # sys.exit(0)
-
 
 
 #---------------------------------------
@@ -331,8 +329,8 @@ sys.exit()
 
 # import os
 # os.system('python ncEFIDisp2.py ncEFI.dat')
-
 # sys.exit(0)
+
 
 
 #---------------------------------------
@@ -461,6 +459,8 @@ p20=partCreate('PupsSlot')
 e20=geomCreateSlotContour(p1,-3.0)
 p20=partAddElements(p20,e20)
 
+
+
 #for i in range(1,len(p1['elements'])):
 #  e1=partGetElement(p1,i)
 #  e2=partGetElement(p1,i+1)
@@ -513,3 +513,17 @@ import os
 os.system('python ncEFIDisp2.py ncEFI.dat')
 
 sys.exit(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
