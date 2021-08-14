@@ -13,18 +13,16 @@
 #  - add geomCreateCircle    necessary at all? could use geomCreateSpiralHelix
 #  - add geomCreateRect      necessary at all? better to create a general 3- or 4pt pocket milling option
 # TODO:
-#  - nicer G-Code output:
-#      - space after command
-#  - geomCreateSlotLine seems to cut double the max depth upon every 2nd move
+#  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
+#  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
 #  - avoid putting out arc z moves in toolCreate if z didn't change
 #  - add geomCreateCircle
-#  - add neEFIDisp2 support for circle
+#  - add ncEFIDisp2 support for circle
 #  - add tool support for circle
 #  - add IJK circle and arcs
 #  - add geomCreateArcSlot
 #  - add geomMoveTo; should be a 3-liner (theoretically :)
 #  - add spiral pocket geom (using SpiralHelix and Circle)
-#  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - split ncEFI into several files, maybe elem, geom, part, tool?
 #  - change geomCreateConcentricCircles
 #      - rename to geomCreateConcentricCirclesConnected
@@ -1451,7 +1449,7 @@ def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
 ### starting point, the moves will be done up. Might only be useful for
 ### form endmills, e.g. a slot-mill, etc.
 #############################################################################
-def geomCreateSlotLine(startPt,endPt,depthPerMove,basNr=0):
+def geomCreateSlotLine( startPt, endPt, depthPerMove, basNr=0 ):
 	geom = []
 
 	if startPt == endPt:
@@ -1472,7 +1470,10 @@ def geomCreateSlotLine(startPt,endPt,depthPerMove,basNr=0):
 		# this is done automatically by the algorithm below
 		print( "INF: geomCreateSlot: depthPerMove is 0, but z-values differ; moving without change of z-height" )
 
-	curDepth = startPt[2] - depthPerMove
+	# Half the depth per move because we're also going backwards, right
+	# into the slope we created before. Max depth per cut will be reached
+	# at the end of every move.
+	curDepth = startPt[2] - depthPerMove / 2.0
 	sPt   = startPt
 	ePt   = ( endPt[0], endPt[1], curDepth)
 	pos   = 2
@@ -1487,11 +1488,11 @@ def geomCreateSlotLine(startPt,endPt,depthPerMove,basNr=0):
 	while( True ):
 
 		if totDepth < 0:
-			curDepth -= depthPerMove
+			curDepth -= depthPerMove / 2.0
 			if curDepth < totDepth:
 				curDepth = totDepth
 		else:
-			curDepth += depthPerMove
+			curDepth += depthPerMove / 2.0
 			if curDepth > totDepth:
 				curDepth = totDepth
 
@@ -2261,24 +2262,24 @@ def toolCreateSimpleFooter():
 ### toolRapidToNextPart
 ###
 #############################################################################
-def toolRapidToNextPart(part):
-	rap=[]
+def toolRapidToNextPart( part ):
+	rap = []
 
-	p1=partGetFirstPosition(part)
-	
-	if p1==None:
+	p1 = partGetFirstPosition(part)
+
+	if p1 == None:
 		print( "ERR: toolRapidToNextPart: part has no first point" )
 		return []
-		
-	if 'name' in part:
-		pname=part['name']
-	else:
-		pname='unnamed part'
 
-	rap.append('(rapid to: '+pname+')')
-	rap.append(GCODE_RAPID+'Z'+GCODE_OP_SAVEZ)
-	rap.append(GCODE_RAPID+'X'+str(p1[0])+'Y'+str(p1[1]))
-	rap.append(GCODE_RAPID+'Z'+str(p1[2]))
+	if 'name' in part:
+		pname = part['name']
+	else:
+		pname = 'unnamed part'
+
+	rap.append( '(rapid to: ' + pname + ')' )
+	rap.append( GCODE_RAPID + ' Z' + GCODE_OP_SAVEZ )
+	rap.append( GCODE_RAPID + ' X' + format( p1[0], 'f' ) + ' Y' + format( p1[1], 'f' ) )
+	rap.append( GCODE_RAPID + ' Z' + format( p1[2], 'f' ) )
 
 	return rap
 
@@ -2306,6 +2307,16 @@ def toolCreateFromPart( part ):
 		tops.append('(unnamed part)')
 
 	lastCmd = ''
+	# TODO: Probably an error for arc creatin.
+	# The lastN storage shall correct the R-circles error that might be created
+	# due to rounding errors with the 'format()' function.
+	# Actually, this is a problem, because we already "somehow" moved
+	# to this position, but we don't know where we are.
+	# If the first moves are arcs or circles, we might run into trouble.
+	# WARNING: These are strings!
+	strLastX = None
+	strLastY = None
+	strLastZ = None
 	for i in range( 1, len(part['elements']) + 1 ):
 		el = partGetElement( part, i )
 		if len(el) == 0:
@@ -2324,20 +2335,23 @@ def toolCreateFromPart( part ):
 				cx = ''
 			else:
 				# format() avoids exponents (was str() before)
-				cx = 'X' + format( el['p2'][0], 'f' )
+				strLastX = format( el['p2'][0], 'f' )
+				cx = 'X' + strLastX
 			if el['p1'][1] == el['p2'][1]:
 				cy = ''
 			else:
-				cy = 'Y' + format( el['p2'][1], 'f' )
+				strLastY = format( el['p2'][1], 'f' )
+				cy = 'Y' + strLastY
 			if el['p1'][2] == el['p2'][2]:
 				cz = ''
 			else:
-				cz = 'Z' + format( el['p2'][2], 'f' )
+				strLastZ = format( el['p2'][2], 'f' )
+				cz = 'Z' + strLastZ
 			if lastCmd == GCODE_LINE:
 				cc = ' '
 			else:
-				cc = GCODE_LINE
-			cxyz = cc + cx + ' ' + cy + ' ' + cz
+				cc = GCODE_LINE 
+			cxyz = cc + ' ' + cx + ' ' + cy + ' ' + cz
 			lastCmd = GCODE_LINE
 
 		if el['type'] == 'a':
@@ -2353,12 +2367,34 @@ def toolCreateFromPart( part ):
 					cc = GCODE_ARC_CC
 
 			# avoids exponent in output (was str() before)
-			cx = 'X' + format( el['p2'][0], 'f' )
-			cy = 'Y' + format( el['p2'][1], 'f' )
-			cz = 'Z' + format( el['p2'][2], 'f' )
-			cr = 'R' + format( el['rad'],   'f' )
+			strAx2 = format( el['p2'][0], 'f' )
+			strAy2 = format( el['p2'][1], 'f' )
+			strAz2 = format( el['p2'][2], 'f' )
+			strAr2 = format( el['rad'],   'f' )
 
-			cxyz = cc + cx + ' ' + cy + ' ' + cz + ' ' + cr
+			# check if the rounding left us with a valid arc
+			if strLastX is not None and strLastY is not None:
+				# DEBUG
+				# if strLastX == '0.027794':
+				# 	qqq = None
+				pDist = vecLengthXY(  ( float(strAx2), float(strAy2), 0 ), ( float(strLastX), float(strLastY), 0 )  )
+				pDist = float( format( pDist, 'f') )
+				# TODO: It might be better to multiply float(strAr2) with 2 instead of dividing pDist.
+				# Gives a better result, because pDist/2 can again be off :-/
+				if float(strAr2) < pDist / 2.0:
+					nstrAr2 = format( pDist / 2.0, 'f' )
+					print( "INF: toolCreateFromPart: corrected invalid arc R rounding:", strAr2, nstrAr2 )
+					strAr2 = nstrAr2
+			cx = 'X' + strAx2
+			cy = 'Y' + strAy2
+			cz = 'Z' + strAz2
+			cr = 'R' + strAr2
+
+			strLastX = strAx2
+			strLastY = strAy2
+			strLastZ = strAz2
+
+			cxyz = cc + ' ' + cx + ' ' + cy + ' ' + cz + ' ' + cr
 			if el['dir'] == 'cw':
 				lastCmd = GCODE_ARC_CW
 			else:

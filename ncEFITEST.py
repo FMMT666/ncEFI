@@ -6,32 +6,51 @@ import os
 from ncEFI import *
 
 
-
-e1 = geomCreateSpiralHelix( ( 0, 0, 0), (50,0,0), -5, -5, 10, 'cc' )
-e2 = geomCreateCircRingHole((0,0,0),20.0,20.0,1.0,5,3,2,2,5,'cw')
-
-debugShowViewer( [e1, e2] )
+# just various test routines
 
 
-p1 = partCreate( "helix 1" )
-partAddElements( p1, e1 )
-
-p2 = partCreate( "hole 1" )
-partAddElements( p2, e2 )
-
-
+#---------------------------------------
+# The rounding of the new "format" conversion of the number-to-string
+# produces an error in the G-Code output:
+# G02 X0.027794 Y-57.157101 Z-3.333333 R0.416667
+#   X-21.545993 Y-72.831374 Z-3.333333 R13.333333  <- illegal arc; should be R13.333334
+#     X0.027794 Y-57.157101 Z-3.333333 R13.333333
+# Yep, it was an error (done in 1995 :) to use R instead of IJ
+# Anyway, now corrected.
+llist=[]
+p1 = partCreate('Hole')
+# def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+for i in range(6):
+#	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
+#	llist.append(  partRotateZ(p1, 360/5 * i)  )
+	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
+debugShowViewer( llist )
 tool = []
-
-# tool += toolCreateSimpleHeader()
-tool += toolRapidToNextPart(p1)
-tool += toolCreateFromPart(p1)
-tool += toolRapidToNextPart(p2)
-tool += toolCreateFromPart(p2)
-# tool += toolCreateSimpleFooter()
-
+for part in llist:
+	tool += toolRapidToNextPart( part )
+	tool += toolCreateFromPart( part )
 toolFileWrite( tool )
-
 sys.exit(0)
+
+
+#---------------------------------------
+# e1 = geomCreateSpiralHelix( ( 0, 0, 0), (50,0,0), -5, -5, 10, 'cc' )
+# e2 = geomCreateCircRingHole((0,0,0),20.0,20.0,1.0,5,3,2,2,5,'cw')
+# debugShowViewer( [e1, e2] )
+# p1 = partCreate( "helix 1" )
+# partAddElements( p1, e1 )
+# p2 = partCreate( "hole 1" )
+# partAddElements( p2, e2 )
+# tool = []
+# # tool += toolCreateSimpleHeader()
+# tool += toolRapidToNextPart(p1)
+# tool += toolCreateFromPart(p1)
+# tool += toolRapidToNextPart(p2)
+# tool += toolCreateFromPart(p2)
+# # tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 
@@ -197,25 +216,6 @@ sys.exit(0)
 # debugShowViewer( [cc1] )
 # sys.exit(0)
 
-
-#---------------------------------------
-# from random import randint
-# from random import random
-# llist=[]
-# p1 = partCreate('Hole')
-# # def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
-# p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
-# for i in range(6):
-# #	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
-# #	llist.append(  partRotateZ(p1, 360/5 * i)  )
-# 	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
-# partlist = llist
-# f=open('ncEFI.dat','w+b')
-# pickle.dump(partlist,f)
-# f.close()
-# import os
-# os.system('python ncEFIDisp2.py ncEFI.dat')
-# sys.exit(0)
 
 
 #---------------------------------------
