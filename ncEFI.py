@@ -23,7 +23,6 @@
 #      - ...
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
-#  - if start and end point for geomCreateSlotPoly are he same, we could just continue to move forward
 #  - avoid putting out arc z moves in toolCreate if z didn't change
 #  - add geomCreateCircle
 #  - add ncEFIDisp2 support for circle
@@ -1457,7 +1456,8 @@ def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
 ### If the z height of the end point is greater (more positive) than the
 ### starting point, the moves will be done up. Might only be useful for
 ### form endmills, e.g. a slot-mill, etc.
-### Probably obsolete because now geomCreateSlotPoly exists.
+### Probably obsolete because now geomCreateSlotPoly exists, but in fact
+### we call it from there now if needed.
 #############################################################################
 def geomCreateSlotLine( startPt, endPt, depthPerMove, basNr=0 ):
 	geom = []
@@ -1541,6 +1541,7 @@ def geomCreateSlotLine( startPt, endPt, depthPerMove, basNr=0 ):
 ### The initial cut depth is controlled by the z-coordinate of the start
 ### point, the total depth from the end point. All other z-values are
 ### ignored.
+### Mostly useful for cutting outlines, e.g.
 #############################################################################
 def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
 
@@ -1560,10 +1561,20 @@ def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
 		print("ERR: geomCreateSlotPoly: incDepth is zero" )
 		return []
 
+	# well, lol
+	if len( listOfPoints ) == 2 and smoothEnter:
+		return geomCreateSlotLine( listOfPoints[0], listOfPoints[1], incDepth, basNr )
+
 	p1 = listOfPoints[0]
 	zDepth = p1[2]
 	pz = listOfPoints[-1]
 	zEnd = pz[2]
+
+	# check if we can travel through everything without changing the direction
+	if p1[0] == pz[0] and p1[1] == pz[1] and len( listOfPoints ) > 2:
+		moveForwardOnly = True
+	else:
+		moveForwardOnly = False
 
 	if zEnd - zDepth >= 0:
 		print("ERR: geomCreateSlotPoly: wrong z-values for first or last point: ", p1, pz )
@@ -1598,7 +1609,7 @@ def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
 			e = elemCreateLineTo( e, (pt[0], pt[1], zDepth ) )
 			geom.append( e )
 
-			if n == 0 and smoothEnter:
+			if n == 0 and smoothEnter and not moveForwardOnly:
 				# go back to pt0, with the current zDepth and back again to
 				# cut away the rest of the "ramp material"
 				e = elemCreateLineTo( e, (pt0[0], pt0[1], zDepth ) )
@@ -1612,8 +1623,14 @@ def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
 		if zDepth == zEnd:
 			break
 
-		list.reverse( listOfPoints )
+		if not moveForwardOnly:
+			list.reverse( listOfPoints )
 
+	# okay, if we went forward only, we need to cut the remaining ramp to the 2nd point:
+	if moveForwardOnly:
+		pt2 = listOfPoints[1]
+		e = elemCreateLineTo( e, (pt2[0], pt2[1], zDepth)  )
+		geom.append( e )
 
 	return geom
 

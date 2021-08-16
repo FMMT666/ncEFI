@@ -11,18 +11,24 @@ from ncEFI import *
 
 #---------------------------------------
 llist = []
-llist += geomCreateSlotPoly( [(-90,0,0), (-80,10,0), (-50,0,-10)], 2, smoothEnter=False )
-llist += geomCreateSlotPoly( [(-30,0,0), (-10,10,0), (10,-10,0), (30,0,-10)], 4, smoothEnter=True )
-llist += geomCreateSlotPoly( [(40,20,0), (80,20,0), (80,-20,0), (40,-20,0),(40,20,-20)], 5, smoothEnter=True )
-
+llist.append( geomCreateSlotPoly( [(-90,0,0), (-80,10,0), (-50,0,-10)], 2, smoothEnter=False ) )
+llist.append( geomCreateSlotPoly( [(-30,0,0), (-10,10,0), (10,-10,0), (30,0,-10)], 4, smoothEnter=True ) )
+llist.append( geomCreateSlotPoly( [(40,60,0), (80,60,0), (80,20,0), (40,20,0),(40,60,-15)], 5, smoothEnter=True ) )
+llist.append( geomCreateSlotPoly( [(40, 0,0), (80, 0,0), (80,-40,0), (40,-40,0),(40, 0,-15)], 5, smoothEnter=False ) )
+llist.append( geomCreateSlotPoly( [(-50, -50,0), (50, -50, -20)], 5, smoothEnter=False ) )
+llist.append( geomCreateSlotPoly( [(-50, -80,0), (50, -80, -20)], 5, smoothEnter=True ) )
 debugShowViewer( llist )
-
-# p1 = partCreate( "cut 1" )
-# partAddElements( p1, e )
-# tool = []
-# tool += toolCreateFromPart(p1)
-# toolFileWrite( tool )
-
+plist = []
+for e in llist:
+	p = partCreate()
+	p = partAddElements( p, e )
+	plist.append( p )
+tool = []
+tool += toolCreateSimpleHeader()
+for p in plist:
+	tool += toolRapidToNextPart( p )
+	tool += toolCreateFromPart( p )
+toolFileWrite( tool )
 sys.exit(0)
 
 
