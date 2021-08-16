@@ -13,8 +13,17 @@
 #  - add geomCreateCircle    necessary at all? could use geomCreateSpiralHelix
 #  - add geomCreateRect      necessary at all? better to create a general 3- or 4pt pocket milling option
 # TODO:
+#  - improve geomCreateConcentricCircles
+#      - p1 should be in the middle
+#      - the args and usage are just meh
+#  - fix all calls to geomCreateConcentricCircles (because of the new p1)
+#  - improve geomCreateCircRingHole:
+#      - arguments' names
+#      - 'clear' does (yet) nothing
+#      - ...
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
+#  - if start and end point for geomCreateSlotPoly are he same, we could just continue to move forward
 #  - avoid putting out arc z moves in toolCreate if z didn't change
 #  - add geomCreateCircle
 #  - add ncEFIDisp2 support for circle
@@ -1448,6 +1457,7 @@ def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
 ### If the z height of the end point is greater (more positive) than the
 ### starting point, the moves will be done up. Might only be useful for
 ### form endmills, e.g. a slot-mill, etc.
+### Probably obsolete because now geomCreateSlotPoly exists.
 #############################################################################
 def geomCreateSlotLine( startPt, endPt, depthPerMove, basNr=0 ):
 	geom = []
@@ -1515,6 +1525,95 @@ def geomCreateSlotLine( startPt, endPt, depthPerMove, basNr=0 ):
 			e = elemCreateLineTo( e, lastPt )
 			geom.append( e )
 			break
+
+	return geom
+
+
+
+#############################################################################
+### geomCreateSlotPoly
+###
+### Creates a linear movement along a list of points, back and forth, to cut
+### something off. by default, the depth is changed at the start- and end
+### point, along the z-axis, "straight in". If "smoothEnter" is set to True,
+### the first vector from the start and the end of the list (the first lines
+### for each move, forward and back) will be used for the depth change.
+### The initial cut depth is controlled by the z-coordinate of the start
+### point, the total depth from the end point. All other z-values are
+### ignored.
+#############################################################################
+def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
+
+	if not isinstance( listOfPoints, list ):
+		print("ERR: geomCreateSlotPoly: listOfPoints is not a list: ", type(listOfPoints))
+		return []
+
+	if len( listOfPoints ) < 2:
+		print("ERR: geomCreateSlotPoly: listOfPoints has not enough points (<2): ", len(listOfPoints))
+		return []
+
+	if incDepth < 0:
+		print("INF: geomCreateSlotPoly: incDepth negative; corrected that" )
+		incDepth = abs( incDepth )
+
+	if incDepth == 0:
+		print("ERR: geomCreateSlotPoly: incDepth is zero" )
+		return []
+
+	p1 = listOfPoints[0]
+	zDepth = p1[2]
+	pz = listOfPoints[-1]
+	zEnd = pz[2]
+
+	if zEnd - zDepth >= 0:
+		print("ERR: geomCreateSlotPoly: wrong z-values for first or last point: ", p1, pz )
+		return []
+
+
+	geom = []
+
+	# TODO: not a single error check in here (in case any of the createLine thingies fail)
+	while zDepth >= zEnd:
+
+		if len( geom ) == 0:
+			pt0 = listOfPoints[0]
+			e = elemCreateVertex( pt0 )
+		else:
+			pt0 = pt
+
+		zDepth -= incDepth
+		if zDepth < zEnd:
+			zDepth = zEnd
+
+		if smoothEnter:
+			pass
+		else:
+			# hammer that tool right into the material
+			e = elemCreateLineTo( e, (pt0[0], pt0[1], zDepth ) )
+			geom.append( e )
+
+		n = 0
+		for pt in listOfPoints[1:]:
+
+			e = elemCreateLineTo( e, (pt[0], pt[1], zDepth ) )
+			geom.append( e )
+
+			if n == 0 and smoothEnter:
+				# go back to pt0, with the current zDepth and back again to
+				# cut away the rest of the "ramp material"
+				e = elemCreateLineTo( e, (pt0[0], pt0[1], zDepth ) )
+				geom.append( e )
+				# and back to where we were (will not cut anything)
+				e = elemCreateLineTo( e, (pt[0], pt[1], zDepth ) )
+				geom.append( e )
+			
+			n += 1
+
+		if zDepth == zEnd:
+			break
+
+		list.reverse( listOfPoints )
+
 
 	return geom
 

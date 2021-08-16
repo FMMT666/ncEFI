@@ -10,6 +10,23 @@ from ncEFI import *
 
 
 #---------------------------------------
+llist = []
+llist += geomCreateSlotPoly( [(-90,0,0), (-80,10,0), (-50,0,-10)], 2, smoothEnter=False )
+llist += geomCreateSlotPoly( [(-30,0,0), (-10,10,0), (10,-10,0), (30,0,-10)], 4, smoothEnter=True )
+llist += geomCreateSlotPoly( [(40,20,0), (80,20,0), (80,-20,0), (40,-20,0),(40,20,-20)], 5, smoothEnter=True )
+
+debugShowViewer( llist )
+
+# p1 = partCreate( "cut 1" )
+# partAddElements( p1, e )
+# tool = []
+# tool += toolCreateFromPart(p1)
+# toolFileWrite( tool )
+
+sys.exit(0)
+
+
+#---------------------------------------
 # The rounding of the new "format" conversion of the number-to-string
 # produces an error in the G-Code output:
 # G02 X0.027794 Y-57.157101 Z-3.333333 R0.416667
