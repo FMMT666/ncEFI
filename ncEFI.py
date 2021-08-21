@@ -1172,7 +1172,16 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 		print( "ERR: geomCreateConcentricCircles: number of circles: needed vs. made. ",nr-1,len(con) )
 		return []
 	return con
-	
+
+
+
+#############################################################################
+### geomCreateSpiraledCircles
+###
+#############################################################################
+def geomCreateSpiraledCircles( p1, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+	pass
+
 
 
 #############################################################################

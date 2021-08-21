@@ -9,27 +9,44 @@ from ncEFI import *
 # just various test routines
 
 
+
 #---------------------------------------
-llist = []
-llist.append( geomCreateSlotPoly( [(-90,0,0), (-80,10,0), (-50,0,-10)], 2, smoothEnter=False ) )
-llist.append( geomCreateSlotPoly( [(-30,0,0), (-10,10,0), (10,-10,0), (30,0,-10)], 4, smoothEnter=True ) )
-llist.append( geomCreateSlotPoly( [(40,60,0), (80,60,0), (80,20,0), (40,20,0),(40,60,-15)], 5, smoothEnter=True ) )
-llist.append( geomCreateSlotPoly( [(40, 0,0), (80, 0,0), (80,-40,0), (40,-40,0),(40, 0,-15)], 5, smoothEnter=False ) )
-llist.append( geomCreateSlotPoly( [(-50, -50,0), (50, -50, -20)], 5, smoothEnter=False ) )
-llist.append( geomCreateSlotPoly( [(-50, -80,0), (50, -80, -20)], 5, smoothEnter=True ) )
-debugShowViewer( llist )
-plist = []
-for e in llist:
-	p = partCreate()
-	p = partAddElements( p, e )
-	plist.append( p )
+#e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -1.5, 0, 999, 'cw' ) 
+e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -3.0, 0, 999, 'cw' ) 
+debugShowViewer( [e1] )
+p1 = partCreate( "spiral 1" )
+partAddElements( p1, e1 )
 tool = []
-tool += toolCreateSimpleHeader()
-for p in plist:
-	tool += toolRapidToNextPart( p )
-	tool += toolCreateFromPart( p )
+# tool += toolCreateSimpleHeader()
+tool += toolRapidToNextPart(p1)
+tool += toolCreateFromPart(p1)
+# tool += toolCreateSimpleFooter()
 toolFileWrite( tool )
 sys.exit(0)
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateSlotPoly( [(-90,0,0), (-80,10,0), (-50,0,-10)], 2, smoothEnter=False ) )
+# llist.append( geomCreateSlotPoly( [(-30,0,0), (-10,10,0), (10,-10,0), (30,0,-10)], 4, smoothEnter=True ) )
+# llist.append( geomCreateSlotPoly( [(40,60,0), (80,60,0), (80,20,0), (40,20,0),(40,60,-15)], 5, smoothEnter=True ) )
+# llist.append( geomCreateSlotPoly( [(40, 0,0), (80, 0,0), (80,-40,0), (40,-40,0),(40, 0,-15)], 5, smoothEnter=False ) )
+# llist.append( geomCreateSlotPoly( [(-50, -50,0), (50, -50, -20)], 5, smoothEnter=False ) )
+# llist.append( geomCreateSlotPoly( [(-50, -80,0), (50, -80, -20)], 5, smoothEnter=True ) )
+# debugShowViewer( llist )
+# plist = []
+# for e in llist:
+# 	p = partCreate()
+# 	p = partAddElements( p, e )
+# 	plist.append( p )
+# tool = []
+# tool += toolCreateSimpleHeader()
+# for p in plist:
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 #---------------------------------------
@@ -40,21 +57,21 @@ sys.exit(0)
 #     X0.027794 Y-57.157101 Z-3.333333 R13.333333
 # Yep, it was an error (done in 1995 :) to use R instead of IJ
 # Anyway, now corrected.
-llist=[]
-p1 = partCreate('Hole')
-# def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
-p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
-for i in range(6):
-#	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
-#	llist.append(  partRotateZ(p1, 360/5 * i)  )
-	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
-debugShowViewer( llist )
-tool = []
-for part in llist:
-	tool += toolRapidToNextPart( part )
-	tool += toolCreateFromPart( part )
-toolFileWrite( tool )
-sys.exit(0)
+# llist=[]
+# p1 = partCreate('Hole')
+# # def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+# p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+# for i in range(6):
+# #	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
+# #	llist.append(  partRotateZ(p1, 360/5 * i)  )
+# 	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
+# debugShowViewer( llist )
+# tool = []
+# for part in llist:
+# 	tool += toolRapidToNextPart( part )
+# 	tool += toolCreateFromPart( part )
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 #---------------------------------------
