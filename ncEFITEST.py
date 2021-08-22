@@ -12,17 +12,17 @@ from ncEFI import *
 
 #---------------------------------------
 #e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -1.5, 0, 999, 'cw' ) 
-e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -3.0, 0, 999, 'cw' ) 
-debugShowViewer( [e1] )
-p1 = partCreate( "spiral 1" )
-partAddElements( p1, e1 )
-tool = []
-# tool += toolCreateSimpleHeader()
-tool += toolRapidToNextPart(p1)
-tool += toolCreateFromPart(p1)
-# tool += toolCreateSimpleFooter()
-toolFileWrite( tool )
-sys.exit(0)
+# e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -3.0, 0, 999, 'cw' ) 
+# debugShowViewer( [e1] )
+# p1 = partCreate( "spiral 1" )
+# partAddElements( p1, e1 )
+# tool = []
+# # tool += toolCreateSimpleHeader()
+# tool += toolRapidToNextPart(p1)
+# tool += toolCreateFromPart(p1)
+# # tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 

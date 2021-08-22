@@ -360,15 +360,9 @@ def vecIntersectXY(p1,p2,q1,q2):
 ### Returns a list of intersections of a line and an arc (by midpoint and radius)
 #############################################################################
 def vecArcIntersectXY(p1,p2,pc,r):
-	if not p1[2]==p2[2]==pc[2]:	
-		print( "vecIntersectXY: line and arc not in same plane (xy)" )
-		return None
 
-#	print( "vecArcIntersect" )
-#	print( "__ p1: ",p1 )
-#	print( "__ p2: ",p2 )
-#	print( "__ pc: ",pc )
-#	print( "__ r : ",r )
+	if not p1[2] == p2[2] == pc[2]:	
+		print( "INF: vecIntersectXY: line and arc not in same plane (xy); ignoring!" )
 
 	# intersection points list
 	ips=[]

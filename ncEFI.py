@@ -318,26 +318,6 @@ def elemCreateArc180by3PtsTo(e1,p2,pm,dir,extra={}):
 
 
 #############################################################################
-### elemCreateArc360
-###
-###
-#############################################################################
-def elemCreateArc360(p1,p2,rad,dir):
-	pass
-
-
-
-#############################################################################
-### elemCreateCircle
-###
-###
-#############################################################################
-def elemCreateCircle(p1,rad,dir):
-	pass
-
-
-
-#############################################################################
 ### elemCopy
 ###
 ### Returns a new instance of the given element
@@ -1037,6 +1017,42 @@ def partRotateZAt( part, ang, center ):
 
 
 #############################################################################
+### geomCreateCircle
+###
+### Creates a full circle at 'center' with a diameter of 'dia' and a
+### direction as specified by 'dir'. The start of the circle can be specified
+### by 'startAngle' (float 0-360): 0=left (xmin), 90=up (ymax), 180=right(xmax),
+### 270=down. Values > 360 or < -360 are "modulus'ed down", negative values
+### are hopefully converted right :)
+#############################################################################
+def geomCreateCircle( center, startAngle, dia, dir ):
+	geom = []
+
+	if dia <= 0:
+		print( "ERR: geomCreateCircle: invalid diameter: ", dia )
+		return []
+	
+	if dir != 'cc' and dir != 'cw':
+		print( "ERR: geomCreateCircle: invalid direction: ", dir )
+		return []
+
+	# check for special dir parameters
+	while dir > 360:
+		dir = dir % 360
+	while dir < -360:
+		dir = dir % -360
+	if dir < 0:
+		dir = 360 - dir
+
+	# TODO: Finish This!!!
+
+
+	return geom
+
+
+
+
+#############################################################################
 ### geomCreateHelix
 ### 
 ### p1's position is the most left position on the helix (xy-plane).
@@ -1176,10 +1192,12 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 
 
 #############################################################################
-### geomCreateSpiraledCircles
+### geomCreateFinishCircles
 ###
+### This 
 #############################################################################
-def geomCreateSpiraledCircles( p1, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+def geomCreateFinishCircles( center, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+#	geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,stopAtZero=True,maxGrad=5.0,startPtIsAbs=False,basNr=0)	
 	pass
 
 
