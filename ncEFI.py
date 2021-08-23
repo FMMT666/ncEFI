@@ -21,6 +21,7 @@
 #      - arguments' names
 #      - 'clear' does (yet) nothing
 #      - ...
+#  - the 'turns' geomCreateSpiralHelix could be a float instead of an int, allowing less than 360° turns
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
 #  - avoid putting out arc z moves in toolCreate if z didn't change
@@ -623,8 +624,8 @@ def elemFindLinked(elem):
 ###
 #############################################################################
 def partCreate( name="", elems = None, extras={} ):
-	if elems == None:
-		elems = []
+	# if elems == None:
+	# 	elems = []
 
 	# TODO: check what to do if the part creation fails; return {} or an empty part??
 
@@ -632,11 +633,17 @@ def partCreate( name="", elems = None, extras={} ):
 		print( "ERR: partCreate: elems is not a list; ignoring: ", type(elems) )
 		elems = []
 	
-	ret = { 'name':name, 'type':'p', 'elements':elems }
-	for i in extras:
-		ret[i] = extras[i]
+#	part = { 'name':name, 'type':'p', 'elements':elems }
+	part = { 'name':name, 'type':'p', 'elements':[] }
 
-	return ret
+	if elems is not None:
+		partAddElements( part, elems )
+
+	# TODO: Do we need these "extras" and why aren't the others labeled "extra"?
+	for i in extras:
+		part[i] = extras[i]
+
+	return part
 
 
 
@@ -700,10 +707,18 @@ def partAddElement( part, elem, number=0 ):
 ###
 #############################################################################
 def partAddElements(part, elems):
+	if elems is None:
+		print( "ERR: partAddElements: 'elems' is None" )
+		return part
+
+	if not isinstance( elems, list):
+		print( "ERR: partAddElements: 'elems' is not a list" )
+		return part
+
 	for i in elems:
 		# TODO: TOCHK: changed 8/2021, auto numbering for AddElements
 		# part=partAddElement( part, i, -1 )
-		part=partAddElement( part, i, 0 )
+		part = partAddElement( part, i, 0 )
 	return part
 
 
@@ -1021,7 +1036,7 @@ def partRotateZAt( part, ang, center ):
 ###
 ### Creates a full circle at 'center' with a diameter of 'dia' and a
 ### direction as specified by 'dir'. The start of the circle can be specified
-### by 'startAngle' (float 0-360): 0=left (xmin), 90=up (ymax), 180=right(xmax),
+### by 'startAngle' (float 0-360): 0=right (xmax), 90=up (ymax), 180=left(xmin),
 ### 270=down. Values > 360 or < -360 are "modulus'ed down", negative values
 ### are hopefully converted right :)
 #############################################################################
@@ -1037,18 +1052,27 @@ def geomCreateCircle( center, startAngle, dia, dir ):
 		return []
 
 	# check for special dir parameters
-	while dir > 360:
-		dir = dir % 360
-	while dir < -360:
-		dir = dir % -360
-	if dir < 0:
-		dir = 360 - dir
+	while startAngle > 360:
+		startAngle = startAngle % 360
+	while startAngle < -360:
+		startAngle = startAngle % -360
+	if startAngle < 0:
+		startAngle = 360 - startAngle
 
-	# TODO: Finish This!!!
+	# calculate this for circle center at (0,0)
+	pts = vecArcIntersectXY( (0,0,0), vecRotateZ( (999999999.9,0,0), -math.radians(startAngle)), (0,0,0), dia/2.0 )
 
+	if len( pts ) != 2:
+		print( "ERR: geomCreateCircle: cannot calculate intersections" )
+		return []
+
+	# move the coords to mathch the center
+	pts[0] = vecAdd( pts[0], center )
+	pts[1] = vecAdd( pts[1], center )
+	geom.append( elemCreateArc180( pts[0], pts[1], 0, dir) )
+	geom.append( elemCreateArc180( pts[1], pts[0], 0, dir) )
 
 	return geom
-
 
 
 
@@ -1192,13 +1216,33 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 
 
 #############################################################################
-### geomCreateFinishCircles
+### geomCreateSpiralToCircle
 ###
-### This 
+### For finishing in- or outsides. Gently approaches a circle from the
+### in- or outside in a spiral motion, then goes around 360° and retracts
+### The cirlce is specified by 'center' and 'dia'.
+### Due to programming laziness, the spiral movement is restricted to a number
+### of full 360° turns and the startting point is the minimum on the x-axis.
+### The "retract" movement is always only one turn, ending at where the entry
+### spiral began.
+### If 'spiralDist' is negative, the spiral will approach the circle from the
+### inside; if possitive, from the outside.
 #############################################################################
-def geomCreateFinishCircles( center, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
-#	geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,stopAtZero=True,maxGrad=5.0,startPtIsAbs=False,basNr=0)	
-	pass
+def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0 ):
+	geom = []
+
+	if spiralDist == 0:
+		print( "ERR: geomCreateSpiralToCircle: spiralDist is zero" )
+		return []
+#	startPt = ( center[0] - dia/2.0 - spiralDist*spiralTurns, center[1], center[2] )
+	# startPt = ( -spiralDist*spiralTurns, center[1], center[2] )
+	startPt = ( -dia/2.0 - spiralDist*spiralTurns, 0, 0 )
+	spiralDist *= -1
+
+	geom += geomCreateSpiralHelix( center, startPt, spiralDist, 0, spiralTurns, dir )
+	geom += geomCreateCircle( center, -180, dia, dir )
+
+	return geom
 
 
 

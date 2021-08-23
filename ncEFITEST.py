@@ -10,6 +10,50 @@ from ncEFI import *
 
 
 
+
+
+
+#---------------------------------------
+llist = []
+llist.append( geomCreateSpiralToCircle( ( 20, 20,0), 20.0,  1, 2, 'cw' ) )
+llist.append( geomCreateSpiralToCircle( ( 20,-20,0), 20.0,  1, 2, 'cc' ) )
+llist.append( geomCreateSpiralToCircle( (-20, 20,0), 20.0, -1, 2, 'cw' ) )
+llist.append( geomCreateSpiralToCircle( (-20,-20,0), 20.0, -1, 2, 'cc' ) )
+debugShowViewer( llist )
+
+parts = []
+for e in llist:
+	parts.append( partCreate( "trololol", e ) )
+
+tool = []
+for p in parts:
+	# tool += toolCreateSimpleHeader()
+	tool += toolRapidToNextPart( p )
+	tool += toolCreateFromPart( p )
+	# tool += toolCreateSimpleFooter()
+
+toolFileWrite( tool )
+sys.exit(0)
+
+
+
+#---------------------------------------
+# l1 = elemCreateLine( (0,0,0),(10,10,0))
+# l2 = elemCreateLineTo( l1, (-10,10,0 ) )
+# geom = [ l1, l2]
+# debugShowViewer( geom )
+# partCreate( "trololol", geom )
+# sys.exit(0)
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateCircle( (20,20,0), 22.5, 25.0, 'cc' ) )
+# debugShowViewer( llist )
+# sys.exit(0)
+
+
 #---------------------------------------
 #e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -1.5, 0, 999, 'cw' ) 
 # e1 = geomCreateSpiralHelix( ( 0, 0, 0), (-20,0,0), -3.0, 0, 999, 'cw' ) 
