@@ -10,15 +10,9 @@ from ncEFI import *
 
 
 
-
-
-
 #---------------------------------------
 llist = []
-llist.append( geomCreateSpiralToCircle( ( 20, 20,0), 20.0,  1, 2, 'cw' ) )
-llist.append( geomCreateSpiralToCircle( ( 20,-20,0), 20.0,  1, 2, 'cc' ) )
-llist.append( geomCreateSpiralToCircle( (-20, 20,0), 20.0, -1, 2, 'cw' ) )
-llist.append( geomCreateSpiralToCircle( (-20,-20,0), 20.0, -1, 2, 'cc' ) )
+llist.append( geomCreateSpiralToCircle( (0,0,0), 29.0, 0.1, 10, 'cw' ) )
 debugShowViewer( llist )
 
 parts = []
@@ -34,6 +28,31 @@ for p in parts:
 
 toolFileWrite( tool )
 sys.exit(0)
+
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateSpiralToCircle( ( 20, 20,0), 20.0,  1, 5, 'cw' ) )
+# llist.append( geomCreateSpiralToCircle( ( 20,-20,0), 20.0,  1, 5, 'cc' ) )
+# llist.append( geomCreateSpiralToCircle( (-20, 20,0), 20.0, -1, 5, 'cw' ) )
+# llist.append( geomCreateSpiralToCircle( (-20,-20,0), 20.0, -1, 5, 'cc' ) )
+# debugShowViewer( llist )
+
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "trololol", e ) )
+
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 
@@ -418,6 +437,9 @@ sys.exit(0)
 
 
 #---------------------------------------
+#---- Everything below is super old ----
+#---------------------------------------
+#---------------------------------------
 l1=elemCreateLine((-10,-10,0),   (100,-10,0))
 l2=elemCreateLine((100,-10,0), (130,60,0))
 l3=elemCreateLine((130,60,0),(-50,30,0))
@@ -597,17 +619,6 @@ import os
 os.system('python ncEFIDisp2.py ncEFI.dat')
 
 sys.exit(0)
-
-
-
-
-
-
-
-
-
-
-
 
 
 

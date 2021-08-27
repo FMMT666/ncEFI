@@ -21,6 +21,7 @@
 #      - arguments' names
 #      - 'clear' does (yet) nothing
 #      - ...
+#  - spiralDist in geomCreateSpiralToCircle() should be an absolute value
 #  - the 'turns' geomCreateSpiralHelix could be a float instead of an int, allowing less than 360° turns
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
@@ -1227,6 +1228,13 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 ### spiral began.
 ### If 'spiralDist' is negative, the spiral will approach the circle from the
 ### inside; if possitive, from the outside.
+###
+### TODO:
+### So, to approach a circle of 30mm from the outside, beginning with a
+### negative x-distance of 2mm and 10 turns, set dia=30, spiralDist=0.2 and
+### turns=10?
+### Should be changed. Guess it's better to use "spiralDist" as the true,
+### initial distance (offset) from the circle.
 #############################################################################
 def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0 ):
 	geom = []
