@@ -10,26 +10,64 @@ from ncEFI import *
 
 
 
+
+
+
+
+#---------------------------------------
+# llist = []
+# # geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' ):
+# llist.append( geomCreateHelix( (-10,-10,0), 10, 10, 2, 'cc') )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "helix reworked", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateSpiralToCircle( (0,0,0), 10, -1.5, 15, 'cc' ) )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# #	parts.append( partCreate( "spiral for 6mm Fr; 30 to 29mm, 20 steps", e ) )
+# #	parts.append( partCreate( "spiral for 6mm Fr; 29 to 28mm, 10 steps", e ) )
+# 	parts.append( partCreate( "spiral for 6mm Fr; 29 to 28mm, 20 steps", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
+
+
+
 #---------------------------------------
 llist = []
-
 # geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
 llist.append( geomCreateCircRingHole( (0,0,0), 10, 20, 2,   5,2,   2,3,    2, 'cc') )
 llist.append( geomCreateCircRingHole( (0,0,0), 10, 40, 3,   5,2,   3,3,    2, 'cw') )
-
 debugShowViewer( llist )
-
 parts = []
 for e in llist:
 	parts.append( partCreate( "mill a 10.5mm hole, 5mm deep with a 2mm endmill ", e ) )
-
 tool = []
 for p in parts:
 	# tool += toolCreateSimpleHeader()
 	tool += toolRapidToNextPart( p )
 	tool += toolCreateFromPart( p )
 	# tool += toolCreateSimpleFooter()
-
 toolFileWrite( tool )
 sys.exit(0)
 

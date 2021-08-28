@@ -20,11 +20,10 @@
 #  - improve geomCreateCircRingHole:
 #      - arguments' names
 #      - 'clear' does (yet) nothing
+#      - the new retract movement should be an arc
 #      - ...
-#  - geomCreateCircRingHole(): "clear" does nothing
-#  - spiralDist in geomCreateSpiralToCircle() should be an absolute value
+#  - geomCreateSpiralToCircle() needs more error checks
 #  - option needed to use different feed rates in multi-geom functions like geomCreateCircRingHole
-#  - geomCreateHelix starts from the left x-coordinate; a bit weird
 #  - the 'turns' geomCreateSpiralHelix could be a float instead of an int, allowing less than 360° turns
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
@@ -1083,13 +1082,13 @@ def geomCreateCircle( center, startAngle, dia, dir ):
 #############################################################################
 ### geomCreateHelix
 ### 
-### p1's position is the most left position on the helix (xy-plane).
-### Endpoint is p1's (x,y)-position (z is depth).
+### p1's position is the axial center of the helix (xy-plane) (*NEW 8/2021*).
+### Endpoint is p1's (x,y)-position with the z-pos of "depth".
 ### "depth" is positive for negative z-axis values (milling a hole usually
 ### is done by milling "down", not "up").
 #############################################################################
-def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
-	hel=[]
+def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' ):
+	hel = []
 	if depth == 0.0:
 		print( "ERR: geomCreateHelix: depth == 0" )
 		return []
@@ -1099,45 +1098,46 @@ def geomCreateHelix(p1,dia,depth,depthSteps,dir,basNr=0,finish='finish'):
 	if dia <= 0.0:
 		print( "ERR: geomCreateHelix: dia <= 0" )
 		return []
-	depthPerHalfRev=depth/(depthSteps*2.0)
-	x1=p1[0]
-	x2=p1[0]+dia
-	p2=(x2,p1[1],p1[2]-depthPerHalfRev)
-	if basNr==0:
-		nr=1
+	depthPerHalfRev = depth / (2 * depthSteps)
+	x1 = p1[0] - dia/2.0
+	x2 = p1[0] + dia/2.0
+	p1 = ( x1, p1[1], p1[2] )
+	p2 = ( x2, p1[1], p1[2] - depthPerHalfRev )
+	if basNr == 0:
+		nr = 1
 	else:
-		nr=basNr
-	for i in range(0,depthSteps):
-		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		hel.append(el)
-		p1=p2
-		p2=(x1,p1[1],p1[2]-depthPerHalfRev)
-		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		hel.append(el)
-		p1=p2
-		if not i == depthSteps-1:
-			p2=(x2,p1[1],p1[2]-depthPerHalfRev)
+		nr = basNr
+	for i in range( 0, depthSteps ):
+		el=elemCreateArc180( p1, p2, dia/2.0, dir, {'pNr':nr} )
+		nr += 1
+		hel.append( el )
+		p1 = p2
+		p2 = ( x1, p1[1], p1[2]-depthPerHalfRev )
+		el = elemCreateArc180( p1, p2, dia/2.0, dir, {'pNr':nr} )
+		nr += 1
+		hel.append( el )
+		p1 = p2
+		if not i == depthSteps - 1:
+			p2 = ( x2, p1[1], p1[2] - depthPerHalfRev )
 		else:
-			p2=(x2,p1[1],p1[2])
+			p2 = ( x2, p1[1], p1[2] )
 	# end for all depthSteps
 
-	if not len(hel)==depthSteps*2:
+	if not len(hel) == 2 * depthSteps:
 		print( "ERR: geomCreateHelix: skipped one or more arcs (helix)" )
 		return[]
 
-	if finish=='finish':
-		el=elemCreateArc180(p1,p2,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		if el==[]:
+	if finish == 'finish':
+		el = elemCreateArc180( p1, p2, dia/2.0, dir, {'pNr':nr} )
+		nr += 1
+		if el == []:
 			print( "ERR: geomCreateHelix: skipped first finishing arc" )
 			return []
 		hel.append(el)
 
-		el=elemCreateArc180(p2,p1,dia/2.0,dir,{'pNr':nr})
-		nr+=1
-		if el==[]:
+		el = elemCreateArc180( p2, p1, dia/2.0, dir, {'pNr':nr} )
+		nr += 1
+		if el == []:
 			print( "ERR: geomCreateHelix: skipped second finishing arc" )
 			return []
 		hel.append(el)
@@ -1224,20 +1224,14 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 ###
 ### For finishing in- or outsides. Gently approaches a circle from the
 ### in- or outside in a spiral motion, then goes around 360° and retracts
-### The cirlce is specified by 'center' and 'dia'.
+### The circle is specified by 'center' and 'dia'.
 ### Due to programming laziness, the spiral movement is restricted to a number
-### of full 360° turns and the startting point is the minimum on the x-axis.
+### of full 360° turns and the starting point always on the x-axis.
 ### The "retract" movement is always only one turn, ending at where the entry
 ### spiral began.
 ### If 'spiralDist' is negative, the spiral will approach the circle from the
-### inside; if possitive, from the outside.
-###
-### TODO:
-### So, to approach a circle of 30mm from the outside, beginning with a
-### negative x-distance of 2mm and 10 turns, set dia=30, spiralDist=0.2 and
-### turns=10?
-### Should be changed. Guess it's better to use "spiralDist" as the true,
-### initial distance (offset) from the circle.
+### inside; if positive, from the outside. The value itself determines the
+### (x-) distance to the finished circle.
 #############################################################################
 def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0 ):
 	geom = []
@@ -1245,12 +1239,14 @@ def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0
 	if spiralDist == 0:
 		print( "ERR: geomCreateSpiralToCircle: spiralDist is zero" )
 		return []
-#	startPt = ( center[0] - dia/2.0 - spiralDist*spiralTurns, center[1], center[2] )
-	# startPt = ( -spiralDist*spiralTurns, center[1], center[2] )
-	startPt = ( -dia/2.0 - spiralDist*spiralTurns, 0, 0 )
+	# NEW 8/2021: make "spiralDist" an absolute value
+#	startPt = ( -dia/2.0 - spiralDist*spiralTurns, 0, 0 )
+	startPt = ( -dia/2.0 - spiralDist, 0, 0 )
 	spiralDist *= -1
 
-	geom += geomCreateSpiralHelix( center, startPt, spiralDist, 0, spiralTurns, dir )
+	# NEW 8/2021: make "spiralDist" an absolute value
+#	geom += geomCreateSpiralHelix( center, startPt, spiralDist, 0, spiralTurns, dir )
+	geom += geomCreateSpiralHelix( center, startPt, spiralDist/spiralTurns, 0, spiralTurns, dir )
 	geom += geomCreateCircle( center, -180, dia, dir )
 
 	return geom
@@ -1299,7 +1295,9 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 	
 	for i in range(0,depthSt):
 		# starting point for helix
-		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+1)*(depth/(depthSt*1.0))))
+		# NEW 8/2021 geomCreateHelix now uses p1 as the center point!
+#		pWork = (  p1[0] - (diaStart/2.0), p1[1], p1[2] + hDepth - ((i+1) * (depth/(depthSt*1.0) ))  )
+		pWork=(p1[0],p1[1],p1[2]+hDepth-((i+1)*(depth/(depthSt*1.0))))
 		hel=geomCreateHelix(pWork,diaStart,hDepth,hDepthSt  ,dir,nr,'nofinish')
 		if hel==[]:
 			print( "ERR: geomCreateCircRingHole: error creating helix" )
