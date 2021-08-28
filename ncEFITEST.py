@@ -12,12 +12,16 @@ from ncEFI import *
 
 #---------------------------------------
 llist = []
-llist.append( geomCreateSpiralToCircle( (0,0,0), 29.0, 0.1, 10, 'cw' ) )
+
+# geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+llist.append( geomCreateCircRingHole( (0,0,0), 10, 20, 2,   5,2,   2,3,    2, 'cc') )
+llist.append( geomCreateCircRingHole( (0,0,0), 10, 40, 3,   5,2,   3,3,    2, 'cw') )
+
 debugShowViewer( llist )
 
 parts = []
 for e in llist:
-	parts.append( partCreate( "trololol", e ) )
+	parts.append( partCreate( "mill a 10.5mm hole, 5mm deep with a 2mm endmill ", e ) )
 
 tool = []
 for p in parts:
@@ -28,6 +32,54 @@ for p in parts:
 
 toolFileWrite( tool )
 sys.exit(0)
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateCircRingHole( (0,0,0), 1, 9, 20,   5,10,2,10,1,'cc') )
+
+# debugShowViewer( llist )
+
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "mill a 10.5mm hole, 5mm deep with a 2mm endmill ", e ) )
+
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+
+# toolFileWrite( tool )
+# sys.exit(0)
+
+
+
+#---------------------------------------
+# llist = []
+# #llist.append( geomCreateSpiralToCircle( (0,0,0), 35 , 0.05, 20, 'cw' ) )
+# #llist.append( geomCreateSpiralToCircle( (0,0,0), 35 , 0.1, 10, 'cc' ) )
+# llist.append( geomCreateSpiralToCircle( (0,0,0), 34 , 0.05, 20, 'cw' ) )
+# #llist.append( geomCreateSpiralToCircle( (0,0,0), 34 , 0.05, 20, 'cc' ) )
+# debugShowViewer( llist )
+
+# parts = []
+# for e in llist:
+# #	parts.append( partCreate( "spiral for 6mm Fr; 30 to 29mm, 20 steps", e ) )
+# #	parts.append( partCreate( "spiral for 6mm Fr; 29 to 28mm, 10 steps", e ) )
+# 	parts.append( partCreate( "spiral for 6mm Fr; 29 to 28mm, 20 steps", e ) )
+
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 

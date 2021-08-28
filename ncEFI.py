@@ -21,7 +21,10 @@
 #      - arguments' names
 #      - 'clear' does (yet) nothing
 #      - ...
+#  - geomCreateCircRingHole(): "clear" does nothing
 #  - spiralDist in geomCreateSpiralToCircle() should be an absolute value
+#  - option needed to use different feed rates in multi-geom functions like geomCreateCircRingHole
+#  - geomCreateHelix starts from the left x-coordinate; a bit weird
 #  - the 'turns' geomCreateSpiralHelix could be a float instead of an int, allowing less than 360° turns
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
@@ -1263,25 +1266,28 @@ def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0
 #############################################################################
 def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
 	if depth <= 0.0:
-		print( "ERR: geomCreateCircRingHole: depth <= 0 :",depth )
+		print( "ERR: geomCreateCircRingHole: negative or zero depth:",depth )
 		return []
 	if depthSt < 1:
-		print( "ERR: geomCreateCircRingHole: depthSt < 1 :",depthSt )
+		print( "ERR: geomCreateCircRingHole: depthSt < 1: ",depthSt )
 		return []
 	if hDepth < 0:
-		print( "ERR: geomCreateCircRingHole: hDepth < 0 :",hDepth )
+		print( "ERR: geomCreateCircRingHole: helix depth needs to be a positive number:",hDepth )
+		return []
+	if hDepth < depth/depthSt:
+		print( "ERR: geomCreateCircRingHole: helix is too short; needs to be greater than depth/depthSt : ", hDepth )
 		return []
 	if hDepthSt < 1:
-		print( "ERR: geomCreateCircRingHole: hDepthSt < 1 :",hDepthSt )
+		print( "ERR: geomCreateCircRingHole: hDepthSt < 1 : ",hDepthSt )
 		return []
 	if clear < p1[2]:
-		print( "ERR: geomCreateCircRingHole: clear < workpos :",clear,p1[2] )
+		print( "ERR: geomCreateCircRingHole: clear < workpos: ",clear,p1[2] )
 		return []
 	if diaStart <= 0:
-		print( "ERR: geomCreateCircRingHole: diaStart < 0 :",diaStart )
+		print( "ERR: geomCreateCircRingHole: diaStart < 0: ",diaStart )
 		return []
 	if diaEnd <= 0:
-		print( "ERR: geomCreateCircRingHole: diaStart < 0 :",diaEnd )
+		print( "ERR: geomCreateCircRingHole: diaStart < 0: ",diaEnd )
 		return []
 	
 	if basNr==0:
@@ -1316,7 +1322,11 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 		if i < depthSt-1:
 			# now, "back" to the "next" helix
 			pWork1=partGetLastPositionFromElements(poc)
-			pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSt*1.0))
+			# NEW 8/2021: avoid moving directly up (might "scratch" the surface),
+			# instead, move to the middle of the x-axis' entry and exit position
+#			pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSt*1.0))
+			# This is okay, but looks super stupid, lol. Should be fixed later.
+			pWork2=( (p1[0]-(diaStart/2.0)+pWork1[0])/2, pWork1[1], pWork1[2] + depth/(depthSt*1.0) )
 			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
 			nr+=1
 			if lin==[]:
@@ -1334,7 +1344,10 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 		else:
 			# now, "back" to the starting point
 			pWork1=partGetLastPositionFromElements(poc)
-			pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSt*1.0)))
+			# NEW 8/2021: avoid moving directly up (might "scratch" the surface),
+			# instead, move to the middle of the x-axis' entry and exit position
+#			pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSt*1.0)))
+			pWork2=(  (pWork1[0]+(p1[0]-(diaStart/2.0)))/2, pWork1[1], pWork1[2] + (i+1) * (depth/(depthSt*1.0))  )
 			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
 			nr+=1
 			if lin==[]:
