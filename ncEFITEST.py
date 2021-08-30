@@ -10,6 +10,23 @@ from ncEFI import *
 
 
 
+#---------------------------------------
+llist = []
+llist.append( geomCreateSpiralToCircle( (0,0,-5), 10, -1.5, 15, 'cc' ) )
+debugShowViewer( llist )
+parts = []
+for e in llist:
+	parts.append( partCreate( "Loch von 10.5 auf 12 aufspiralen", e ) )
+tool = []
+for p in parts:
+	# tool += toolCreateSimpleHeader()
+	tool += toolRapidToNextPart( p )
+	tool += toolCreateFromPart( p )
+	# tool += toolCreateSimpleFooter()
+toolFileWrite( tool )
+sys.exit(0)
+
+
 
 
 
@@ -54,22 +71,23 @@ from ncEFI import *
 
 
 #---------------------------------------
-llist = []
-# geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
-llist.append( geomCreateCircRingHole( (0,0,0), 10, 20, 2,   5,2,   2,3,    2, 'cc') )
-llist.append( geomCreateCircRingHole( (0,0,0), 10, 40, 3,   5,2,   3,3,    2, 'cw') )
-debugShowViewer( llist )
-parts = []
-for e in llist:
-	parts.append( partCreate( "mill a 10.5mm hole, 5mm deep with a 2mm endmill ", e ) )
-tool = []
-for p in parts:
-	# tool += toolCreateSimpleHeader()
-	tool += toolRapidToNextPart( p )
-	tool += toolCreateFromPart( p )
-	# tool += toolCreateSimpleFooter()
-toolFileWrite( tool )
-sys.exit(0)
+# llist = []
+# # geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+# # llist.append( geomCreateCircRingHole( (-20,0,0), 10, 40, 3,   5,2,   3,3,    2, 'cc') )
+# # llist.append( geomCreateCircRingHole( ( 20,0,0), 10, 40, 3,   5,2,   3,3,    2, 'cw') )
+# llist.append( geomCreateCircRingHole( ( 0,0,0), 10, 40, 6,   5,2,   5,3,   0,   'cw') )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "mill a 10.5mm hole, 5mm deep with a 2mm endmill ", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 

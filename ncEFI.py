@@ -1319,47 +1319,67 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 		
 		if i < depthSt-1:
 			# now, "back" to the "next" helix
-			pWork1=partGetLastPositionFromElements(poc)
+			pWork1 = partGetLastPositionFromElements(poc)
+			pWork0 = pWork1
 			# NEW 8/2021: avoid moving directly up (might "scratch" the surface),
 			# instead, move to the middle of the x-axis' entry and exit position
 #			pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSt*1.0))
 			# This is okay, but looks super stupid, lol. Should be fixed later.
-			pWork2=( (p1[0]-(diaStart/2.0)+pWork1[0])/2, pWork1[1], pWork1[2] + depth/(depthSt*1.0) )
-			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-			nr+=1
-			if lin==[]:
-				print( "ERR: geomCreateCircRingHole: error creating helix back line 1 in: ",i )
-				return []
-			ccrh.append(lin)
-			pWork1=pWork2
-			pWork2=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+2)*(depth/(depthSt*1.0))))
-			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-			nr+=1
-			if lin==[]:
-				print( "ERR: geomCreateCircRingHole: error creating helix back line 2 in: ",i )
-				return []
-			ccrh.append(lin)
+			pWork2 = ( (p1[0]-(diaStart/2.0)+pWork1[0])/2, pWork1[1], pWork1[2] + depth/(depthSt*1.0) )
+			# NEW 8/2021 B: now get rid of these two lines and add a cool 180° arc (see below)
+			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			# nr+=1
+			# if lin==[]:
+			# 	print( "ERR: geomCreateCircRingHole: error creating helix back line 1 in: ",i )
+			# 	return []
+			# ccrh.append(lin)
+			pWork1 = pWork2
+			pWork2 = (p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+2)*(depth/(depthSt*1.0))))
+			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			# nr+=1
+			# if lin==[]:
+			# 	print( "ERR: geomCreateCircRingHole: error creating helix back line 2 in: ",i )
+			# 	return []
+			# ccrh.append(lin)
+
+			# NEW 8/2021: now with double arc
+			arc = elemCreateArc180( pWork0, pWork1, 0, dir, {'pNr':nr} )
+			nr += 1
+			ccrh.append(arc)
+			odir = 'cc' if dir == 'cw' else 'cw'
+			arc = elemCreateArc180( pWork1, pWork2, 0, odir, {'pNr':nr} )
+			nr += 1
+			ccrh.append(arc)
+
 		else:
 			# now, "back" to the starting point
-			pWork1=partGetLastPositionFromElements(poc)
+			pWork1 = partGetLastPositionFromElements(poc)
+			pWork0 = pWork1
 			# NEW 8/2021: avoid moving directly up (might "scratch" the surface),
 			# instead, move to the middle of the x-axis' entry and exit position
 #			pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSt*1.0)))
 			pWork2=(  (pWork1[0]+(p1[0]-(diaStart/2.0)))/2, pWork1[1], pWork1[2] + (i+1) * (depth/(depthSt*1.0))  )
-			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-			nr+=1
-			if lin==[]:
-				print( "ERR: geomCreateCircRingHole: error creating back line 1" )
-				return []
-			ccrh.append(lin)
-			pWork1=pWork2
-			pWork2=(p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((depth/(depthSt*1.0))))
-			lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
-			nr+=1
-			if lin==[]:
-				print( "ERR: geomCreateCircRingHole: error creating back line 2" )
-				return []
-			ccrh.append(lin)
+			# NEW 8/2021 B: arcs now also here
+			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			# nr+=1
+			# if lin==[]:
+			# 	print( "ERR: geomCreateCircRingHole: error creating back line 1" )
+			# 	return []
+			# ccrh.append(lin)
+			pWork1 = pWork2
+			pWork2 = (p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((depth/(depthSt*1.0))))
+			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
+			# nr+=1
+			# if lin==[]:
+			# 	print( "ERR: geomCreateCircRingHole: error creating back line 2" )
+			# 	return []
+			# ccrh.append(lin)
+
+			# NEW 8/2021: now with arc
+			arc = elemCreateArc180( pWork0, pWork2, 0, dir, {'pNr':nr} )
+			nr += 1
+			ccrh.append(arc)
+
 	return ccrh
 
 

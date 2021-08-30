@@ -8,6 +8,11 @@ A Python programmable G-Code generator for milling machines,
 including a minimalistic OpenGL preview.  
 Well, er... The remains of that :)
 
+![Circular Pocket Toolpath](/images/ncEFI_circularPockets.png)  
+
+This is not meant to be a CAM software or for milling parts, but
+for preparing the stock or quickly doing other things "live".
+
 I restored these Python fragments from an old CPIOed backup tape.  
 The only thing I remember is, that I implemented a quite cool, round
 pocket milling algorithm.
