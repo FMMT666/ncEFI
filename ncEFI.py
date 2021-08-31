@@ -23,6 +23,7 @@
 #      - the new retract movement should be an arc
 #      - ...
 #  - geomCreateSpiralToCircle() needs more error checks
+#  - more error checks for 'dir' (almost everywhere)
 #  - option needed to use different feed rates in multi-geom functions like geomCreateCircRingHole
 #  - the 'turns' geomCreateSpiralHelix could be a float instead of an int, allowing less than 360° turns
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
@@ -1150,9 +1151,38 @@ def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' )
 #############################################################################
 ### geomCreateRect
 ###
+### Creates a rectangle between points 'p1' and 'p2' with the direction 'dir'.
+### The algorithm always starts at 'p1'; the z-component of 'p2' is ignored.
+### If 'p1' and 'p2' share either the same x or y value, then the algorithm
+### will always return to 'p1'.
 #############################################################################
-def geomCreateRect( p1, p2, stepOver, dir, basNr=0 ):
-	pass
+def geomCreateRect( p1, p2, dir, basNr=0 ):
+
+	if dir != 'cc' and dir != 'cw':
+		print( "ERR: geomCreateRect: invalid direction: ", dir )
+		return []
+	
+	if p1[0] == p2[0] and p1[1] == p2[1]:
+		print( "ERR: geomCreateRect: p1 and p2 have identical x and y values: ", p1, p2 )
+		return []
+
+	geom = []
+
+	p2 = ( p2[0], p2[1], p1[2] )
+	xvec = ( p2[0] - p1[0], 0, 0 )
+	pts = [ p1, vecAdd(p1,xvec), p2, vecSub(p2,xvec), p1 ]
+
+	if dir == 'cw':
+		pts.reverse()
+
+	lastPt = p1
+	for pt in pts[1:]:
+		# only create a line if there's really a difference between the points
+		if pt != lastPt:
+			geom.append( elemCreateLine( lastPt, pt ) )
+		lastPt = pt
+
+	return geom
 
 
 

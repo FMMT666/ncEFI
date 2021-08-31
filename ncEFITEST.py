@@ -11,8 +11,12 @@ from ncEFI import *
 
 
 #---------------------------------------
+# def geomCreateRect( p1, p2, dir, basNr=0 ):
 llist = []
-llist.append( geomCreateSpiralToCircle( (0,0,-5), 10, -1.5, 15, 'cc' ) )
+llist.append( geomCreateRect( (-50,-40,0), (30,20,0), 'cw' ) )
+r2 = geomCreateRect( (-30,-10,0), (40,-50,0), 'cc' )
+r2 = geomRotateZ( r2, 12.5 )
+llist.append( r2 )
 debugShowViewer( llist )
 parts = []
 for e in llist:
@@ -27,6 +31,23 @@ toolFileWrite( tool )
 sys.exit(0)
 
 
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateSpiralToCircle( (0,0,-5), 10, -1.5, 15, 'cc' ) )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "Loch von 10.5 auf 12 aufspiralen", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 
