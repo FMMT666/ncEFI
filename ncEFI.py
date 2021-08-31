@@ -1148,6 +1148,15 @@ def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' )
 
 
 #############################################################################
+### geomCreateRect
+###
+#############################################################################
+def geomCreateRect( p1, p2, stepOver, dir, basNr=0 ):
+	pass
+
+
+
+#############################################################################
 ### geomCreateConcentricCircles
 ###
 ### p1 is the left posistion of the beginnig circle
