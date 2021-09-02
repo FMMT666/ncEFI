@@ -9,13 +9,11 @@ from ncEFI import *
 # just various test routines
 
 
-
 #---------------------------------------
-# def geomCreateRect( p1, p2, dir, basNr=0 ):
+#def geomCreateRectHelix( p1, p2, depth, depthSteps, dir, clearBottom=True, basNr=0 ):
 llist = []
-llist.append( geomCreateRect( (-50,-40,0), (30,20,0), 10, 'cw' ) )
-llist.append( geomCreateRect( (-50, 30,0), (60,30,0), 20, 'cw' ) )
-r2 = geomCreateRect( (-30,-10,0), (40,-50,0), 0, 'cc' )
+llist.append( geomCreateRectHelix( (-50,-40,0), (30,20,0), 10, 5, 'cw' ) )
+r2 = geomCreateRectHelix( (-30,-10,0), (40,-50,0), 3, 20, 'cc' )
 r2 = geomRotateZ( r2, 12.5 )
 llist.append( r2 )
 debugShowViewer( llist )
@@ -30,6 +28,29 @@ for p in parts:
 	# tool += toolCreateSimpleFooter()
 toolFileWrite( tool )
 sys.exit(0)
+
+
+
+#---------------------------------------
+# def geomCreateRect( p1, p2, dir, basNr=0 ):
+# llist = []
+# llist.append( geomCreateRect( (-50,-40,0), (30,20,0), 10, 'cw' ) )
+# llist.append( geomCreateRect( (-50, 30,0), (60,30,0), 20, 'cw' ) )
+# r2 = geomCreateRect( (-30,-10,0), (40,-50,0), 0, 'cc' )
+# r2 = geomRotateZ( r2, 12.5 )
+# llist.append( r2 )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "Loch von 10.5 auf 12 aufspiralen", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 

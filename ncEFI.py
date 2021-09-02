@@ -23,7 +23,7 @@
 #      - the new retract movement should be an arc
 #      - ...
 #  - geomCreateSpiralToCircle() needs more error checks
-#  - more error checks for 'dir' (almost everywhere)
+#  - geomCreateHelix() uses 'finish' for 'finish' (lol), but shold have sth likr "clearBottom=True"#  - more error checks for 'dir' (almost everywhere)
 #  - option needed to use different feed rates in multi-geom functions like geomCreateCircRingHole
 #  - the 'turns' geomCreateSpiralHelix could be a float instead of an int, allowing less than 360° turns
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
@@ -1201,6 +1201,50 @@ def geomCreateRect( p1, p2, depth, dir, basNr=0 ):
 		if pt != lastPt:
 			geom.append( elemCreateLine( lastPt, pt ) )
 		lastPt = pt
+
+	return geom
+
+
+
+#############################################################################
+### geomCreateRectHelix
+###
+### Creates a rectangular helix between points 'p1' and 'p2', the direction
+### 'dir' and a linear z-change of 'depth' per turn. 'depthSteps' specifies
+### the amount of turns.
+### The algorithm always starts at 'p1'; the z-component of 'p2' is ignored.
+### If 'p1' and 'p2' share either the same x or y value, then the algorithm
+### will always return to 'p1'. If 'finish'
+### Useful for finishing and smoothening things.
+#############################################################################
+def geomCreateRectHelix( p1, p2, depth, depthSteps, dir, clearBottom=True, basNr=0 ):
+	if depth == 0:
+		print( "ERR: geomCreateRectHelix: depth is zero" )
+		return []
+	if depthSteps < 1:
+		print( "ERR: geomCreateRectHelix: depthSteps < 1:", depthSteps )
+		return []
+	
+	geom = []
+
+	for i in range( depthSteps ):
+		e = geomCreateRect( p1, p2, depth, dir )
+		if e == []:
+			print( "ERR: geomCreateRectHelix: error creating rect at step i ", i )
+			return []
+
+		# geoms need to be added to geoms, not appended
+		geom += e
+
+		# new z start position
+		p1 = ( p1[0], p1[1], p1[2] - depth )
+
+	if clearBottom:
+		e = geomCreateRect( p1, p2, 0, dir )
+		if e == []:
+			print( "ERR: geomCreateRectHelix: error creating bottom rect" )
+			return []
+		geom += e
 
 	return geom
 
