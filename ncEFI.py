@@ -791,9 +791,8 @@ def partGetNumbers(part):
 ###
 #############################################################################
 def partGetLastPositionFromElements(elems):
-	li=[]
-	nr=0
-	el={}
+	nr = 0
+	el = {}
 	for i in elems:
 		if 'pNr' in i:
 			if i['pNr'] > nr:
@@ -1151,12 +1150,14 @@ def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' )
 #############################################################################
 ### geomCreateRect
 ###
-### Creates a rectangle between points 'p1' and 'p2' with the direction 'dir'.
+### Creates a rectangle between points 'p1' and 'p2' with the direction 'dir'
+### and a linear z-change of 'depth'.
+### If 'depth' is zero, a "flat" rectangle is created.
 ### The algorithm always starts at 'p1'; the z-component of 'p2' is ignored.
 ### If 'p1' and 'p2' share either the same x or y value, then the algorithm
 ### will always return to 'p1'.
 #############################################################################
-def geomCreateRect( p1, p2, dir, basNr=0 ):
+def geomCreateRect( p1, p2, depth, dir, basNr=0 ):
 
 	if dir != 'cc' and dir != 'cw':
 		print( "ERR: geomCreateRect: invalid direction: ", dir )
@@ -1168,15 +1169,34 @@ def geomCreateRect( p1, p2, dir, basNr=0 ):
 
 	geom = []
 
+	# create a list of point coordinates
 	p2 = ( p2[0], p2[1], p1[2] )
 	xvec = ( p2[0] - p1[0], 0, 0 )
+	# moved to the bottom
 	pts = [ p1, vecAdd(p1,xvec), p2, vecSub(p2,xvec), p1 ]
+
+	# modify the depths of the points in the list we just created
+	yvec = ( p2[1] - p1[1], 0, 0 )
+	xlen = vecLength( xvec )
+	ylen = vecLength( yvec )
+	# should not be zero; already checked if p1 equals p2 above
+	nomDepth = depth / ( 2 * xlen + 2 * ylen )
+	zvecX = nomDepth * xlen
+	zvecY = nomDepth * ylen
+	depths = [ p1[2], p1[2] - zvecX, p1[2] - zvecX - zvecY, p1[2] - 2*zvecX - zvecY, p1[2]-depth ]
+
+	# create a list with the points including the correct z-depth
+	lstPts = []
+	n = 0
+	for pt in pts:
+		lstPts.append(  (pt[0], pt[1], depths[n] )  )
+		n += 1
 
 	if dir == 'cw':
 		pts.reverse()
 
 	lastPt = p1
-	for pt in pts[1:]:
+	for pt in lstPts[1:]:
 		# only create a line if there's really a difference between the points
 		if pt != lastPt:
 			geom.append( elemCreateLine( lastPt, pt ) )
@@ -1739,6 +1759,8 @@ def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
 			pt0 = listOfPoints[0]
 			e = elemCreateVertex( pt0 )
 		else:
+			# Executed upon the 2nd iteration, so it's save to use 'pt' here, even if Pylint complains.
+			# 'pt' is set in the for loop below
 			pt0 = pt
 
 		zDepth -= incDepth

@@ -13,8 +13,9 @@ from ncEFI import *
 #---------------------------------------
 # def geomCreateRect( p1, p2, dir, basNr=0 ):
 llist = []
-llist.append( geomCreateRect( (-50,-40,0), (30,20,0), 'cw' ) )
-r2 = geomCreateRect( (-30,-10,0), (40,-50,0), 'cc' )
+llist.append( geomCreateRect( (-50,-40,0), (30,20,0), 10, 'cw' ) )
+llist.append( geomCreateRect( (-50, 30,0), (60,30,0), 20, 'cw' ) )
+r2 = geomCreateRect( (-30,-10,0), (40,-50,0), 0, 'cc' )
 r2 = geomRotateZ( r2, 12.5 )
 llist.append( r2 )
 debugShowViewer( llist )
