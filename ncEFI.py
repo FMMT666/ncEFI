@@ -53,13 +53,13 @@ from random import random
 from ncVec import *
 
 
-GCODE_RAPID        = "G00"
-GCODE_LINE         = "G01"
-GCODE_ARC_CW       = "G02"
-GCODE_ARC_CC       = "G03"
+GCODE_RAPID          = "G00"
+GCODE_LINE           = "G01"
+GCODE_ARC_CW         = "G02"
+GCODE_ARC_CC         = "G03"
 
-# TODO
-# Just some stupid default values for now.
+
+# TODO: testing only; these should all be in a "PRG_START" file
 GCODE_PRG_FEEDUNIT = 'G94 (feedrate in \'units\' per minute)'
 GCODE_PRG_UNITS    = 'G21 (units are millimeters)'
 GCODE_PRG_PLANE    = 'G17 (working in/on xy-plane)'
@@ -67,12 +67,15 @@ GCODE_PRG_PATHMODE = 'G64P0.05 (LinuxCNC, continuous mode with \'p\' as toleranc
 GCODE_PRG_INIT1    = 'T1M06'
 GCODE_PRG_INIT2    = 'G00X0Y0 S6000 M03'
 GCODE_PRG_INIT3    = 'F900'
-
+# TODO: testing only; these should all be in a "PRG_END" file
 GCODE_PRG_ENDPOS   = 'G00X0Y0'
 GCODE_PRG_END      = 'M02'
 
+
 GCODE_OP_SAVEZ     = '10'
 
+
+EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 instead of G01
 
 
 TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
@@ -99,6 +102,7 @@ TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 #   pNr     <- number of element in part
 #   pNext   <- if chained -> number of next element
 #   pPrev   <- if chained -> number of previous element
+#   tMove   <- 'RAPID' or 'NORMAL'; if not defined, 'NORMAL' (feed rate) is assumed
 
 #############################################################################
 # geometry
@@ -122,12 +126,14 @@ TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 #############################################################################
 def extraAddExtra(elem,extra):
 	for i in extra:
-		if i=='pNr':
-			elem['pNr']=extra['pNr']
-		if i=='pNext':
-			elem['pNext']=extra['pNext']
-		if i=='pPrev':
-			elem['pPrev']=extra['pPrev']
+		if i == 'pNr':
+			elem['pNr'] = extra['pNr']
+		if i == 'pNext':
+			elem['pNext'] = extra['pNext']
+		if i == 'pPrev':
+			elem['pPrev'] = extra['pPrev']
+		if i == 'tMove':
+			elem['tMove'] = extra['tMove']
 
 
 
@@ -1258,10 +1264,10 @@ def geomCreateRectHelix( p1, p2, depth, depthSteps, dir, clearBottom=True, basNr
 #############################################################################
 def geomCreateRectSpiral( p1, p2, stepOver, steps, dir, basNr=0 ):
 	if stepOver == 0:
-		print( "ERR: geomCreateRectHelix: depth is zero" )
+		print( "ERR: geomCreateRectSpiral: stepOver is zero" )
 		return []
 	if steps < 1:
-		print( "ERR: geomCreateRectHelix: depthSteps < 1:", depthSteps )
+		print( "ERR: geomCreateRectSpiral: steps < 1:", steps )
 		return []
 	
 	geom = []
@@ -1591,10 +1597,14 @@ def geomCreateSpiralHelix(center,startPt,radInc,heightInc,turns,dir,stopAtZero=T
 ### Height (z) is takes from StartPt.
 #############################################################################
 def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
-	geom =  []
+	geom = []
+
+	if incStep == 0:
+		print( "INF: geomCreateZigZag: 'incStep' must not be zero" )
+		return []
 
 	if incStep < 0:
-		print( "INF: geomCreateZigZag: inverted negative 'incStep' value" )
+		print( "INF: geomCreateZigZag: negative 'incStep' value" )
 		incStep *= -1
 
 	# use z from startPt
@@ -1678,6 +1688,130 @@ def geomCreateZigZag( startPt, endPt, incStep, yFirst, basNr=0 ):
 				geom.append( e )
 
 	return geom
+
+
+
+#############################################################################
+### geomCreateZig
+###
+### Copied from ZigZag; was too lazy
+### Creates a one-way flat milling shape, defined by two points, a step
+### parameter and a selection which axis shall move first.
+### Unlike "ZigZag", which mills in boths ways, this one moves back at a
+### safe Z position (G0 moves).
+### The amount of steps is calculated from the distance to travel, divided by
+### the increment per step 'incStep', rounded up!
+### For "Zig", unlike "ZigZag", the incStep value is the one between the
+### "real" milling moves, not the rapid moves backward.
+### For stupid values, a positive 'incStep' value but "more negative" end
+### point coordinates, at least the first move is always executed. A linear
+### move or a slot (if milled).
+### Height (z) is takes from StartPt.
+#############################################################################
+def geomCreateZig( startPt, endPt, incStep, safeZ, yFirst, basNr=0 ):
+	geom = []
+
+	if incStep == 0:
+		print( "INF: geomCreateZig: 'incStep' must not be zero" )
+		return []
+
+	if incStep < 0:
+		print( "INF: geomCreateZig: negative 'incStep' value" )
+		incStep *= -1
+
+	# the 2nd move is always a rapid one, so we ignore
+	incStep /= 2.0
+
+	# use z from startPt
+	z = startPt[2]
+
+	if safeZ < z:
+		print( "INF: geomCreateZig: safeZ < z: ", safeZ, z )
+		return []
+
+	# a marker for the direction of movement
+	movX = endPt[0] - startPt[0]
+	movY = endPt[1] - startPt[1]
+
+	# a sign marker
+	sigX = 1 if movX > 1 else -1
+	sigY = 1 if movY > 1 else -1
+
+	# always execute the first move
+	if yFirst == 0:
+		# x is going to move first
+		e = elemCreateLine( startPt, ( endPt[0], startPt[1], z) )
+		if incStep == 0:
+			return [e]
+		steps = movY / incStep
+	else:
+		# y is going to move first
+		e = elemCreateLine( startPt, ( startPt[0], endPt[1], z) )
+		if incStep == 0:
+			return [e]
+		steps = movX / incStep
+
+	geom.append( e )
+
+	steps = abs( math.ceil( steps ) )
+
+	# splitting this in x and y is redundant, but easier to follow
+	for n in range( steps ):
+
+		# for x moves and step over y
+		if yFirst == 0:
+			yn = startPt[1] + (n+1) * incStep * sigY
+			if n % 2 == 0:
+				# 0, 2, 4, ...: move x back
+				if movY > 0:
+					aDir = 'cc' if movX > 0 else 'cw'
+				else:
+					aDir = 'cw' if movX > 0 else 'cc'
+				# TODO: should be a rapid move and a "safe out" one; not possible for arc though (rapid)
+				e = elemCreateArc180To( e, ( endPt[0], yn, safeZ ), 0, aDir )
+				geom.append( e )
+				# at least the linear move can be rapid
+				e = elemCreateLineTo( e, ( startPt[0], yn, safeZ ), {'tMove':EXTRA_MOVE_RAPID} )
+				geom.append( e )
+			else:
+				# 1, 3, 5, ...: move x forward
+				if movY > 0:
+					aDir = 'cw' if movX > 0 else 'cc'
+				else:
+					aDir = 'cc' if movX > 0 else 'cw'
+				e = elemCreateArc180To( e, ( startPt[0], yn, z ), 0, aDir )
+				geom.append( e )
+				e = elemCreateLineTo( e, ( endPt[0], yn, z ) )
+				geom.append( e )
+
+		# move y, then step through x
+		else:
+			xn = startPt[0] + (n+1) * incStep * sigX
+			if n % 2 == 0:
+				# 0, 2, 4, ...: move y back
+				if movX > 0:
+					aDir = 'cw' if movY > 0 else 'cc'
+				else:
+					aDir = 'cc' if movY > 0 else 'cw'
+				# TODO: should be a rapid move and a "safe out" one; not possible for arc though (rapid)
+				e = elemCreateArc180To( e, ( xn, endPt[1], safeZ ), 0, aDir )
+				geom.append( e )
+				# at least the linear move can be rapid
+				e = elemCreateLineTo( e, ( xn, startPt[1], safeZ ), {'tMove':EXTRA_MOVE_RAPID} )
+				geom.append( e )
+			else:
+				# 1, 3, 5, ...: move x forward
+				if movX > 0:
+					aDir = 'cc' if movY > 0 else 'cw'
+				else:
+					aDir = 'cw' if movY > 0 else 'cc'
+				e = elemCreateArc180To( e, ( xn, startPt[1], z ), 0, aDir )
+				geom.append( e )
+				e = elemCreateLineTo( e, ( xn,  endPt[1], z ) )
+				geom.append( e )
+
+	return geom
+
 
 
 #############################################################################
@@ -2701,7 +2835,11 @@ def toolCreateFromPart( part ):
 			if lastCmd == GCODE_LINE:
 				cc = ' '
 			else:
+				# NEW 9/2021: now with optional rapid moves, if 'tMove':EXTRA_MOVE_RAPID
 				cc = GCODE_LINE 
+				if 'tMove' in el:
+					if el['tMove'] == EXTRA_MOVE_RAPID:
+						cc = GCODE_RAPID
 			cxyz = cc + ' ' + cx + ' ' + cy + ' ' + cz
 			lastCmd = GCODE_LINE
 

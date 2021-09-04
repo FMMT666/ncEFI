@@ -9,17 +9,16 @@ from ncEFI import *
 # just various test routines
 
 
+
+
 #---------------------------------------
-#def geomCreateRectHelix( p1, p2, depth, depthSteps, dir, clearBottom=True, basNr=0 ):
 llist = []
-llist.append( geomCreateRectHelix( (-50,-40,0), (30,20,0), 10, 5, 'cw' ) )
-r2 = geomCreateRectHelix( (-30,-10,0), (40,-50,0), 3, 20, 'cc' )
-r2 = geomRotateZ( r2, 12.5 )
-llist.append( r2 )
+llist.append( geomCreateZig(  (91, 0, -0.5), ( 30, 30, 0), 3, 5,  False )  )
+llist.append( geomCreateZig(  (-50, -50, 1.0), ( 10, -10, 0), 3, 2,  False )  )
 debugShowViewer( llist )
 parts = []
 for e in llist:
-	parts.append( partCreate( "Loch von 10.5 auf 12 aufspiralen", e ) )
+	parts.append( partCreate( "C2000 Test Messing", e ) )
 tool = []
 for p in parts:
 	# tool += toolCreateSimpleHeader()
@@ -28,6 +27,46 @@ for p in parts:
 	# tool += toolCreateSimpleFooter()
 toolFileWrite( tool )
 sys.exit(0)
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateZigZag(  ( -3, 0, -0.6), (91, 30, 0), 1.5, False )  )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "C2000 Test Messing", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
+
+
+
+
+#---------------------------------------
+#def geomCreateRectHelix( p1, p2, depth, depthSteps, dir, clearBottom=True, basNr=0 ):
+# llist = []
+# llist.append( geomCreateRectHelix( (-50,-40,0), (30,20,0), 10, 5, 'cw' ) )
+# r2 = geomCreateRectHelix( (-30,-10,0), (40,-50,0), 3, 20, 'cc' )
+# r2 = geomRotateZ( r2, 12.5 )
+# llist.append( r2 )
+# debugShowViewer( llist )
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "Loch von 10.5 auf 12 aufspiralen", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 
