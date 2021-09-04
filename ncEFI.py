@@ -9,10 +9,11 @@
 
 
 
-# TODO (MAYBE):
-#  - add geomCreateCircle    necessary at all? could use geomCreateSpiralHelix
-#  - add geomCreateRect      necessary at all? better to create a general 3- or 4pt pocket milling option
 # TODO:
+#  - geomCreateRectSpiral
+#  - geomCreateRectSpiralHelix
+#  - geomCreatePoly
+#  - geomCreatePolyHelix
 #  - improve geomCreateConcentricCircles
 #      - p1 should be in the middle
 #      - the args and usage are just meh
@@ -1245,6 +1246,25 @@ def geomCreateRectHelix( p1, p2, depth, depthSteps, dir, clearBottom=True, basNr
 			print( "ERR: geomCreateRectHelix: error creating bottom rect" )
 			return []
 		geom += e
+
+	return geom
+
+
+
+#############################################################################
+### geomCreateRectSpiral
+###
+### TODO: Does this make sense at all?
+#############################################################################
+def geomCreateRectSpiral( p1, p2, stepOver, steps, dir, basNr=0 ):
+	if stepOver == 0:
+		print( "ERR: geomCreateRectHelix: depth is zero" )
+		return []
+	if steps < 1:
+		print( "ERR: geomCreateRectHelix: depthSteps < 1:", depthSteps )
+		return []
+	
+	geom = []
 
 	return geom
 
