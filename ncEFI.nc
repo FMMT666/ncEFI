@@ -1,8 +1,29 @@
-(rapid to: C2000 Test Messing)
-G00 Z10
+(G-code start)
+(The contents of this file can be used for the tool path creation)
+(if the file name is used as a parameter for the toolCreateSimpleHeader)
+(or the toolFullAuto function.)
+(The file name must end with '_start.nc' and yes, these comments will)
+(appear in the output file too :)
+
+G21       (units are millimeters)
+G94       (feedrate in 'units' per minute)
+G17       (working in/on xy-plane)
+G64 P0.05 (LinuxCNC, continuous mode with 'p' as tolerance)
+
+G54       (use first WCS)
+
+T1 M6     (select first tool)
+S8000 M03
+G04 P3    (wait for 3 seconds)
+
+G43 H1    (set tool offset)
+
+F900
+(rapid to: zig)
+G00 Z20
 G00 X91.000000 Y0.000000
 G00 Z-0.500000
-(C2000 Test Messing)
+(zig)
 G01 X30.000000  
 G02 X30.000000 Y1.500000 Z5.000000 R0.750000
 G00 X91.000000  
@@ -44,11 +65,11 @@ G02 X30.000000 Y28.500000 Z5.000000 R0.750000
 G00 X91.000000  
 G03 X91.000000 Y30.000000 Z-0.500000 R0.750000
 G01 X30.000000  
-(rapid to: C2000 Test Messing)
-G00 Z10
+(rapid to: zig)
+G00 Z20
 G00 X-50.000000 Y-50.000000
 G00 Z1.000000
-(C2000 Test Messing)
+(zig)
 G01 X10.000000  
 G03 X10.000000 Y-48.500000 Z2.000000 R0.750000
 G00 X-50.000000  
@@ -104,3 +125,17 @@ G02 X-50.000000 Y-11.000000 Z1.000000 R0.750000
 G01 X10.000000  
 G03 X10.000000 Y-9.500000 Z2.000000 R0.750000
 G00 X-50.000000  
+
+(G-code end)
+(The contents of this file can be used for the tool path creation)
+(if the file name is used as a parameter for the toolCreateSimpleFooter)
+(or the toolFullAuto function.)
+(The file name must end with '_end.nc' and yes, these comments will)
+(appear in the output file too :)
+
+(SPECIAL VARIABLES IN THIS FILE:)
+( - GCODE_OP_SAFEZ in parenthesis will be replaced with the safeZ height)
+
+G00 Z20
+
+M02

@@ -10,6 +10,8 @@
 
 
 # TODO:
+#  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
+#  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
 #  - geomCreateRectSpiral
 #  - geomCreateRectSpiralHelix
 #  - geomCreatePoly
@@ -59,20 +61,41 @@ GCODE_ARC_CW         = "G02"
 GCODE_ARC_CC         = "G03"
 
 
-# TODO: testing only; these should all be in a "PRG_START" file
-GCODE_PRG_FEEDUNIT = 'G94 (feedrate in \'units\' per minute)'
-GCODE_PRG_UNITS    = 'G21 (units are millimeters)'
-GCODE_PRG_PLANE    = 'G17 (working in/on xy-plane)'
-GCODE_PRG_PATHMODE = 'G64P0.05 (LinuxCNC, continuous mode with \'p\' as tolerance)'
-GCODE_PRG_INIT1    = 'T1M06'
-GCODE_PRG_INIT2    = 'G00X0Y0 S6000 M03'
-GCODE_PRG_INIT3    = 'F900'
-# TODO: testing only; these should all be in a "PRG_END" file
-GCODE_PRG_ENDPOS   = 'G00X0Y0'
-GCODE_PRG_END      = 'M02'
+# default safe-Z height
+GCODE_OP_SAFEZ = 10.0
 
 
-GCODE_OP_SAVEZ     = '10'
+# default G-code start
+GCODE_PRG_START = [\
+'G21       (units are millimeters)',\
+'G94       (feedrate in \'units\' per minute)',\
+'G17       (working in/on xy-plane)',\
+'G64 P0.05 (LinuxCNC, continuous mode with \'p\' as tolerance)',\
+'',\
+'G54       (use first WCS)',\
+'',\
+'(DEBUG,CHECK WCS NOW!)',\
+'M0        (pause and display message)',\
+'G4 P1     (wait for 1 second)',\
+'',\
+'T1 M6     (select first tool)',\
+'S8000 M03',\
+'G04 P3    (wait for 3 seconds)',\
+'',\
+'G43 H1    (set tool offset)',\
+'',\
+'(DEBUG,CHECK TOOL OFFSET NOW!)',\
+'M0        (pause and display message)',\
+'G4 P1     (wait for 1 second)',\
+'',\
+'F900',\
+'']
+
+# default G-code end
+GCODE_PRG_END = [\
+'G00 Z' + str(GCODE_OP_SAFEZ),\
+'',\
+'M02']
 
 
 EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 instead of G01
@@ -2714,31 +2737,72 @@ def geomTrimPointsStartToEnd( elIn, isClosed=False ):
 
 
 #############################################################################
+### toolReadTextFile
+###
+### Opens a text file and returns its contents in a list, line by line.
+#############################################################################
+def toolReadTextFile( fname ):
+	lines = []
+	try:
+		fin = open( fname, 'r+t', encoding='UTF-8')
+	except:
+		print( "ERR: toolReadTextFile: unable to open file ", fname ) 
+		return None
+
+	if fin:
+		with open( fname ) as fin:
+			while True:
+				line = fin.readline()
+				if not line:
+					break
+				lines.append( line.rstrip() )
+	
+	return lines
+
+
+
+#############################################################################
 ### toolCreateSimpleHeader
 ###
 #############################################################################
-def toolCreateSimpleHeader():
+def toolCreateSimpleHeader( fname=None ):
 	head=[]
-	head.append(GCODE_PRG_UNITS)
-	head.append(GCODE_PRG_FEEDUNIT)
-	head.append(GCODE_PRG_PATHMODE)
-	head.append(GCODE_PRG_PLANE)
-	head.append(GCODE_PRG_INIT1)
-	head.append(GCODE_PRG_INIT2)
-	head.append(GCODE_PRG_INIT3)
+
+	if fname is not None:
+		headFile = toolReadTextFile ( fname + '_start.nc' )
+		if headFile:
+			return headFile
+
+	for i in GCODE_PRG_START:
+		head.append(i)
+
 	return head
+
 
 
 #############################################################################
 ### toolCreateSimpleFooter
 ###
 #############################################################################
-def toolCreateSimpleFooter():
+def toolCreateSimpleFooter( fname=None ):
 	foot=[]
-	foot.append('(rapid to endposition)')
-	foot.append(GCODE_RAPID+'Z'+GCODE_OP_SAVEZ)
-	foot.append(GCODE_PRG_ENDPOS)
-	foot.append(GCODE_PRG_END)
+
+	if fname is not None:
+		headFile = toolReadTextFile ( fname + '_end.nc' )
+		if headFile:
+			# check for magic names
+			for i in range(len(headFile)):
+				if '(GCODE_OP_SAFEZ)' in headFile[i]:
+					# override immutable string
+					headFile[i] = headFile[i].replace( '(GCODE_OP_SAFEZ)', str(GCODE_OP_SAFEZ) )
+
+			return headFile
+
+	foot.append( '(END)' )
+
+	for i in GCODE_PRG_END:
+		foot.append(i)
+
 	return foot
 
 
@@ -2762,7 +2826,7 @@ def toolRapidToNextPart( part ):
 		pname = 'unnamed part'
 
 	rap.append( '(rapid to: ' + pname + ')' )
-	rap.append( GCODE_RAPID + ' Z' + GCODE_OP_SAVEZ )
+	rap.append( GCODE_RAPID + ' Z' + str(GCODE_OP_SAFEZ) )
 	rap.append( GCODE_RAPID + ' X' + format( p1[0], 'f' ) + ' Y' + format( p1[1], 'f' ) )
 	rap.append( GCODE_RAPID + ' Z' + format( p1[2], 'f' ) )
 
@@ -2931,6 +2995,77 @@ def toolFileWrite( tools, fname='ncEFI.nc', append=False ):
 #############################################################################
 def toolFileAppend( tools, fname='ncEFI.nc' ):
 	return toolFileWrite( tools, fname, append=True)
+
+
+
+#############################################################################
+### toolFullAuto
+###
+### Creates a G-code file from a list of geometries, connecting them via
+### rapid moves. Just here to save you some typing :)
+### 'geoms' is a list of geometries; optionally, with 'names', a list of the
+### same length as 'geoms', can be used to name the created parts. The items
+### need to be strings.
+### 'safeZ' is the safe Z travel height. If not specified, the default value
+### will be used.
+### The name of the G-code output file can be overriden with 'fname'.
+#############################################################################
+def toolFullAuto( geoms, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fnameHeader=None ):
+
+	# avoid overwriting files if someone swaps arguments
+	forbiddenFileNames = ['ncEFI', 'ncVec', 'ncPRG', 'README', '.gitignore', 'testlol']
+	if fname != 'ncEFI.nc':
+		for n in forbiddenFileNames:
+			if n in fname:
+				print( "ERR: toolFullAuto: unsafe file name used: ", fname )
+				return False
+
+	if not isinstance( geoms, list ):
+			print( "ERR: toolFullAuto: 'geoms' is not a list ", type(geoms) )
+			return False
+	
+	if len(geoms) < 1:
+		print( "ERR: toolFullAuto: 'geoms' is empty" )
+		return False
+
+	if names is not None:
+		if len(names) != len(geoms):
+			print( "WARNING: toolFullAuto: length of 'names' does not match length of 'geoms: ", len(geoms), len(names) )
+			names = None
+
+	if not isinstance( safeZ, (int, float, complex)) or isinstance(safeZ, bool):
+		print( "ERR: toolFullAuto: 'safeZ' is not a number ", type(safeZ) )
+		return False
+
+	if safeZ < 0:
+		print( "WARNING: 'safeZ' is < 0: ", safeZ )
+
+	# TODO: overriding this "should" [tm] be safe
+	global GCODE_OP_SAFEZ
+	GCODE_OP_SAFEZ = safeZ
+
+	# create parts
+	parts = []
+	n = 0
+	for e in geoms:
+		name = "no name"
+		if names is not None:
+			name = names[n]
+			if not isinstance(name,str):
+				print( "WARNING: toolFullAuto: 'names' contains other types than strings" )
+				names = None
+				name = "no name"
+		parts.append( partCreate( name, e ) )
+
+	# create tool path
+	tool = []
+	tool += toolCreateSimpleHeader( fnameHeader )
+	for p in parts:
+		tool += toolRapidToNextPart( p )
+		tool += toolCreateFromPart( p )
+	tool += toolCreateSimpleFooter( fnameHeader )
+
+	toolFileWrite( tool, fname )
 
 
 

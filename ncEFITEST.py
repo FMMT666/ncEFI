@@ -10,23 +10,35 @@ from ncEFI import *
 
 
 
-
 #---------------------------------------
 llist = []
 llist.append( geomCreateZig(  (91, 0, -0.5), ( 30, 30, 0), 3, 5,  False )  )
 llist.append( geomCreateZig(  (-50, -50, 1.0), ( 10, -10, 0), 3, 2,  False )  )
+
 debugShowViewer( llist )
-parts = []
-for e in llist:
-	parts.append( partCreate( "C2000 Test Messing", e ) )
-tool = []
-for p in parts:
-	# tool += toolCreateSimpleHeader()
-	tool += toolRapidToNextPart( p )
-	tool += toolCreateFromPart( p )
-	# tool += toolCreateSimpleFooter()
-toolFileWrite( tool )
-sys.exit(0)
+
+toolFullAuto( llist, 20, ['zig','zag'], fnameHeader='ncPRG' )
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateZig(  (91, 0, -0.5), ( 30, 30, 0), 3, 5,  False )  )
+# llist.append( geomCreateZig(  (-50, -50, 1.0), ( 10, -10, 0), 3, 2,  False )  )
+
+# debugShowViewer( llist )
+
+# parts = []
+# for e in llist:
+# 	parts.append( partCreate( "C2000 Test Messing", e ) )
+# tool = []
+# for p in parts:
+# 	# tool += toolCreateSimpleHeader()
+# 	tool += toolRapidToNextPart( p )
+# 	tool += toolCreateFromPart( p )
+# 	# tool += toolCreateSimpleFooter()
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 #---------------------------------------
@@ -630,74 +642,74 @@ sys.exit(0)
 #---- Everything below is super old ----
 #---------------------------------------
 #---------------------------------------
-l1=elemCreateLine((-10,-10,0),   (100,-10,0))
-l2=elemCreateLine((100,-10,0), (130,60,0))
-l3=elemCreateLine((130,60,0),(-50,30,0))
-a1=elemCreateArc180((-50,30,0),(-60,-20,0),30,'cw')
-a2=elemCreateArc180((-60,-20,0),(-30,10,0),50,'cw')
-l4=elemCreateLine((-30,10,0),  (-10,-10,0))
+# l1=elemCreateLine((-10,-10,0),   (100,-10,0))
+# l2=elemCreateLine((100,-10,0), (130,60,0))
+# l3=elemCreateLine((130,60,0),(-50,30,0))
+# a1=elemCreateArc180((-50,30,0),(-60,-20,0),30,'cw')
+# a2=elemCreateArc180((-60,-20,0),(-30,10,0),50,'cw')
+# l4=elemCreateLine((-30,10,0),  (-10,-10,0))
 
 
-#a1=elemCreateArc180((0,0,0),(50,0,0),40,'cw')
-l01=elemCreateLine((0,0,0),(20,0,0))
-l02=elemCreateLine((20,0,0),(20,-15,0))
-l03=elemCreateLine((20,-15,0),(35,-15,0))
-l04=elemCreateLine((35,-15,0),(35,0,0))
-l05=elemCreateLine((35,0,0),(50,0,0))
+# #a1=elemCreateArc180((0,0,0),(50,0,0),40,'cw')
+# l01=elemCreateLine((0,0,0),(20,0,0))
+# l02=elemCreateLine((20,0,0),(20,-15,0))
+# l03=elemCreateLine((20,-15,0),(35,-15,0))
+# l04=elemCreateLine((35,-15,0),(35,0,0))
+# l05=elemCreateLine((35,0,0),(50,0,0))
 
-l1=elemCreateLine((50,0,0),   (0,50,0))
-a2=elemCreateArc180((0,50,0),(-50,30,0),40,'cc')
-l2=elemCreateLine((-50,30,0),   (0,0,0))
-
-
-p1=partCreate('pups')
-
-p1=partAddElement(p1,l01,1)
-p1=partAddElement(p1,l02,2)
-p1=partAddElement(p1,l03,3)
-p1=partAddElement(p1,l04,4)
-p1=partAddElement(p1,l05,5)
-
-p1=partAddElement(p1,l1,6)
-p1=partAddElement(p1,a2,10)
-p1=partAddElement(p1,l2,11)
-
-a1=elemCreateArc180((0,0,0),(30,0,20),15,'cw')
-a2=elemCreateArc180((30,0,20),(0,0,40),15,'cw')
-a3=elemCreateArc180((0,0,40),(30,0,60),15,'cw')
-a4=elemCreateArc180((30,0,60),(0,0,80),15,'cw')
-
-p2=partCreate('pansen')
-p2=partAddElement(p2,a1,1)
-p2=partAddElement(p2,a2,2)
-p2=partAddElement(p2,a3,3)
-p2=partAddElement(p2,a4,4)
+# l1=elemCreateLine((50,0,0),   (0,50,0))
+# a2=elemCreateArc180((0,50,0),(-50,30,0),40,'cc')
+# l2=elemCreateLine((-50,30,0),   (0,0,0))
 
 
-h1=geomCreateHelix((50,50,0),5,10,10,'cw',0,'nofinish')
-p3=partCreate('helix')
-p3=partAddElements(p3,h1)
+# p1=partCreate('pups')
+
+# p1=partAddElement(p1,l01,1)
+# p1=partAddElement(p1,l02,2)
+# p1=partAddElement(p1,l03,3)
+# p1=partAddElement(p1,l04,4)
+# p1=partAddElement(p1,l05,5)
+
+# p1=partAddElement(p1,l1,6)
+# p1=partAddElement(p1,a2,10)
+# p1=partAddElement(p1,l2,11)
+
+# a1=elemCreateArc180((0,0,0),(30,0,20),15,'cw')
+# a2=elemCreateArc180((30,0,20),(0,0,40),15,'cw')
+# a3=elemCreateArc180((0,0,40),(30,0,60),15,'cw')
+# a4=elemCreateArc180((30,0,60),(0,0,80),15,'cw')
+
+# p2=partCreate('pansen')
+# p2=partAddElement(p2,a1,1)
+# p2=partAddElement(p2,a2,2)
+# p2=partAddElement(p2,a3,3)
+# p2=partAddElement(p2,a4,4)
 
 
-c1=geomCreateConcentricCircles((0,0,0),30,10,5,'cc')
-p4=partCreate('Concentric')
-p4=partAddElements(p4,c1)
+# h1=geomCreateHelix((50,50,0),5,10,10,'cw',0,'nofinish')
+# p3=partCreate('helix')
+# p3=partAddElements(p3,h1)
 
 
-h1=geomCreateCircRingHole((0,0,0),1,50,49,5,3,2,2,5,'cw')
+# c1=geomCreateConcentricCircles((0,0,0),30,10,5,'cc')
+# p4=partCreate('Concentric')
+# p4=partAddElements(p4,c1)
 
 
-p5=partCreate('Hole')
-p5=partAddElements(p5,geomCreateCircRingHole((0,0,0),20.0,20.0,1.0,5,3,2,2,5,'cw'))
+# h1=geomCreateCircRingHole((0,0,0),1,50,49,5,3,2,2,5,'cw')
 
-p6=partCreate('Hole2')
-p6=partAddElements(p6,geomCreateCircRingHole((100,0,0),1,10,9,5,3,2,2,5,'cc'))
 
-p7=partCreate('Hole3')
-p7=partAddElements(p7,geomCreateCircRingHole((100,50,0),10,1,9,5,3,2,2,5,'cw'))
+# p5=partCreate('Hole')
+# p5=partAddElements(p5,geomCreateCircRingHole((0,0,0),20.0,20.0,1.0,5,3,2,2,5,'cw'))
 
-p8=partCreate('Hole4')
-p8=partAddElements(p8,geomCreateCircRingHole((0,50,0),1,10,9,5,3,2,2,5,'cw'))
+# p6=partCreate('Hole2')
+# p6=partAddElements(p6,geomCreateCircRingHole((100,0,0),1,10,9,5,3,2,2,5,'cc'))
+
+# p7=partCreate('Hole3')
+# p7=partAddElements(p7,geomCreateCircRingHole((100,50,0),10,1,9,5,3,2,2,5,'cw'))
+
+# p8=partCreate('Hole4')
+# p8=partAddElements(p8,geomCreateCircRingHole((0,50,0),1,10,9,5,3,2,2,5,'cw'))
 
 
 
@@ -709,106 +721,106 @@ p8=partAddElements(p8,geomCreateCircRingHole((0,50,0),1,10,9,5,3,2,2,5,'cw'))
 
 
 
-f=open('ncEFI.nc','w+t')
-for i in toolCreateSimpleHeader():
-	f.write(i+'\n')
+# f=open('ncEFI.nc','w+t')
+# for i in toolCreateSimpleHeader():
+# 	f.write(i+'\n')
 
 
-for i in toolRapidToNextPart(p1):
-	f.write(i+'\n')
-for i in toolCreateFromPart(p1):
-	f.write(i+'\n')
+# for i in toolRapidToNextPart(p1):
+# 	f.write(i+'\n')
+# for i in toolCreateFromPart(p1):
+# 	f.write(i+'\n')
 
-for i in toolRapidToNextPart(p6):
-	f.write(i+'\n')
-for i in toolCreateFromPart(p6):
-	f.write(i+'\n')
+# for i in toolRapidToNextPart(p6):
+# 	f.write(i+'\n')
+# for i in toolCreateFromPart(p6):
+# 	f.write(i+'\n')
 
-for i in toolRapidToNextPart(p7):
-	f.write(i+'\n')
-for i in toolCreateFromPart(p7):
-	f.write(i+'\n')
+# for i in toolRapidToNextPart(p7):
+# 	f.write(i+'\n')
+# for i in toolCreateFromPart(p7):
+# 	f.write(i+'\n')
 
-for i in toolRapidToNextPart(p8):
-	f.write(i+'\n')
-for i in toolCreateFromPart(p8):
-	f.write(i+'\n')
+# for i in toolRapidToNextPart(p8):
+# 	f.write(i+'\n')
+# for i in toolCreateFromPart(p8):
+# 	f.write(i+'\n')
 
-for i in toolRapidToNextPart(p1):
-	f.write(i+'\n')
-for i in toolCreateFromPart(p1):
-	f.write(i+'\n')
+# for i in toolRapidToNextPart(p1):
+# 	f.write(i+'\n')
+# for i in toolCreateFromPart(p1):
+# 	f.write(i+'\n')
 
 	
-for i in toolCreateSimpleFooter():
-	f.write(i+'\n')
+# for i in toolCreateSimpleFooter():
+# 	f.write(i+'\n')
 
-f.close()
+# f.close()
 
-print( "p1 closed :",partCheckClosed(p1) )
+# print( "p1 closed :",partCheckClosed(p1) )
 
-p10=partCreate('PupsContour')
-e10=geomCreateContour(p1,-5.0)
-p10=partAddElements(p10,e10)
+# p10=partCreate('PupsContour')
+# e10=geomCreateContour(p1,-5.0)
+# p10=partAddElements(p10,e10)
 
-p20=partCreate('PupsSlot')
-e20=geomCreateSlotContour(p1,-3.0)
-p20=partAddElements(p20,e20)
+# p20=partCreate('PupsSlot')
+# e20=geomCreateSlotContour(p1,-3.0)
+# p20=partAddElements(p20,e20)
 
 
 
-#for i in range(1,len(p1['elements'])):
-#  e1=partGetElement(p1,i)
-#  e2=partGetElement(p1,i+1)
-#  if e1 == [] or e2 == []:
-#    break
-#  ips=elemIntersectsElemXY(e1,e2)
-#  print( "i: ",i," -> ",ips )
+# #for i in range(1,len(p1['elements'])):
+# #  e1=partGetElement(p1,i)
+# #  e2=partGetElement(p1,i+1)
+# #  if e1 == [] or e2 == []:
+# #    break
+# #  ips=elemIntersectsElemXY(e1,e2)
+# #  print( "i: ",i," -> ",ips )
 	
 
-#cc1=geomCreateLeftContour(p1,-5.0)
-#cc1=geomTrimPointsStartToEnd(cc1,'Closed')
-#p50=partCreate('PupsContour1')
-#p50=partAddElements(p50,cc1)
-#cc2=geomCreateLeftContour(p50,-5.0)
-#p51=partCreate('PupsContour2')
-#p51=partAddElements(p51,cc2)
+# #cc1=geomCreateLeftContour(p1,-5.0)
+# #cc1=geomTrimPointsStartToEnd(cc1,'Closed')
+# #p50=partCreate('PupsContour1')
+# #p50=partAddElements(p50,cc1)
+# #cc2=geomCreateLeftContour(p50,-5.0)
+# #p51=partCreate('PupsContour2')
+# #p51=partAddElements(p51,cc2)
 
 
-ss1=geomCreateSlotContour(p1,-5)
-ss1=geomExtractSlotDirVecs(ss1)
-p60=partCreate('SlotControl')
-p60=partAddElements(p60,ss1)
+# ss1=geomCreateSlotContour(p1,-5)
+# ss1=geomExtractSlotDirVecs(ss1)
+# p60=partCreate('SlotControl')
+# p60=partAddElements(p60,ss1)
 
 
-ss2=geomCreateLeftContour(p1,-5.0)
-p61=partCreate('LeftContour1')
-p61=partAddElements(p61,ss2)
+# ss2=geomCreateLeftContour(p1,-5.0)
+# p61=partCreate('LeftContour1')
+# p61=partAddElements(p61,ss2)
 
-ss3=geomCreateLeftContour(p61,-5.0)
-p62=partCreate('LeftContour2')
-p62=partAddElements(p62,ss3)
+# ss3=geomCreateLeftContour(p61,-5.0)
+# p62=partCreate('LeftContour2')
+# p62=partAddElements(p62,ss3)
 
-ss4=geomCreateSlotContour(p61,-5.0)
-ss4=geomExtractSlotDirVecs(ss4)
-p63=partCreate('SlotControl61')
-p63=partAddElements(p63,ss4)
+# ss4=geomCreateSlotContour(p61,-5.0)
+# ss4=geomExtractSlotDirVecs(ss4)
+# p63=partCreate('SlotControl61')
+# p63=partAddElements(p63,ss4)
 
 
-partlist=[p1,p61,p62]
+# partlist=[p1,p61,p62]
 
-f=open('ncEFI.dat','w+b')
-pickle.dump(partlist,f)
-f.close()
+# f=open('ncEFI.dat','w+b')
+# pickle.dump(partlist,f)
+# f.close()
 
-print( "SLOT CONTOUR:" )
-for i in p62['elements']:
-	print( i )
+# print( "SLOT CONTOUR:" )
+# for i in p62['elements']:
+# 	print( i )
 
-import os
-os.system('python ncEFIDisp2.py ncEFI.dat')
+# import os
+# os.system('python ncEFIDisp2.py ncEFI.dat')
 
-sys.exit(0)
+# sys.exit(0)
 
 
 
