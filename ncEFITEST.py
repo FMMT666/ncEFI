@@ -11,13 +11,24 @@ from ncEFI import *
 
 
 #---------------------------------------
+#def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 llist = []
-llist.append( geomCreateZig(  (91, 0, -0.5), ( 30, 30, 0), 3, 5,  False )  )
-llist.append( geomCreateZig(  (-50, -50, 1.0), ( 10, -10, 0), 3, 2,  False )  )
+llist.append(  geomCreateConcentricCircles( (0,0,0), 10, 20, 3, 'cw')  )
 
 debugShowViewer( llist )
 
 toolFullAuto( llist, 20, ['zig','zag'], fnameHeader='ncPRG' )
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateZig(  (91, 0, -0.5), ( 30, 30, 0), 3, 5,  False )  )
+# llist.append( geomCreateZig(  (-50, -50, 1.0), ( 10, -10, 0), 3, 2,  False )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20, ['zig','zag'], fnameHeader='ncPRG' )
 
 
 

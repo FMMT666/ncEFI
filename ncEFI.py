@@ -17,7 +17,7 @@
 #  - geomCreatePoly
 #  - geomCreatePolyHelix
 #  - improve geomCreateConcentricCircles
-#      - p1 should be in the middle
+#      DONE - p1 should be in the middle
 #      - the args and usage are just meh
 #  - fix all calls to geomCreateConcentricCircles (because of the new p1)
 #  - improve geomCreateCircRingHole:
@@ -1302,7 +1302,7 @@ def geomCreateRectSpiral( p1, p2, stepOver, steps, dir, basNr=0 ):
 #############################################################################
 ### geomCreateConcentricCircles
 ###
-### p1 is the left posistion of the beginnig circle
+### p1 is the center position of the circles.
 ### If diaStart < diaEnd, the circular pocket is "milled" from the inside
 ### to the outside and vice versa.
 ### "diaSteps" determines the amount of steps (aka.: circles) which should
@@ -1322,6 +1322,10 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 		print( "ERR: geomCreateConcentricCircles: diaSteps < 1" )
 		return []
 	diaPerRev=(diaEnd-diaStart)/diaSteps
+
+	# NEW 8/2021: quickfix to make p1 the center (was left of circle before)
+	p1 = ( p1[0] - diaStart/2.0, p1[1], p1[2])
+
 	y=p1[1]
 	z=p1[2]
 	if basNr==0:
