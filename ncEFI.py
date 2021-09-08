@@ -16,10 +16,6 @@
 #  - geomCreateRectSpiralHelix
 #  - geomCreatePoly
 #  - geomCreatePolyHelix
-#  - improve geomCreateConcentricCircles
-#      DONE - p1 should be in the middle
-#      - the args and usage are just meh
-#  - fix all calls to geomCreateConcentricCircles (because of the new p1)
 #  - improve geomCreateCircRingHole:
 #      - arguments' names
 #      - 'clear' does (yet) nothing
@@ -1310,8 +1306,8 @@ def geomCreateRectSpiral( p1, p2, stepOver, steps, dir, basNr=0 ):
 ### If diaSep==1, a single circle, determined by "diaStart"'s diamenter is
 ### "milled".
 #############################################################################
-def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
-	con=[]
+def geomCreateConcentricCircles( p1, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+	con = []
 	if diaStart <= 0.0:
 		print( "ERR: geomCreateConcentricCircles: diaStart <= 0" )
 		return []
@@ -1323,7 +1319,7 @@ def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 		return []
 	diaPerRev=(diaEnd-diaStart)/diaSteps
 
-	# NEW 8/2021: quickfix to make p1 the center (was left of circle before)
+	# NEW 9/2021: quickfix to make p1 the center (was left of circle before)
 	p1 = ( p1[0] - diaStart/2.0, p1[1], p1[2])
 
 	y=p1[1]
@@ -1416,7 +1412,7 @@ def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0
 ### value is the start of the _milling_ operation (mill hits material).
 ### The helix is on top of this point!
 #############################################################################
-def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+def geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDepth, hDepthSt, clear, dir, basNr=0 ):
 	if depth <= 0.0:
 		print( "ERR: geomCreateCircRingHole: negative or zero depth:",depth )
 		return []
@@ -1426,7 +1422,7 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 	if hDepth < 0:
 		print( "ERR: geomCreateCircRingHole: helix depth needs to be a positive number:",hDepth )
 		return []
-	if hDepth < depth/depthSt:
+	if hDepth < depth / depthSt:
 		print( "ERR: geomCreateCircRingHole: helix is too short; needs to be greater than depth/depthSt : ", hDepth )
 		return []
 	if hDepthSt < 1:
@@ -1453,19 +1449,22 @@ def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthS
 		# starting point for helix
 		# NEW 8/2021 geomCreateHelix now uses p1 as the center point!
 #		pWork = (  p1[0] - (diaStart/2.0), p1[1], p1[2] + hDepth - ((i+1) * (depth/(depthSt*1.0) ))  )
-		pWork=(p1[0],p1[1],p1[2]+hDepth-((i+1)*(depth/(depthSt*1.0))))
-		hel=geomCreateHelix(pWork,diaStart,hDepth,hDepthSt  ,dir,nr,'nofinish')
-		if hel==[]:
+		pWork = (  p1[0], p1[1], p1[2] + hDepth - ( (i+1) * (depth/(depthSt*1.0) ))  )
+		hel = geomCreateHelix( pWork, diaStart, hDepth, hDepthSt, dir, nr, 'nofinish' )
+		if hel == []:
 			print( "ERR: geomCreateCircRingHole: error creating helix" )
 			return []
 		# we are now on pWork(x,y) but already cut depth/depthSt of the material
 		for j in hel:
 			ccrh.append(j)
-		nr+=len(hel)
-	
-		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]-((i+1)*(depth/(depthSt*1.0))))
-		poc=geomCreateConcentricCircles(pWork,diaStart,diaEnd,diaSt,dir,nr)
-		if poc==[]:
+		nr += len(hel)
+
+		# NEW 9/2021 geomCrateConcentricCircles was changed to now work with
+		# p1 as the center point.
+#		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]-((i+1)*(depth/(depthSt*1.0))))
+		pWork = ( p1[0], p1[1], p1[2] - ( (i+1)*(depth/(depthSt*1.0))) )
+		poc = geomCreateConcentricCircles( pWork, diaStart, diaEnd, diaStep, dir, nr )
+		if poc == []:
 			print( "ERR: geomCreateCircRingHole: error creating concentric circles" )
 			return []
 		# we are now on pWork(x,y), with i*(depth/depthSt) in reverse z-axis direction

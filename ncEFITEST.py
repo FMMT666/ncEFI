@@ -12,12 +12,12 @@ from ncEFI import *
 
 #---------------------------------------
 #def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
-llist = []
-llist.append(  geomCreateConcentricCircles( (0,0,0), 10, 20, 3, 'cw')  )
+# llist = []
+# llist.append(  geomCreateConcentricCircles( (0,0,0), 10, 20, 3, 'cw')  )
 
-debugShowViewer( llist )
+# debugShowViewer( llist )
 
-toolFullAuto( llist, 20, ['zig','zag'], fnameHeader='ncPRG' )
+# toolFullAuto( llist, 20, ['zig','zag'], fnameHeader='ncPRG' )
 
 
 
