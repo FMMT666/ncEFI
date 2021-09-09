@@ -1233,6 +1233,17 @@ def geomCreateRect( p1, p2, depth, dir, basNr=0 ):
 
 
 #############################################################################
+### geomCreateConcentricRects
+###
+### TODO: Ugh. Seriously?
+#############################################################################
+def geomCreateConcentricRects( p1Start, p2Start, p1End, p2End, stepOver, dir, basNr=0 ):
+
+	pass
+
+
+
+#############################################################################
 ### geomCreateRectHelix
 ###
 ### Creates a rectangular helix between points 'p1' and 'p2', the direction
