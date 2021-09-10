@@ -12,6 +12,10 @@
 # TODO:
 #  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
 #  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
+#  - geomCreateConcentricRects
+#      - implement the connecting circles
+#      - implement depth (if not already done)
+#      - implement helix (if that makes sense)
 #  - geomCreateRectSpiral
 #  - geomCreateRectSpiralHelix
 #  - geomCreatePoly
@@ -1237,9 +1241,77 @@ def geomCreateRect( p1, p2, depth, dir, basNr=0 ):
 ###
 ### TODO: Ugh. Seriously?
 #############################################################################
-def geomCreateConcentricRects( p1Start, p2Start, p1End, p2End, stepOver, dir, basNr=0 ):
+def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
 
-	pass
+	if xdiff < 0 and ydiff > 0 or xdiff > 0 and ydiff < 0:
+		print( "ERR: geomCreateConcentricRects: xdiff and ydiff must have same sign: ", xdiff, ydiff )
+		return []
+
+	if xdiff == 0 and ydiff == 0:
+		print( "INF: geomCreateConcentricRects: xdiff and ydiff zero; auto stop on middle" )
+		xdiff = (p2[0] - p1[0]) / 2.0
+		ydiff = (p2[1] - p1[1]) / 2.0
+
+	if xdiff == 0 or ydiff == 0:
+		print( "ERR: geomCreateConcentricRects: either xdiff or ydiff is zero: ", xdiff, ydiff )
+		return []
+
+	if stepOver == 0:
+		print( "INF: geomCreateConcentricRects: stepOver is zero; creating a simple rect ")
+		return geomCreateRect( p1, p2, 0, dir )
+
+	if stepOver < 0:
+		# Shh, it must not, but this makes things easier below :)
+		print( "INF: geomCreateConcentricRects: stepOver must be > 0: ", stepOver )
+		return []
+
+	geom = []
+
+	# make stepOver match the direction
+	if xdiff < 0:
+		stepOver *= -1
+
+	depth = p1[2]
+	p11 = p1
+	p22 = p2
+	xDone = yDone = False
+	while True:
+		e = geomCreateRect( p11, p22, depth, dir )
+
+		if e == []:
+			print( "ERR: geomCreateConcentricRects: unable to create rect: ", p11, p22, dir )
+			return []
+
+		# geoms need to be _added_ to geoms, not appended
+		geom += e
+
+		if xDone == True and yDone == True:
+			break
+
+		######################################################
+		# TODO: CREATE ARC TO NEXT POINT HERE (skip for now) #
+		######################################################
+
+		# next point set
+		if stepOver > 0 and p11[0] + stepOver >= p1[0] + xdiff   or   stepOver < 0 and p11[0] + stepOver <= p1[0] + xdiff:
+			xnew = p1[0] + xdiff - p11[0]
+			xDone = True
+		else:
+			xnew = stepOver
+
+		if stepOver > 0 and p11[1] + stepOver >= p1[1] + ydiff   or   stepOver < 0 and p11[1] + stepOver <= p1[1] + ydiff:
+			ynew = p1[1] + ydiff - p11[1]
+			yDone = True
+		else:
+			ynew = stepOver
+
+		p11 = ( p11[0] + xnew, p11[1] + ynew, p11[2] )
+		p22 = ( p22[0] - xnew, p22[1] - ynew, p22[2] )
+
+	return geom
+
+
+
 
 
 

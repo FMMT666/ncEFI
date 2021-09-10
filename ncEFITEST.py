@@ -10,6 +10,18 @@ from ncEFI import *
 
 
 
+
+#---------------------------------------
+#def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
+llist = []
+llist.append( geomCreateConcentricRects( (-40,-30,0), (20,10,0), -10, -5, 0.5, 'cw' )  )
+
+debugShowViewer( llist )
+
+toolFullAuto( llist, 20 )
+
+
+
 #---------------------------------------
 #def geomCreateConcentricCircles(p1,diaStart,diaEnd,diaSteps,dir,basNr=0):
 # llist = []
