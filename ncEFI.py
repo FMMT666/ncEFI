@@ -1110,6 +1110,49 @@ def geomCreateCircle( center, startAngle, dia, dir ):
 
 
 #############################################################################
+### geomCreateBezier4P
+### 
+#############################################################################
+def geomCreateBezier4P( p1, p2, p3, p4, steps, basNr=0 ):
+	# uses code from
+	# https://rosettacode.org/wiki/Bitmap/B%C3%A9zier_curves/Cubic#Python
+
+	geom = []
+
+	x0 = p1[0]
+	y0 = p1[1]
+	x1 = p2[0]
+	y1 = p2[1]
+	x2 = p3[0]
+	y2 = p3[1]
+	x3 = p4[0]
+	y3 = p4[1]
+
+	firstOne = True
+	for i in range( steps + 1 ):
+		t = i / steps
+		a = (1.0 - t) ** 3
+		b = 3.0 * t * (1. - t) ** 2.0
+		c = 3.0 * t ** 2.0 * (1.0 - t)
+		d = t ** 3.0
+ 
+		x = a * x0 + b * x1 + c * x2 + d * x3
+		y = a * y0 + b * y1 + c * y2 + d * y3
+
+		if firstOne == True:
+			xold = x
+			yold = y
+			firstOne = False
+		else:
+			geom.append( elemCreateLine( (xold,yold,0), (x,y,0) ) )
+			xold = x
+			yold = y
+
+	return geom
+
+
+
+#############################################################################
 ### geomCreateHelix
 ### 
 ### p1's position is the axial center of the helix (xy-plane) (*NEW 8/2021*).

@@ -11,14 +11,28 @@ from ncEFI import *
 
 
 
+
+
 #---------------------------------------
-#def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
+#def geomCreateBezier( p1, p2, p3, p4, steps, basNr=0 ):
 llist = []
-llist.append( geomCreateConcentricRects( (-40,-30,0), (20,10,0), -10, -5, 0.5, 'cw' )  )
+llist.append(  geomCreateBezier4P( (0,0,0), (25,0,0), (25,10,0), (50,10,0), 20 )  )
+llist.append(  geomCreateBezier4P( (0,0,0), (50,0,0), (50,30,0), (30,10,0), 20 )  )
 
 debugShowViewer( llist )
 
 toolFullAuto( llist, 20 )
+
+
+
+#---------------------------------------
+#def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
+# llist = []
+# llist.append( geomCreateConcentricRects( (-20,-10,0), (20,10,0), 10, 5, 3, 'cw' )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
 
 
 
