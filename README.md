@@ -69,6 +69,10 @@ That always worked.
 ---
 ## News
 
+### CHANGES 2021/09/XX
+    - added even more functions
+
+
 ### CHANGES 2021/08/XX
     - I have a stupid idea.
     - ported ncEFI.py to Python 3.x (origins were Python 1.5, lmao)

@@ -12,8 +12,11 @@
 # TODO:
 #  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
 #  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
+#  - geomCreateBezierXX
+#      - add safety and other corrections to the new Bezier functions
+#      - add z coordinates to all of these (linear, though)
 #  - geomCreateConcentricRects
-#      - implement the connecting circles
+#      - implement the connecting circles (NOPE, let's use the new Beziers!)
 #      - implement depth (if not already done)
 #      - implement helix (if that makes sense)
 #  - geomCreateRectSpiral
@@ -1104,6 +1107,47 @@ def geomCreateCircle( center, startAngle, dia, dir ):
 	pts[1] = vecAdd( pts[1], center )
 	geom.append( elemCreateArc180( pts[0], pts[1], 0, dir) )
 	geom.append( elemCreateArc180( pts[1], pts[0], 0, dir) )
+
+	return geom
+
+
+
+#############################################################################
+### geomCreateBezier
+### 
+#############################################################################
+def geomCreateBezier( p1, p2, p3, steps, basNr=0 ):
+	# uses code from
+	# https://rosettacode.org/wiki/Bitmap/B%C3%A9zier_curves/Cubic#Python
+
+	geom = []
+
+	x0 = p1[0]
+	y0 = p1[1]
+	x1 = p2[0]
+	y1 = p2[1]
+	x2 = p3[0]
+	y2 = p3[1]
+
+	firstOne = True
+	for i in range( steps + 1 ):
+		t  = i / steps
+		t1 = 1.0 - t
+		a  = t1 ** 2
+		b  = 2.0 * t * t1
+		c  = t ** 2
+ 
+		x = a * x0 + b * x1 + c * x2
+		y = a * y0 + b * y1 + c * y2
+
+		if firstOne == True:
+			xold = x
+			yold = y
+			firstOne = False
+		else:
+			geom.append( elemCreateLine( (xold,yold,0), (x,y,0) ) )
+			xold = x
+			yold = y
 
 	return geom
 
