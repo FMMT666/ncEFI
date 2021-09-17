@@ -12,9 +12,6 @@
 # TODO:
 #  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
 #  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
-#  - geomCreateBezierXX
-#      - add safety and other corrections to the new Bezier functions
-#      - add z coordinates to all of these (linear, though)
 #  - geomCreateConcentricRects
 #      - implement the connecting circles (NOPE, let's use the new Beziers!)
 #      - implement depth (if not already done)
@@ -1115,11 +1112,19 @@ def geomCreateCircle( center, startAngle, dia, dir ):
 #############################################################################
 ### geomCreateBezier
 ### 
+### Creates a three points 2.5D Bézier curve through p1, p2 and p3 with lines.
+### Z is linearly interpolated from p1 to p3. The z value of p2 is ignored.
+### The amount of lines can be specified by 'steps".
+### With steps set to 1, a line is drawn.
 #############################################################################
 def geomCreateBezier( p1, p2, p3, steps, basNr=0 ):
 	# uses code from
 	# https://rosettacode.org/wiki/Bitmap/B%C3%A9zier_curves/Cubic#Python
 
+	if steps < 1:
+		print( "ERR: geomCreateBezier: 'steps' must be > 0: ", steps ) 
+		return []
+	
 	geom = []
 
 	x0 = p1[0]
@@ -1128,6 +1133,8 @@ def geomCreateBezier( p1, p2, p3, steps, basNr=0 ):
 	y1 = p2[1]
 	x2 = p3[0]
 	y2 = p3[1]
+
+	zSteps = ( p3[2] - p1[2] ) / steps
 
 	firstOne = True
 	for i in range( steps + 1 ):
@@ -1139,15 +1146,16 @@ def geomCreateBezier( p1, p2, p3, steps, basNr=0 ):
  
 		x = a * x0 + b * x1 + c * x2
 		y = a * y0 + b * y1 + c * y2
+		z = p1[2] + ( i * zSteps ) 
 
 		if firstOne == True:
-			xold = x
-			yold = y
 			firstOne = False
 		else:
-			geom.append( elemCreateLine( (xold,yold,0), (x,y,0) ) )
-			xold = x
-			yold = y
+			geom.append( elemCreateLine( (xold,yold,zold), (x,y,z) ) )
+
+		xold = x
+		yold = y
+		zold = z
 
 	return geom
 
@@ -1156,10 +1164,18 @@ def geomCreateBezier( p1, p2, p3, steps, basNr=0 ):
 #############################################################################
 ### geomCreateBezier4P
 ### 
+### Creates a four points 2.5D Bézier curve through p1..p4 with lines.
+### Z is linearly interpolated from p1 to p4. The z value of p2 and p3 are ignored.
+### The amount of lines can be specified by 'steps".
+### With steps set to 1, a line is drawn.
 #############################################################################
 def geomCreateBezier4P( p1, p2, p3, p4, steps, basNr=0 ):
 	# uses code from
 	# https://rosettacode.org/wiki/Bitmap/B%C3%A9zier_curves/Cubic#Python
+
+	if steps < 1:
+		print( "ERR: geomCreateBezier4P: 'steps' must be > 0: ", steps ) 
+		return []
 
 	geom = []
 
@@ -1172,6 +1188,8 @@ def geomCreateBezier4P( p1, p2, p3, p4, steps, basNr=0 ):
 	x3 = p4[0]
 	y3 = p4[1]
 
+	zSteps = ( p4[2] - p1[2] ) / steps
+
 	firstOne = True
 	for i in range( steps + 1 ):
 		t = i / steps
@@ -1182,15 +1200,16 @@ def geomCreateBezier4P( p1, p2, p3, p4, steps, basNr=0 ):
  
 		x = a * x0 + b * x1 + c * x2 + d * x3
 		y = a * y0 + b * y1 + c * y2 + d * y3
+		z = p1[2] + ( i * zSteps ) 
 
 		if firstOne == True:
-			xold = x
-			yold = y
 			firstOne = False
 		else:
-			geom.append( elemCreateLine( (xold,yold,0), (x,y,0) ) )
-			xold = x
-			yold = y
+			geom.append( elemCreateLine( (xold,yold,zold), (x,y,z) ) )
+
+		xold = x
+		yold = y
+		zold = z
 
 	return geom
 

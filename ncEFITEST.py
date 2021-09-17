@@ -18,7 +18,9 @@ from ncEFI import *
 llist = []
 llist.append(  geomCreateBezier4P( (0,0,0), (25,0,0), (25,10,0), (50,10,0), 20 )  )
 llist.append(  geomCreateBezier4P( (0,0,0), (50,0,0), (50,30,0), (30,10,0), 20 )  )
-llist.append(  geomCreateBezier  ( (0,0,0), (50,0,0), (50,50,0), 20 )  )
+llist.append(  geomCreateBezier4P( (0,0,-20), (50,0,0), (50,30,0), (30,10,30), 20 )  )
+llist.append(  geomCreateBezier  ( (0,0,30), (50,0,0), (50,50,-30), 50 )  )
+llist.append(  geomCreateBezier  ( (0,0,30), (50,0,0), (50,50,-30),  5 )  )
 llist.append(  geomCreateBezier  ( (0,0,0), (50,0,0), (50,10,0), 20 )  )
 
 debugShowViewer( llist )
