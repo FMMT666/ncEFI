@@ -93,7 +93,7 @@ GCODE_PRG_START = [\
 
 # default G-code end
 GCODE_PRG_END = [\
-'G00 Z' + str(GCODE_OP_SAFEZ),\
+'G00 Z(GCODE_OP_SAFEZ)',\
 '',\
 'M02']
 
@@ -2992,8 +2992,12 @@ def toolCreateSimpleFooter( fname=None ):
 
 	foot.append( '(END)' )
 
-	for i in GCODE_PRG_END:
-		foot.append(i)
+	for line in GCODE_PRG_END:
+		if '(GCODE_OP_SAFEZ)' in line:
+			# override immutable string
+			line = line.replace( '(GCODE_OP_SAFEZ)', str(GCODE_OP_SAFEZ) )
+
+		foot.append(line)
 
 	return foot
 

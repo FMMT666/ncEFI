@@ -12,20 +12,34 @@ from ncEFI import *
 
 
 
-
 #---------------------------------------
-#def geomCreateBezier( p1, p2, p3, p4, steps, basNr=0 ):
+# geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDepth, hDepthSt, clear, dir, basNr=0 ):
 llist = []
-llist.append(  geomCreateBezier4P( (0,0,0), (25,0,0), (25,10,0), (50,10,0), 20 )  )
-llist.append(  geomCreateBezier4P( (0,0,0), (50,0,0), (50,30,0), (30,10,0), 20 )  )
-llist.append(  geomCreateBezier4P( (0,0,-20), (50,0,0), (50,30,0), (30,10,30), 20 )  )
-llist.append(  geomCreateBezier  ( (0,0,30), (50,0,0), (50,50,-30), 50 )  )
-llist.append(  geomCreateBezier  ( (0,0,30), (50,0,0), (50,50,-30),  5 )  )
-llist.append(  geomCreateBezier  ( (0,0,0), (50,0,0), (50,10,0), 20 )  )
+llist.append(  geomCreateCircRingHole( (0,0,0), 1, 3, 4, 5.5, 11, 1, 4, True, 'cc'  )  )
+
 
 debugShowViewer( llist )
 
-toolFullAuto( llist, 20 )
+toolFullAuto( llist, 5 )
+
+
+
+
+
+
+#---------------------------------------
+#def geomCreateBezier( p1, p2, p3, p4, steps, basNr=0 ):
+# llist = []
+# llist.append(  geomCreateBezier4P( (0,0,0), (25,0,0), (25,10,0), (50,10,0), 20 )  )
+# llist.append(  geomCreateBezier4P( (0,0,0), (50,0,0), (50,30,0), (30,10,0), 20 )  )
+# llist.append(  geomCreateBezier4P( (0,0,-20), (50,0,0), (50,30,0), (30,10,30), 20 )  )
+# llist.append(  geomCreateBezier  ( (0,0,30), (50,0,0), (50,50,-30), 50 )  )
+# llist.append(  geomCreateBezier  ( (0,0,30), (50,0,0), (50,50,-30),  5 )  )
+# llist.append(  geomCreateBezier  ( (0,0,0), (50,0,0), (50,10,0), 20 )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
 
 
 
