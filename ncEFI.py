@@ -1601,21 +1601,21 @@ def geomCreateSpiralToCircle( center, dia, spiralDist, spiralTurns, dir, basNr=0
 ### value is the start of the _milling_ operation (mill hits material).
 ### The helix is on top of this point!
 #############################################################################
-def geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDepth, hDepthSt, clear, dir, basNr=0 ):
+def geomCreateCircRingHole( p1, diaStart, diaEnd, diaSteps, depth, depthSteps, hDepth, hDepthSteps, clear, dir, basNr=0 ):
 	if depth <= 0.0:
 		print( "ERR: geomCreateCircRingHole: negative or zero depth:",depth )
 		return []
-	if depthSt < 1:
-		print( "ERR: geomCreateCircRingHole: depthSt < 1: ",depthSt )
+	if depthSteps < 1:
+		print( "ERR: geomCreateCircRingHole: depthSt < 1: ",depthSteps )
 		return []
 	if hDepth < 0:
 		print( "ERR: geomCreateCircRingHole: helix depth needs to be a positive number:",hDepth )
 		return []
-	if hDepth < depth / depthSt:
-		print( "ERR: geomCreateCircRingHole: helix is too short; needs to be greater than depth/depthSt : ", hDepth )
+	if hDepth < depth / depthSteps:
+		print( "ERR: geomCreateCircRingHole: helix is too short; needs to be greater than depth/depthSteps : ", hDepth )
 		return []
-	if hDepthSt < 1:
-		print( "ERR: geomCreateCircRingHole: hDepthSt < 1 : ",hDepthSt )
+	if hDepthSteps < 1:
+		print( "ERR: geomCreateCircRingHole: hDepthSteps < 1 : ",hDepthSteps )
 		return []
 	if clear < p1[2]:
 		print( "ERR: geomCreateCircRingHole: clear < workpos: ",clear,p1[2] )
@@ -1634,42 +1634,42 @@ def geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDept
 
 	ccrh=[]
 	
-	for i in range(0,depthSt):
+	for i in range(0,depthSteps):
 		# starting point for helix
 		# NEW 8/2021 geomCreateHelix now uses p1 as the center point!
-#		pWork = (  p1[0] - (diaStart/2.0), p1[1], p1[2] + hDepth - ((i+1) * (depth/(depthSt*1.0) ))  )
-		pWork = (  p1[0], p1[1], p1[2] + hDepth - ( (i+1) * (depth/(depthSt*1.0) ))  )
-		hel = geomCreateHelix( pWork, diaStart, hDepth, hDepthSt, dir, nr, 'nofinish' )
+#		pWork = (  p1[0] - (diaStart/2.0), p1[1], p1[2] + hDepth - ((i+1) * (depth/(depthSteps*1.0) ))  )
+		pWork = (  p1[0], p1[1], p1[2] + hDepth - ( (i+1) * (depth/(depthSteps*1.0) ))  )
+		hel = geomCreateHelix( pWork, diaStart, hDepth, hDepthSteps, dir, nr, 'nofinish' )
 		if hel == []:
 			print( "ERR: geomCreateCircRingHole: error creating helix" )
 			return []
-		# we are now on pWork(x,y) but already cut depth/depthSt of the material
+		# we are now on pWork(x,y) but already cut depth/depthSteps of the material
 		for j in hel:
 			ccrh.append(j)
 		nr += len(hel)
 
 		# NEW 9/2021 geomCrateConcentricCircles was changed to now work with
 		# p1 as the center point.
-#		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]-((i+1)*(depth/(depthSt*1.0))))
-		pWork = ( p1[0], p1[1], p1[2] - ( (i+1)*(depth/(depthSt*1.0))) )
-		poc = geomCreateConcentricCircles( pWork, diaStart, diaEnd, diaStep, dir, nr )
+#		pWork=(p1[0]-(diaStart/2.0),p1[1],p1[2]-((i+1)*(depth/(depthSteps*1.0))))
+		pWork = ( p1[0], p1[1], p1[2] - ( (i+1)*(depth/(depthSteps*1.0))) )
+		poc = geomCreateConcentricCircles( pWork, diaStart, diaEnd, diaSteps, dir, nr )
 		if poc == []:
 			print( "ERR: geomCreateCircRingHole: error creating concentric circles" )
 			return []
-		# we are now on pWork(x,y), with i*(depth/depthSt) in reverse z-axis direction
+		# we are now on pWork(x,y), with i*(depth/depthSteps) in reverse z-axis direction
 		for j in poc:
 			ccrh.append(j)
 		nr+=len(poc)
 		
-		if i < depthSt-1:
+		if i < depthSteps-1:
 			# now, "back" to the "next" helix
 			pWork1 = partGetLastPositionFromElements(poc)
 			pWork0 = pWork1
 			# NEW 8/2021: avoid moving directly up (might "scratch" the surface),
 			# instead, move to the middle of the x-axis' entry and exit position
-#			pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSt*1.0))
+#			pWork2=(pWork1[0],pWork1[1],pWork1[2]+depth/(depthSteps*1.0))
 			# This is okay, but looks super stupid, lol. Should be fixed later.
-			pWork2 = ( (p1[0]-(diaStart/2.0)+pWork1[0])/2, pWork1[1], pWork1[2] + depth/(depthSt*1.0) )
+			pWork2 = ( (p1[0]-(diaStart/2.0)+pWork1[0])/2, pWork1[1], pWork1[2] + depth/(depthSteps*1.0) )
 			# NEW 8/2021 B: now get rid of these two lines and add a cool 180° arc (see below)
 			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
 			# nr+=1
@@ -1678,7 +1678,7 @@ def geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDept
 			# 	return []
 			# ccrh.append(lin)
 			pWork1 = pWork2
-			pWork2 = (p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+2)*(depth/(depthSt*1.0))))
+			pWork2 = (p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((i+2)*(depth/(depthSteps*1.0))))
 			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
 			# nr+=1
 			# if lin==[]:
@@ -1701,8 +1701,8 @@ def geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDept
 			pWork0 = pWork1
 			# NEW 8/2021: avoid moving directly up (might "scratch" the surface),
 			# instead, move to the middle of the x-axis' entry and exit position
-#			pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSt*1.0)))
-			pWork2=(  (pWork1[0]+(p1[0]-(diaStart/2.0)))/2, pWork1[1], pWork1[2] + (i+1) * (depth/(depthSt*1.0))  )
+#			pWork2=(pWork1[0],pWork1[1],pWork1[2]+(i+1)*(depth/(depthSteps*1.0)))
+			pWork2=(  (pWork1[0]+(p1[0]-(diaStart/2.0)))/2, pWork1[1], pWork1[2] + (i+1) * (depth/(depthSteps*1.0))  )
 			# NEW 8/2021 B: arcs now also here
 			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
 			# nr+=1
@@ -1711,7 +1711,7 @@ def geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDept
 			# 	return []
 			# ccrh.append(lin)
 			pWork1 = pWork2
-			pWork2 = (p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((depth/(depthSt*1.0))))
+			pWork2 = (p1[0]-(diaStart/2.0),p1[1],p1[2]+hDepth-((depth/(depthSteps*1.0))))
 			# lin=elemCreateLine(pWork1,pWork2,{'pNr':nr})
 			# nr+=1
 			# if lin==[]:

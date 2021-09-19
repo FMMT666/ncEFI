@@ -13,9 +13,12 @@ from ncEFI import *
 
 
 #---------------------------------------
-# geomCreateCircRingHole( p1, diaStart, diaEnd, diaStep, depth, depthSt, hDepth, hDepthSt, clear, dir, basNr=0 ):
+#def geomCreateCircRingHole( p1, diaStart, diaEnd, diaSteps, depth, depthSteps, hDepth, hDepthSteps, clear, dir, basNr=0 ):
 llist = []
-llist.append(  geomCreateCircRingHole( (0,0,0), 1, 3, 4, 5.5, 11, 1, 4, True, 'cc'  )  )
+llist.append(  geomCreateCircRingHole( (-20,0,0), 1, 3, 4, 5.5, 11, 1, 4, True, 'cc'  )  )
+llist.append(  geomCreateCircRingHole( (-10,0,0), 1, 3, 4, 5.5, 11, 1, 4, True, 'cw'  )  )
+llist.append(  geomCreateCircRingHole( (0,0,0), 1, 3, 8, 5.5, 11, 1, 8, True, 'cc'  )  )
+llist.append(  geomCreateCircRingHole( (10,0,0), 1, 3, 4, 5.5, 22, 1, 4, True, 'cc'  )  )
 
 
 debugShowViewer( llist )
