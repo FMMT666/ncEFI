@@ -1284,6 +1284,42 @@ def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' )
 
 
 #############################################################################
+### geomCreateRadial
+### 
+#############################################################################
+def geomCreateRadial( p1, dia1, p2, dia2, angleStart, angleInc, angleSteps, connect1='direct', connect2='direct', basNr=0 ):
+
+	if angleSteps < 1:
+		print( "ERR: geomCreateRadial: 'angleSteps' must be > 0: ", angleSteps )
+		return []
+
+	if p1 == p2 and dia1 == dia2:
+		print( "ERR: geomCreateRadial: same coords and diameters for p1 and p2 not possible" )
+		return []
+	
+	if angleInc == 0:
+		print( "ERR: geomCreateRadial: 'angleInc' must not be 0" )
+		return []
+
+	lines = []
+
+	vec1 = ( dia1 / 2.0, 0, 0 )
+	vec2 = ( dia2 / 2.0, 0, 0 )
+	vec1 = vecRotateZ( vec1, math.radians(angleStart) )
+	vec2 = vecRotateZ( vec2, math.radians(angleStart) )
+
+	for n in range( angleSteps ):
+		np1 = vecRotateZAt( vec1, p1, math.radians( angleStart + n * angleInc) )
+		np2 = vecRotateZAt( vec2, p2, math.radians( angleStart + n * angleInc) )
+
+		lines.append( elemCreateLine( np1, np2 ) )
+
+	return lines
+
+
+
+
+#############################################################################
 ### geomCreateRect
 ###
 ### Creates a rectangle between points 'p1' and 'p2' with the direction 'dir'
