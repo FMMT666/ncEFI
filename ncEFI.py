@@ -54,18 +54,22 @@ from random import random
 
 from ncVec import *
 
+# some tolerances and precision things
+TOOL_CONTINUOUS_TOLERANCE = 0.001   # checks for tool path continuity; if mm, this makes 1um...
+MINLEN_BEZIER             = 0.1     # minimum length of Bezier interpolation segment; for some createGeom
+DEFLEN_BEZIER             = 0.5     # default length of Bezier interpolation segment; for some createGeom
+MAXLEN_BEZIER             = 2.0     # maximum length of Bezier interpolation segment; for some createGeom
 
+# default G-codes
 GCODE_RAPID          = "G00"
 GCODE_LINE           = "G01"
 GCODE_ARC_CW         = "G02"
 GCODE_ARC_CC         = "G03"
 
-
 # default safe-Z height
 GCODE_OP_SAFEZ = 10.0
 
-
-# default G-code start
+# default G-code end for when no "start G-code" file is given
 GCODE_PRG_START = [\
 'G21       (units are millimeters)',\
 'G94       (feedrate in \'units\' per minute)',\
@@ -91,17 +95,15 @@ GCODE_PRG_START = [\
 'F900',\
 '']
 
-# default G-code end
+# default G-code end for when no "end G-code" file is given
 GCODE_PRG_END = [\
 'G00 Z(GCODE_OP_SAFEZ)',\
 '',\
 'M02']
 
-
+# looks like a very clever thing, lol
 EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 instead of G01
 
-
-TOOL_CONTINUOUS_TOLERANCE = 0.001    # in units; if mm, this makes 1um...
 
 
 
@@ -218,6 +220,44 @@ def elemCreateLineTo(e1,p2,extra={}):
 		return {}
 
 	ret={'type':'l','p1':pt,'p2':p2}
+	extraAddExtra(ret,extra)
+	return ret
+
+
+
+#############################################################################
+### elemCreateLineBetween
+###
+#############################################################################
+def elemCreateLineBetween(e1,e2,extra={}):
+
+	if not 'type' in e1:
+		print( "ERR: elemCreateLineTo: element 'e1' has no 'type'" )
+		return {}
+
+	if not 'type' in e2:
+		print( "ERR: elemCreateLineTo: element 'e2' has no 'type'" )
+		return {}
+
+	if   e1['type'] == 'v':
+		p1 = e1['p1']
+	elif e1['type'] == 'l' or e1['type'] == 'a':
+		p1 = e1['p2']
+	else:
+		print( "ERR: elemCreateLineTo: unknown 'type' in 'e1':", e1['type'] )
+		return {}
+
+	if e2['type'] == 'v' or e2['type'] == 'l' or e1['type'] == 'a':
+		p2 = e2['p1']
+	else:
+		print( "ERR: elemCreateLineTo: unknown 'type' in 'e2':", e2['type'] )
+		return {}
+
+	if p1 == p2:
+		print( "ERR: elemCreateLine: e1 and e2 share same coordinates: ", p1 )
+		return {}
+
+	ret={'type':'l','p1':p1,'p2':p2}
 	extraAddExtra(ret,extra)
 	return ret
 
@@ -349,6 +389,21 @@ def elemCreateArc180by3PtsTo(e1,p2,pm,dir,extra={}):
 		return {}
 
 	return elemCreateArc180by3Pts(pt,p2,pm,dir,extra)
+
+
+#############################################################################
+### elemGetPts
+###
+### Returns a list of the elements points.
+#############################################################################
+def elemGetPts(el):
+	if   el['type'] == 'v':
+		return [ el['p1'] ]
+	elif el['type'] == 'l' or el['type'] == 'a':
+		return [ el['p1'], el['p2'] ]
+
+	print( "ERR: elemGetPts: unknown 'type' in 'el':", el['type'] )
+	return []
 
 
 
@@ -1287,7 +1342,12 @@ def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' )
 ### geomCreateRadial
 ### 
 #############################################################################
-def geomCreateRadial( p1, dia1, p2, dia2, angleStart, angleInc, angleSteps, connect1='direct', connect2='direct', basNr=0 ):
+def geomCreateRadial( p1, dia1, p2, dia2,
+					angleStart, angleInc, angleSteps,
+					connect1='line', connect2='line',
+					angleOffset1 = 0, angleOffset2 = 0,
+					bezierSteps = None,
+					basNr=0 ):
 
 	if angleSteps < 1:
 		print( "ERR: geomCreateRadial: 'angleSteps' must be > 0: ", angleSteps )
@@ -1301,20 +1361,145 @@ def geomCreateRadial( p1, dia1, p2, dia2, angleStart, angleInc, angleSteps, conn
 		print( "ERR: geomCreateRadial: 'angleInc' must not be 0" )
 		return []
 
+	if connect1 == 'back' or connect2 == 'back':
+		print( "INF: geomCreateRadial: mode mismatch, using 'back'" )
+		connect1 = connect2 = 'back'
+
+	if connect1 == 'zup' or connect2 == 'zup':
+		print( "INF: geomCreateRadial: mode mismatch, using 'zup'" )
+		connect1 = connect2 = 'zup'
+
+	while angleStart > 360:
+		angleStart = angleStart % 360
+	while angleStart < -360:
+		angleStart = angleStart % -360
+	if angleStart < 0:
+		angleStart = 360 - angleStart
+
+	while angleInc > 360:
+		angleInc = angleInc % 360
+	while angleInc < -360:
+		angleInc = angleInc % -360
+	if angleInc < 0:
+		angleInc = 360 - angleInc
+
 	lines = []
 
+	# rotated vectors to easily calculate the point coordinates
 	vec1 = ( dia1 / 2.0, 0, 0 )
 	vec2 = ( dia2 / 2.0, 0, 0 )
-	vec1 = vecRotateZ( vec1, math.radians(angleStart) )
-	vec2 = vecRotateZ( vec2, math.radians(angleStart) )
+	vec1 = vecRotateZ( vec1, math.radians(angleStart + angleOffset1) )
+	vec2 = vecRotateZ( vec2, math.radians(angleStart + angleOffset2) )
 
 	for n in range( angleSteps ):
-		np1 = vecRotateZAt( vec1, p1, math.radians( angleStart + n * angleInc) )
-		np2 = vecRotateZAt( vec2, p2, math.radians( angleStart + n * angleInc) )
+		v1 = vecRotateZ( vec1, math.radians( n * angleInc) )
+		v2 = vecRotateZ( vec2, math.radians( n * angleInc) )
+		np1 = vecAdd( v1, p1 )
+		np2 = vecAdd( v2, p2 )
 
-		lines.append( elemCreateLine( np1, np2 ) )
+		e = elemCreateLine( np1, np2 )
 
-	return lines
+		# reverse every 2nd line for correct directions
+		if n%2:
+			e = elemReverse( e )
+
+		lines.append( e )
+
+	# okay; lines are done, now on to the connections
+	numLines = len(lines)
+
+	if numLines < 2:
+		return lines
+
+	geom = []
+	n = 0
+	lastLine = None
+
+	for line in lines:
+
+		if n > 0:
+			# these are the lines ending at the 2nd point ("towards")
+			if n % 2:
+				# -----
+				if connect2 is None or connect2 == 'none':
+					pass
+				# -----
+				elif connect2 == 'line':
+					geom.append( elemCreateLineBetween( lastLine, line ) )
+				# -----
+				elif connect2 == 'back':
+					line = elemReverse( line )
+					geom.append( elemCreateLineBetween( lastLine, line ) )
+				# -----
+				elif connect2 == 'zup':
+					line = elemReverse( line )
+
+					p1 = elemGetPts( lastLine )[1]
+					p3 = elemGetPts( line )[0]
+					if p3[2] > p1[2]:
+						# if we "mill down", move up here then mode to target
+						p2 = ( p1[0], p1[1], p3[2] )
+					else:
+						# if we "mill up", first move to the xy target, then down
+						p2 = ( p3[0], p3[1], p1[2] )
+
+					if bezierSteps is None:
+						bezSteps = int( vecLength( p1, p3 ) / DEFLEN_BEZIER )
+						if bezSteps < 5:
+							bezSteps = int( vecLength( p1, p3 ) / MINLEN_BEZIER )
+					else:
+						bezSteps = bezierSteps
+					if bezSteps < 2:
+						bezSteps = 2
+
+					geom += geomCreateBezier( p1, p2, p3, bezSteps )
+				# -----
+				else:
+					pass
+
+			# These are the lines ending at the 1nd point ("backwards"),
+			else:
+				# -----
+				if connect1 is None or connect1 == 'none':
+					pass
+				# -----
+				elif connect1 == 'line':
+					geom.append( elemCreateLineBetween( lastLine, line ) )
+				# -----
+				elif connect1 == 'back':
+					geom.append( elemCreateLineBetween( lastLine, line ) )
+				# -----
+				elif connect1 == 'zup':
+#					line = elemReverse( line )
+					p1 = elemGetPts( lastLine )[1]
+					p3 = elemGetPts( line )[0]
+					if p3[2] > p1[2]:
+						# if we "mill down", move up here then mode to target
+						p2 = ( p1[0], p1[1], p3[2] )
+					else:
+						# if we "mill up", first move to the xy target, then down
+						p2 = ( p3[0], p3[1], p1[2] )
+
+					if bezierSteps is None:
+						bezSteps = int( vecLength( p1, p3 ) / DEFLEN_BEZIER )
+						if bezSteps < 5:
+							bezSteps = int( vecLength( p1, p3 ) / MINLEN_BEZIER )
+					else:
+						bezSteps = bezierSteps
+					if bezSteps < 2:
+						bezSteps = 2
+
+					geom += geomCreateBezier( p1, p2, p3, bezSteps )
+				# -----
+				else:
+					pass
+
+		geom.append( line )
+		lastLine = line
+		n += 1
+
+
+	return geom
 
 
 

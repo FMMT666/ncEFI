@@ -406,8 +406,8 @@ class myGLCanvas(GLCanvas):
 
 	def OnWheel(self, event):
 		scrollFac = abs( self.distance * MOUSE_ZOOM_FACTOR_WHEEL )
-		if scrollFac < 10:
-			scrollFac = 10
+		if scrollFac < 1:
+			scrollFac = 1
 		if event.GetWheelRotation() > 0:
 			self.distance -= scrollFac
 		else:

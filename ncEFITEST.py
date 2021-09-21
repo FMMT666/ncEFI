@@ -14,7 +14,15 @@ from ncEFI import *
 #---------------------------------------
 #def geomCreateRadial( p1, dia1, p2, dia2, angleStart, angleInc, angleSteps, connect1='direct', connect2='direct', basNr=0 ):
 llist = []
-llist.append( geomCreateRadial( (10,0,0), 10, (10,00,0), 40, 22.0, 10, 5, None, None ) )
+llist.append( geomCreateRadial( ( 10,0,0), 10, (0,0,0), 40, 22.0, 10, 18 ) )
+llist.append( geomCreateRadial( (-30,30,0), 20, (-30,30,0), 30, 0, 10, 36 ) )
+llist.append( geomCreateRadial( (0,30,0), 20, (0,30,10), 30, 0, 10, 36 ) )
+llist.append( geomCreateRadial( (30,30,0), 20, (30,30,-10), 10, 0, 10, 36 ) )
+llist.append( geomCreateRadial( (-30,-30,0), 20, (-30,-30,0), 30, 0, 10, 36, 'line', 'back' ) )
+llist.append( geomCreateRadial( (  0,-30,0), 20, (  0,-30,5),15, 0, 10, 36, 'line', 'back' ) )
+llist.append( geomCreateRadial( ( 30,-30,0), 20, ( 30,-30,-5),10, 0, 10, 36, 'line', 'zup' ) )
+llist.append( geomCreateRadial( ( -30,0,0), 1, ( -30,0,0.2),1.2, 0, 20, 18, 'line', 'zup' ) )
+llist.append( geomCreateRadial( ( 30,0,0), 20, ( 35,5,10),20, 0, 20, 18, 'line', 'zup' ) )
 
 
 debugShowViewer( llist )
