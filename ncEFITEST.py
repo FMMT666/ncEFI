@@ -1,43 +1,39 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
-import os
 from ncEFI import *
 
-
-# just various test routines
 
 
 
 
 #---------------------------------------
 #def geomCreateRadial( p1, dia1, p2, dia2, angleStart, angleInc, angleSteps, connect1='direct', connect2='direct', basNr=0 ):
-llist = []
-llist.append( geomCreateRadial( ( 10,0,0), 10, (0,0,0), 40, 22.0, 10, 18 ) )
-llist.append( geomCreateRadial( (-30,30,0), 20, (-30,30,0), 30, 0, 10, 36 ) )
-llist.append( geomCreateRadial( (0,30,0), 20, (0,30,10), 30, 0, 10, 36 ) )
-llist.append( geomCreateRadial( (30,30,0), 20, (30,30,-10), 10, 0, 10, 36 ) )
-llist.append( geomCreateRadial( (-30,-30,0), 20, (-30,-30,0), 30, 0, 10, 36, 'line', 'back' ) )
-llist.append( geomCreateRadial( (  0,-30,0), 20, (  0,-30,5),15, 0, 10, 36, 'line', 'back' ) )
-llist.append( geomCreateRadial( ( 30,-30,0), 20, ( 30,-30,-5),10, 0, 10, 36, 'line', 'zup' ) )
-llist.append( geomCreateRadial( ( 70,-30,0), 20, ( 70,-30,-5),30, 0, 10, 36, 'line', 'zup' ) )
-llist.append( geomCreateRadial( ( -30,0,0), 1, ( -30,0,0.2),1.2, 0, 20, 18, 'line', 'zup' ) )
-llist.append( geomCreateRadial( ( 30,0,0), 20, ( 35,5,10),22, 0, 20, 18, 'line', 'zup' ) )
-llist.append( geomCreateRadial( ( -30,-70,0), 30, ( -30,-70,-10),20, 0, 20, 18, 'line', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 0,-70,0), 20, ( 0,-70,-10),30, 0, 20, 18, 'line', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 40,-70,0), 20, ( 40,-70,-10),30, 0, -20, 18, 'line', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 40,-70,0), 20, ( 40,-70,-10),10, 0, -20, 18, 'line', 'arcflat' ) )
-llist.append( geomCreateRadial( ( -30,70,0), 30, ( -30,70,-10),20, 0, 20, 18, 'arcflat', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 0,70,0), 20, ( 0,70,-10),30, 0, 20, 18, 'arcflat', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 40,70,0), 20, ( 40,70,-10),30, 0, -20, 18, 'arcflat', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 70,70,0), 20, ( 70,70,-10),10, 0, -20, 18, 'arcflat', 'arcflat' ) )
-llist.append( geomCreateRadial( ( 70,25,0), 5, ( 70,25, 0),30, 0, 10, 36, 'arcflat', 'arcflat' ) )
+# llist = []
+# llist.append( geomCreateRadial( ( 10,0,0), 10, (0,0,0), 40, 22.0, 10, 18 ) )
+# llist.append( geomCreateRadial( (-30,30,0), 20, (-30,30,0), 30, 0, 10, 36 ) )
+# llist.append( geomCreateRadial( (0,30,0), 20, (0,30,10), 30, 0, 10, 36 ) )
+# llist.append( geomCreateRadial( (30,30,0), 20, (30,30,-10), 10, 0, 10, 36 ) )
+# llist.append( geomCreateRadial( (-30,-30,0), 20, (-30,-30,0), 30, 0, 10, 36, 'line', 'back' ) )
+# llist.append( geomCreateRadial( (  0,-30,0), 20, (  0,-30,5),15, 0, 10, 36, 'line', 'back' ) )
+# llist.append( geomCreateRadial( ( 30,-30,0), 20, ( 30,-30,-5),10, 0, 10, 36, 'line', 'zup' ) )
+# llist.append( geomCreateRadial( ( 70,-30,0), 20, ( 70,-30,-5),30, 0, 10, 36, 'line', 'zup' ) )
+# llist.append( geomCreateRadial( ( -30,0,0), 1, ( -30,0,0.2),1.2, 0, 20, 18, 'line', 'zup' ) )
+# llist.append( geomCreateRadial( ( 30,0,0), 20, ( 35,5,10),22, 0, 20, 18, 'line', 'zup' ) )
+# llist.append( geomCreateRadial( ( -30,-70,0), 30, ( -30,-70,-10),20, 0, 20, 18, 'line', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 0,-70,0), 20, ( 0,-70,-10),30, 0, 20, 18, 'line', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 40,-70,0), 20, ( 40,-70,-10),30, 0, -20, 18, 'line', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 40,-70,0), 20, ( 40,-70,-10),10, 0, -20, 18, 'line', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( -30,70,0), 30, ( -30,70,-10),20, 0, 20, 18, 'arcflat', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 0,70,0), 20, ( 0,70,-10),30, 0, 20, 18, 'arcflat', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 40,70,0), 20, ( 40,70,-10),30, 0, -20, 18, 'arcflat', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 70,70,0), 20, ( 70,70,-10),10, 0, -20, 18, 'arcflat', 'arcflat' ) )
+# llist.append( geomCreateRadial( ( 70,25,0), 5, ( 70,25, 0),30, 0, 10, 36, 'arcflat', 'arcflat' ) )
 
 
-debugShowViewer( llist )
+# debugShowViewer( llist )
 
-toolFullAuto( llist, 5 )
+# toolFullAuto( llist, 5 )
 
 
 
@@ -78,12 +74,12 @@ toolFullAuto( llist, 5 )
 
 #---------------------------------------
 #def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
-# llist = []
-# llist.append( geomCreateConcentricRects( (-20,-10,0), (20,10,0), 10, 5, 3, 'cw' )  )
+llist = []
+llist.append( geomCreateConcentricRects( (-20,-10,0), (20,10,0), 10, 5, 3, 'cw' )  )
 
-# debugShowViewer( llist )
+debugShowViewer( llist )
 
-# toolFullAuto( llist, 20 )
+toolFullAuto( llist, 20 )
 
 
 

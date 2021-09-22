@@ -47,10 +47,11 @@
 #  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
 
 
-import os
+import os       # only for 'debugShowViewer()'
+import sys      # only for 'debugShowViewer()'
+
 import math
 import pickle
-from random import random
 
 from ncVec import *
 
@@ -1341,7 +1342,35 @@ def geomCreateHelix( p1, dia, depth, depthSteps, dir, basNr=0, finish='finish' )
 #############################################################################
 ### geomCreateRadial
 ### 
-#############################################################################
+### Creates a radial line pattern between two circles, specified by p1, dia1,
+### p2 and dia2. The beginning and end of the radial lines can be controlled
+### with the start angle 'angleStart' (0-360°), the angle bweteen the lines
+### 'angleInc' (°) and the number of lines 'angleSteps' (int). Additinal angular
+### offsets can be set by 'angleOffset1/2' (0-360°).
+### 'connect1' specifies the connection type of the lines on the first circle
+### and 'connect2' the type of the 2nd circle. Supported are:
+###   'none' or None  -> no connection, just radial lines; not for milling
+###   'line'          -> a direct connection between two top or two bottom lines;
+###                      mills in both Z directions
+###   'arcflat'       -> an arc with no change in Z height between two top or
+###                      two bottom lines; mills in both Z directions
+###   'arc'           -> TODO TODO TODO
+###   'back'          -> a cross connection from circle 2 "back" to the first;
+###                      will scratch the surface; mills in both Z directions
+###   'zup'           -> a Bezier curve from circle 2, with a lifted Z-axis;
+###                      will not touch the surface; mills only in the direction
+###                      towards the 2nd circle
+### The operations 'line', 'arc' and 'arcflat' can be used in any combination,
+### in any of the 'connect1/2' arguments. The two ops 'back' and 'zup' can
+### not be combined at all. If one of the 'connect1/2' arguments has either
+### a 'back' or a 'zup' op, then this will override all other arguments.
+### Notice that a 'back' AND a 'zup' together will result in an error, as this
+### combination does not make sense at all.
+### The number of line segemnts for the Bezier interpolation is length-adapted
+### automatically, via DEFLEN_BEZIER, MINLEN_BEZIER and MAXLEN_BEZIER.
+### This can be overridden by 'bezierSteps'. Notice that this setting is then
+### valid for all 'zup-lines'.
+##############################################################################
 def geomCreateRadial( p1, dia1, p2, dia2,
 					angleStart, angleInc, angleSteps,
 					connect1='line', connect2='line',
@@ -1366,6 +1395,9 @@ def geomCreateRadial( p1, dia1, p2, dia2,
 		return []
 
 	if connect1 == 'back' or connect2 == 'back':
+		if connect1 == 'zup' or connect2 == 'zup':
+			print( "ERR: geomCreateRadial: 'back' AND 'zup' mode cannot be combined" )
+			return []
 		print( "INF: geomCreateRadial: mode mismatch, using 'back'" )
 		connect1 = connect2 = 'back'
 
@@ -3556,5 +3588,11 @@ def debugShowViewer( llist ):
 	f = open( 'ncEFI.dat', 'w+b' )
 	pickle.dump( llist, f )
 	f.close()
-	os.system('python3 ncEFIDisp2.py ncEFI.dat')
 
+	# The original was "python", but failed on macOS (with a lot of MacPorts Python versions installed).
+	# Something like "Python3" failed on Windoze, so let us just use the same executable with which
+	# this here was launched.
+	# os.system('python ncEFIDisp2.py ncEFI.dat')
+	# os.system('python3 ncEFIDisp2.py ncEFI.dat')
+	thisPython = sys.executable
+	os.system( thisPython + ' ncEFIDisp2.py ncEFI.dat')
