@@ -10,14 +10,16 @@
 
 
 # TODO:
-#  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
-#  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
 #  - geomCreateConcentricRects
 #      - implement the connecting circles (NOPE, let's use the new Beziers!)
 #      - implement depth (if not already done)
 #      - implement helix (if that makes sense)
-#  - geomCreateRectSpiral
-#  - geomCreateRectSpiralHelix
+#  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
+#  - geomCreateRadial
+#      - add the 'arc' operation
+#      - add rapid retracts (requires the "feed-rate-in-vertices" idea)
+#  - geomCreateRectSpiral       REALLY?
+#  - geomCreateRectSpiralHelix  REALLY?
 #  - geomCreatePoly
 #  - geomCreatePolyHelix
 #  - improve geomCreateCircRingHole:
@@ -25,6 +27,7 @@
 #      - 'clear' does (yet) nothing
 #      - the new retract movement should be an arc
 #      - ...
+#  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
 #  - geomCreateSpiralToCircle() needs more error checks
 #  - geomCreateHelix() uses 'finish' for 'finish' (lol), but shold have sth likr "clearBottom=True"#  - more error checks for 'dir' (almost everywhere)
 #  - option needed to use different feed rates in multi-geom functions like geomCreateCircRingHole
@@ -32,11 +35,11 @@
 #  - add retract movement or at least a "retractPt" to all the geom functions; last move to move the tool out
 #  - toolRapidToNextPart needs a better and valid solution to determine the really necessary height. Now just fixed.
 #  - avoid putting out arc z moves in toolCreate if z didn't change
-#  - add geomCreateCircle
-#  - add ncEFIDisp2 support for circle
+#  - add ncEFIDisp2 support for circle    ??? Häh?
 #  - add tool support for circle
 #  - add IJK circle and arcs
-#  - add geomCreateArcSlot
+#  - add geomCreateSlotArc
+#  - add geomCreateSlotBezier
 #  - add geomMoveTo; should be a 3-liner (theoretically :)
 #  - add spiral pocket geom (using SpiralHelix and Circle)
 #  - split ncEFI into several files, maybe elem, geom, part, tool?
@@ -1707,9 +1710,10 @@ def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
 		if xDone == True and yDone == True:
 			break
 
-		######################################################
-		# TODO: CREATE ARC TO NEXT POINT HERE (skip for now) #
-		######################################################
+		###########################################################
+		# TODO: CREATE ARC TO NEXT POINT HERE (skip for now)
+		#       Nah, that's have we put the Beziers in here for :)
+		###########################################################
 
 		# next point set
 		if stepOver > 0 and p11[0] + stepOver >= p1[0] + xdiff   or   stepOver < 0 and p11[0] + stepOver <= p1[0] + xdiff:
