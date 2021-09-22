@@ -1353,6 +1353,10 @@ def geomCreateRadial( p1, dia1, p2, dia2,
 		print( "ERR: geomCreateRadial: 'angleSteps' must be > 0: ", angleSteps )
 		return []
 
+	if dia1 == dia2:
+		print( "ERR: geomCreateRadial: dia1 and dia2 must not be equal: ", dia1 )
+		return []
+
 	if p1 == p2 and dia1 == dia2:
 		print( "ERR: geomCreateRadial: same coords and diameters for p1 and p2 not possible" )
 		return []
@@ -1434,25 +1438,53 @@ def geomCreateRadial( p1, dia1, p2, dia2,
 				elif connect2 == 'zup':
 					line = elemReverse( line )
 
-					p1 = elemGetPts( lastLine )[1]
-					p3 = elemGetPts( line )[0]
-					if p3[2] > p1[2]:
+					np1 = elemGetPts( lastLine )[1]
+					np3 = elemGetPts( line )[0]
+					if np3[2] > np1[2]:
 						# if we "mill down", move up here then mode to target
-						p2 = ( p1[0], p1[1], p3[2] )
+						np2 = ( np1[0], np1[1], np3[2] )
 					else:
 						# if we "mill up", first move to the xy target, then down
-						p2 = ( p3[0], p3[1], p1[2] )
+						np2 = ( np3[0], np3[1], np1[2] )
 
 					if bezierSteps is None:
-						bezSteps = int( vecLength( p1, p3 ) / DEFLEN_BEZIER )
+						bezSteps = int( vecLength( np1, np3 ) / DEFLEN_BEZIER )
 						if bezSteps < 5:
-							bezSteps = int( vecLength( p1, p3 ) / MINLEN_BEZIER )
+							bezSteps = int( vecLength( np1, np3 ) / MINLEN_BEZIER )
 					else:
 						bezSteps = bezierSteps
 					if bezSteps < 2:
 						bezSteps = 2
 
-					geom += geomCreateBezier( p1, p2, p3, bezSteps )
+					geom += geomCreateBezier( np1, np2, np3, bezSteps )
+				# -----
+				elif connect2 == 'arcflat':
+					[np11,np12] = elemGetPts( lastLine )
+					[np21,np22] = elemGetPts( line )
+
+					if angleInc < 0:
+						dir = 'cw'
+					else:
+						dir = 'cc'
+
+					revDir = False
+					if dia2 > dia1:
+						# target dia > start dia
+						if p2[2] <= p1[2]:
+							# bigger dia at bottom; swap!
+							revDir = True
+					else:
+						# target dia < start dia
+						if p2[2] >= p1[2]:
+							# bigger dia at top; swap!
+							revDir = True
+					if revDir:
+						if dir == 'cw':
+							dir = 'cc'
+						else:
+							dir = 'cw'
+
+					geom.append( elemCreateArc180( np12, np21, 0, dir) )
 				# -----
 				else:
 					pass
@@ -1470,26 +1502,54 @@ def geomCreateRadial( p1, dia1, p2, dia2,
 					geom.append( elemCreateLineBetween( lastLine, line ) )
 				# -----
 				elif connect1 == 'zup':
-#					line = elemReverse( line )
-					p1 = elemGetPts( lastLine )[1]
-					p3 = elemGetPts( line )[0]
-					if p3[2] > p1[2]:
+					np1 = elemGetPts( lastLine )[1]
+					np3 = elemGetPts( line )[0]
+					if np3[2] > np1[2]:
 						# if we "mill down", move up here then mode to target
-						p2 = ( p1[0], p1[1], p3[2] )
+						np2 = ( np1[0], np1[1], np3[2] )
 					else:
 						# if we "mill up", first move to the xy target, then down
-						p2 = ( p3[0], p3[1], p1[2] )
+						np2 = ( np3[0], np3[1], np1[2] )
 
 					if bezierSteps is None:
-						bezSteps = int( vecLength( p1, p3 ) / DEFLEN_BEZIER )
+						bezSteps = int( vecLength( np1, np3 ) / DEFLEN_BEZIER )
 						if bezSteps < 5:
-							bezSteps = int( vecLength( p1, p3 ) / MINLEN_BEZIER )
+							bezSteps = int( vecLength( np1, np3 ) / MINLEN_BEZIER )
 					else:
 						bezSteps = bezierSteps
 					if bezSteps < 2:
 						bezSteps = 2
 
-					geom += geomCreateBezier( p1, p2, p3, bezSteps )
+					geom += geomCreateBezier( np1, np2, np3, bezSteps )
+				# -----
+				elif connect2 == 'arcflat':
+					[np11,np12] = elemGetPts( lastLine )
+					[np21,np22] = elemGetPts( line )
+
+					if angleInc < 0:
+						dir = 'cw'
+					else:
+						dir = 'cc'
+
+					revDir = False
+					if dia2 > dia1:
+						# target dia > start dia
+						if p2[2] <= p1[2]:
+							# bigger dia at bottom; swap!
+							revDir = True
+					else:
+						# target dia < start dia
+						if p2[2] >= p1[2]:
+							# bigger dia at top; swap!
+							revDir = True
+					if revDir:
+						if dir == 'cw':
+							dir = 'cc'
+						else:
+							dir = 'cw'
+
+					geom.append( elemCreateArc180( np12, np21, 0, dir) )
+
 				# -----
 				else:
 					pass
@@ -3493,8 +3553,8 @@ def toolFullAuto( geoms, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fna
 ### calls the OpenGL debug view app.
 #############################################################################
 def debugShowViewer( llist ):
-	f=open('ncEFI.dat','w+b')
-	pickle.dump(llist,f)
+	f = open( 'ncEFI.dat', 'w+b' )
+	pickle.dump( llist, f )
 	f.close()
-	os.system('python ncEFIDisp2.py ncEFI.dat')
+	os.system('python3 ncEFIDisp2.py ncEFI.dat')
 

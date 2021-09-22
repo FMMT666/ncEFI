@@ -353,7 +353,7 @@ def vecGetParameter(p1,p2):
 #############################################################################
 def vecIntersectXY(p1,p2,q1,q2):
 	if not p1[2]==p2[2]==q1[2]==q2[2]:
-		print( "vecIntersectXY: lines not in same plane (xy)" )
+		print( "vecIntersectXYpts: lines not in same plane (xy)" )
 		return None
 	par1=vecGetParameter(p1,p2)
 	par2=vecGetParameter(q1,q2)
@@ -363,6 +363,7 @@ def vecIntersectXY(p1,p2,q1,q2):
 	c2=par1[1]*par2[2]-par1[2]*par2[1]
 	c3=par1[2]*par2[0]-par1[0]*par2[2]
 	return (c2/c1,c3/c1,p1[2])
+
 
 
 #############################################################################
