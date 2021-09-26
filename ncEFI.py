@@ -11,8 +11,8 @@
 
 # TODO:
 #  - geomCreateConcentricRects
-#      - implement the connecting circles (NOPE, let's use the new Beziers!)
 #      - implement depth (if not already done)
+#      - implement correct amount of Bezier line segments
 #      - implement helix (if that makes sense)
 #  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
 #  - geomCreateRadial
@@ -1645,7 +1645,7 @@ def geomCreateRect( p1, p2, depth, dir, basNr=0 ):
 		n += 1
 
 	if dir == 'cw':
-		pts.reverse()
+		lstPts.reverse()
 
 	lastPt = p1
 	for pt in lstPts[1:]:
@@ -1700,13 +1700,19 @@ def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
 	p1old = p2old = None
 	while True:
 
-
-		###########################################################
-		# TODO: JUST SOME RANDOMLY THROWN IN THINGS HERE!
-		###########################################################
 		if p1old is not None:
-			# TODO: Z-height
-			pmid = ( p1old[0]+(p11[0]-p1old[0])/2, p1old[1]+(p11[1]-p1old[1])/2, 0 )
+
+			# TODO -> Z-height
+			# TODO -> amount of Bezier points 
+
+			if dir == 'cw':
+				pmx = p11[0]
+				pmy = p1old[1]
+			else:
+				pmx = p1old[0]
+				pmy = p11[1]
+			pmz = 0
+			pmid = ( pmx, pmy, pmz )
 			ebez = geomCreateBezier( p1old, pmid, p11, 10 )
 			geom += ebez
 

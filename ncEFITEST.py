@@ -28,6 +28,17 @@ toolFullAuto( llist, 20 )
 
 
 #---------------------------------------
+# discovered an error while working on conentric rects; cc/cw didn't work
+# llist = []
+# llist.append( geomCreateRect( (-50,-40,0), (50,40,0), 0, 'cw' ) )
+# llist.append( geomCreateRect( (-40,-30,0), (40,30,0), 0, 'cc' ) )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
+
+
+#---------------------------------------
 #def geomCreateRadial( p1, dia1, p2, dia2, angleStart, angleInc, angleSteps, connect1='direct', connect2='direct', basNr=0 ):
 # llist = []
 # llist.append( geomCreateRadial( ( 10,0,0), 10, (0,0,0), 40, 22.0, 10, 18 ) )
