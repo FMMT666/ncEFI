@@ -1697,7 +1697,20 @@ def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
 	p11 = p1
 	p22 = p2
 	xDone = yDone = False
+	p1old = p2old = None
 	while True:
+
+
+		###########################################################
+		# TODO: JUST SOME RANDOMLY THROWN IN THINGS HERE!
+		###########################################################
+		if p1old is not None:
+			# TODO: Z-height
+			pmid = ( p1old[0]+(p11[0]-p1old[0])/2, p1old[1]+(p11[1]-p1old[1])/2, 0 )
+			ebez = geomCreateBezier( p1old, pmid, p11, 10 )
+			geom += ebez
+
+
 		e = geomCreateRect( p11, p22, depth, dir )
 
 		if e == []:
@@ -1709,11 +1722,6 @@ def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
 
 		if xDone == True and yDone == True:
 			break
-
-		###########################################################
-		# TODO: CREATE ARC TO NEXT POINT HERE (skip for now)
-		#       Nah, that's have we put the Beziers in here for :)
-		###########################################################
 
 		# next point set
 		if stepOver > 0 and p11[0] + stepOver >= p1[0] + xdiff   or   stepOver < 0 and p11[0] + stepOver <= p1[0] + xdiff:
@@ -1727,6 +1735,9 @@ def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
 			yDone = True
 		else:
 			ynew = stepOver
+
+		p1old = p11
+		p2old = p22
 
 		p11 = ( p11[0] + xnew, p11[1] + ynew, p11[2] )
 		p22 = ( p22[0] - xnew, p22[1] - ynew, p22[2] )
