@@ -5,25 +5,38 @@ from ncEFI import *
 
 
 
-#---------------------------------------
-#def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
-llist = []
-llist.append( geomCreateConcentricRects( ( 10, 30,0), (50,50,0), 10, 5, 3, 'cw' )  )
-llist.append( geomCreateConcentricRects( ( 20,-20,0), (40,20,0), 8, 8, 3, 'cw' )  )
-llist.append( geomCreateConcentricRects( ( 20,-70,0), (40,-30,0), 5, 10, 3, 'cw' )  )
-llist.append( geomCreateConcentricRects( ( 60, 30,0), (100,50,0), 10, 5, 3, 'cc' )  )
-llist.append( geomCreateConcentricRects( ( 70,-20,0), (90,20,0), 8, 8, 3, 'cc' )  )
-llist.append( geomCreateConcentricRects( ( 70,-70,0), (90,-30,0), 5, 10, 3, 'cc' )  )
-# these need some work :-)
-llist.append( geomCreateConcentricRects( ( -10, 30,0), (-50,50,0), -10, -5, 3, 'cc' )  )
-llist.append( geomCreateConcentricRects( ( -20,-20,0), (-40,20,0), 8, 8, 3, 'cc' )  )
-llist.append( geomCreateConcentricRects( ( -20,-70,0), (-40,-30,0), 5, 10, 3, 'cc' )  )
 
-llist.append( geomCreateConcentricRects( ( 90-35,-90,0), (90-35,-50,0), 5, 10, 3, 'cw' )  )
+#---------------------------------------
+#def geomCreateSlotHole( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 )
+
+llist = []
+llist.append(  geomCreateSlotHole( (20,20,0), (60,40,0), 10, 20, 3, 'cc' )  )
+llist.append(  geomCreateSlotHole( (-20,20,0), (-60,40,0), 10, 20, 3, 'cw' )  )
 
 debugShowViewer( llist )
 
 toolFullAuto( llist, 20 )
+
+
+#---------------------------------------
+#def geomCreateConcentricRects( p1, p2, xdiff, ydiff, stepOver, dir, basNr=0 ):
+# llist = []
+# llist.append( geomCreateConcentricRects( ( 10, 30,0), (50,50,0), 10, 5, 3, 'cw' )  )
+# llist.append( geomCreateConcentricRects( ( 20,-20,0), (40,20,0), 8, 8, 3, 'cw' )  )
+# llist.append( geomCreateConcentricRects( ( 20,-70,0), (40,-30,0), 5, 10, 3, 'cw' )  )
+# llist.append( geomCreateConcentricRects( ( 60, 30,0), (100,50,0), 10, 5, 3, 'cc' )  )
+# llist.append( geomCreateConcentricRects( ( 70,-20,0), (90,20,0), 8, 8, 3, 'cc' )  )
+# llist.append( geomCreateConcentricRects( ( 70,-70,0), (90,-30,0), 5, 10, 3, 'cc' )  )
+# # these need some work :-)
+# llist.append( geomCreateConcentricRects( ( -10, 30,0), (-50,50,0), -10, -5, 3, 'cc' )  )
+# llist.append( geomCreateConcentricRects( ( -20,-20,0), (-40,20,0), 8, 8, 3, 'cc' )  )
+# llist.append( geomCreateConcentricRects( ( -20,-70,0), (-40,-30,0), 5, 10, 3, 'cc' )  )
+
+# llist.append( geomCreateConcentricRects( ( 90-35,-90,0), (90-35,-50,0), 5, 10, 3, 'cw' )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
 
 
 

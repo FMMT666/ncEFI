@@ -10,6 +10,7 @@
 
 
 # TODO:
+#  - geomCreateSlotHole: rotate geom to final position
 #  - geomCreateConcentricRects
 #      - implement depth (if not already done)
 #      - implement correct amount of Bezier line segments
@@ -2551,6 +2552,107 @@ def geomCreateSlotPoly( listOfPoints, incDepth, smoothEnter=False, basNr=0 ):
 		geom.append( e )
 
 	return geom
+
+
+
+#############################################################################
+### geomCreateSlotHole
+###
+### Creates a slot hole.
+#############################################################################
+def geomCreateSlotHole( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+	con = []
+	if diaStart <= 0.0:
+		print( "ERR: geomCreateSlotHole: diaStart <= 0" )
+		return []
+	if diaEnd <= 0.0:
+		print( "ERR: geomCreateSlotHole: diaStart <= 0" )
+		return []
+	if diaSteps < 1:
+		print( "ERR: geomCreateSlotHole: diaSteps < 1" )
+		return []
+	diaPerRev=(diaEnd-diaStart)/diaSteps
+
+	# This was derived from ConcentricCircles.
+	# To reduce the amount of calculations (lol), the slot hole is always created
+	# along the y-axis and rotated afterwards, to match p2.
+
+	# length is actually the "y-difference" now
+	lenp1p2 = vecLengthXY( p1, p2 )
+	if dir == 'cw':
+		lenp1p2 = -lenp1p2
+	np2 = vecAdd( p1, (0, lenp1p2, 0) )
+
+	# WARNING: this is the "work vector", along the y-axis!
+	vecp1p2 = vecSub( np2, p1 )
+
+	# NEW 9/2021: quickfix to make p1 the center (was left of circle before)
+	p1 = ( p1[0] - diaStart/2.0, p1[1], p1[2] )
+
+	y=p1[1]
+	z=p1[2]
+	if basNr==0:
+		nr=1
+	else:
+		nr=basNr
+	# TOCHK (2021)
+	for i in range( 0, int(diaSteps) ):
+		x1 = p1[0] - ( i * diaPerRev/2.0 )
+		x2 = p1[0] + ( i * diaPerRev/2.0 ) + diaStart
+		diaAct = diaStart + ( i * diaPerRev )
+		# arc at start point
+		el = elemCreateArc180( (x1,y,z), (x2,y,z), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
+		nr += 1
+		con.append(el)
+		# line to dest
+		el = elemCreateLineTo( el, (x2,y+lenp1p2,z))
+		con.append(el)
+		nr += 1
+		# arc at dest point
+		el = elemCreateArc180( (x2,y,z), (x1,y,z), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
+		el = elemTranslate( el, vecp1p2 )
+		nr += 1
+		con.append(el)
+
+		x1 = p1[0] - ( i * diaPerRev/2.0 )
+		x2 = p1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/4.0
+
+		# line to start
+		el = elemCreateLineTo( el, (x1,y,z))
+		con.append(el)
+		nr += 1
+
+		if i < diaSteps-1:
+
+			if diaPerRev > 0:
+				if dir == 'cw':
+					tdir='cc'
+				else:
+					tdir='cw'
+			else:
+				tdir = dir
+			el = elemCreateArc180( (x1,y,z), (x2,y,z), math.fabs( diaPerRev ) / 8.0, tdir, {'pNr':nr} )
+			nr += 1
+			con.append(el)
+			if diaPerRev < 0:
+				if dir == 'cw':
+					tdir='cc'
+				else:
+					tdir='cw'
+			else:
+				tdir=dir
+			x1 = p1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/4.0
+			x2 = p1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/2.0
+			el = elemCreateArc180( (x1,y,z), (x2,y,z), math.fabs( diaPerRev ) / 8.0, tdir, {'pNr':nr} )
+			nr += 1
+			con.append(el)
+
+	# TODO: This check was from the original ConcentricCircles function
+	# if not len(con) == ( diaSteps * 4 ) - 2:
+	# 	print( "ERR: geomCreateSlotHole: number of circles: needed vs. made. ", nr-1, len(con) )
+	# 	return []
+
+	return con
 
 
 
