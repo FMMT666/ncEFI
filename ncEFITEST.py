@@ -7,15 +7,41 @@ from ncEFI import *
 
 
 #---------------------------------------
-#def geomCreateSlotHole( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 )
-
+#def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
 llist = []
-llist.append(  geomCreateSlotHole( (20,20,0), (60,40,0), 10, 20, 3, 'cc' )  )
-llist.append(  geomCreateSlotHole( (-20,20,0), (-60,40,0), 10, 20, 3, 'cw' )  )
+llist.append(  geomCreateSlotSpiral( (20,20,0), (60,40,0), 20, 4, 1, 'cc', clearBottom=True)  )
 
 debugShowViewer( llist )
 
 toolFullAuto( llist, 20 )
+
+
+
+#---------------------------------------
+##def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
+# print( arcLengthXY( (0,0,0), (1,0,0), 0.5, 'cw' ) )
+# print( arcLengthXY( (1,0,0), (0,0,0), 0.5, 'cw' ) )
+# print( arcLengthXY( (0,0,0), (1,0,0), 0.5, 'cc' ) )
+# print( arcLengthXY( (1,0,0), (0,0,0), 0.5, 'cc' ) )
+# print( arcLengthXY( (2,0,0), (3,0,0), 0.5, 'cw' ) )
+# print( arcLengthXY( (3,0,0), (2,0,0), 0.5, 'cw' ) )
+# print( arcLengthXY( (2,0,0), (3,0,0), 0.5, 'cc' ) )
+# print( arcLengthXY( (3,0,0), (2,0,0), 0.5, 'cc' ) )
+# print( arcLengthXY( (10,0,0), (20,20,0), 15, 'cc' ) )
+
+
+
+
+#---------------------------------------
+#def geomCreateSlotHole( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 )
+
+# llist = []
+# llist.append(  geomCreateConcentricSlots( (20,20,0), (60,40,0), 10, 20, 3, 'cc' )  )
+# llist.append(  geomCreateConcentricSlots( (-20,20,0), (-60,40,0), 10, 20, 3, 'cw' )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
 
 
 #---------------------------------------
