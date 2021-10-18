@@ -585,7 +585,7 @@ def arcDistPointOnBowXY(p1,p2,rad,dir,px):
 
 
 #############################################################################
-### arcAngle \(°_° ),
+### arcAngle /\(°-°)/\
 ###
 ### Returns something in radians. What? TODO!
 #############################################################################
@@ -610,7 +610,7 @@ def arcAngleAtPx(p1,p2,rad,dir,p):
 		print( "arcAngleAtPx: no midpoint: ",p1,p2,rad,dir )
 		return None
 	if p!='p1' and p!='p2':
-		print( "arcAngleAtPx: point select is not \'p1\' or \'p2\': ",p )
+		print( "arcAngleAtPx: point select is not a string with \'p1\' or \'p2\': ", p )
 		return None
 	if p == 'p1':
 		a=vecExtract(pm,p1)
@@ -625,6 +625,30 @@ def arcAngleAtPx(p1,p2,rad,dir,p):
 	if a == None:
 		return None
 	return a
+
+
+
+#############################################################################
+### arcLengthXY
+###
+### Returns the length of an arc in the XY plane.
+### As all the arcs in here cannot be >180°, this should be safe to use.
+#############################################################################
+def arcLengthXY(p1,p2,rad):
+
+	if rad <= 0.0:
+		print( "arcLengthXY: rad must not be <=0: ", rad )
+		return None
+
+	len = vecLengthXY( p1, p2 )
+	try:
+		arg = len / (2.0 * rad)
+		ang = 2.0 * rad * math.asin( arg )
+	except:
+		print( "arcLengthXY: error while calculating arcsin; arg, len, rad: ", arg, len, rad )
+		return None
+	
+	return ang
 
 
 

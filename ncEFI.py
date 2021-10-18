@@ -10,7 +10,18 @@
 
 
 # TODO:
-#  - geomCreateSlotHole: rotate geom to final position
+#  - geomCreateSlotSpiral:
+#      - calculation of segments's lengths
+#      - proper z values
+#      - add "clearBottom" functionality
+#      - sth like a "doNotRotate" option, for usage in geomCreateSlotHole
+#  - geomCreateSlotHole:
+#      - add geomCreateSlotSpiral as entry movement
+#      - add depth
+#      - add retract movement
+#      - rotate geom to final position
+#  - add proper "ERR:" prints in ncVec
+#  - add arcLength for z changes (half helix)
 #  - geomCreateConcentricRects
 #      - implement depth (if not already done)
 #      - implement correct amount of Bezier line segments
