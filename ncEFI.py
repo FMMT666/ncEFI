@@ -11,10 +11,9 @@
 
 # TODO:
 #  - geomCreateSlotSpiral:
-#      - calculation of segments's lengths
-#      - proper z values
 #      - add "clearBottom" functionality
-#      - sth like a "doNotRotate" option, for usage in geomCreateSlotHole
+#      - rotate to original position
+#      - sth like a "doNotRotate" option, for usage in geomCreateSlotHole??
 #  - geomCreateSlotHole:
 #      - add geomCreateSlotSpiral as entry movement
 #      - add depth
@@ -2701,22 +2700,30 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 	else:
 		nr = basNr
 
-	# TODO: calc lengths of arc and line segments as basis for changing z values
+	# calculate the length of the individial segments for the correct z-depth
+	lenLine = vecLengthXY( p1, p2 )
+	lenArc  = math.pi * (dia / 2.0)
+	depthNorm = depthPerStep / (2*lenLine + 2*lenArc)
+	depthLine = depthNorm * lenLine
+	depthArc  = depthNorm * lenArc
 
 	for i in range( 0, depthSteps ):
 		x1 = p1[0]
 		x2 = p1[0] + dia
 		diaAct = dia
 		# arc at start point
-		el = elemCreateArc180( (x1,y,z), (x2,y,z), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
+		el = elemCreateArc180( (x1,y,z), (x2,y,z-depthArc), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
+		z -= depthArc
 		nr += 1
 		con.append(el)
 		# line to dest
-		el = elemCreateLineTo( el, (x2,y+lenp1p2,z))
+		el = elemCreateLineTo( el, (x2,y+lenp1p2,z-depthLine))
+		z -= depthLine
 		con.append(el)
 		nr += 1
 		# arc at dest point
-		el = elemCreateArc180( (x2,y,z), (x1,y,z), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
+		el = elemCreateArc180( (x2,y,z), (x1,y,z-depthArc), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
+		z -= depthArc
 		el = elemTranslate( el, vecp1p2 )
 		nr += 1
 		con.append(el)
@@ -2728,7 +2735,8 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 		x2 = p1[0] - 0
 
 		# line to start
-		el = elemCreateLineTo( el, (x1,y,z))
+		el = elemCreateLineTo( el, (x1,y,z-depthLine))
+		z -= depthLine
 		con.append(el)
 		nr += 1
 

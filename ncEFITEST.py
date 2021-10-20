@@ -7,25 +7,25 @@ from ncEFI import *
 
 #---------------------------------------
 #def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
-# llist = []
-# llist.append(  geomCreateSlotSpiral( (20,20,0), (60,40,0), 20, 4, 1, 'cc', clearBottom=True)  )
+llist = []
+llist.append(  geomCreateSlotSpiral( (20,20,0), (60,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
 
-# debugShowViewer( llist )
+debugShowViewer( llist )
 
-# toolFullAuto( llist, 20 )
+toolFullAuto( llist, 20 )
 
 
 
 #---------------------------------------
-print( arcLengthXY( (0,0,0), (1,1,0), 1 ) / math.pi )
-print( arcLengthXY( (0,0,0), (-1,1,0), 1 ) / math.pi )
-print( arcLengthXY( (0,0,0), (-1,-1,0), 1 ) / math.pi )
-print( arcLengthXY( (3,3,0), (4,4,0), 1 ) / math.pi )
-print( arcLengthXY( (3,3,0), (2,4,0), 1 ) / math.pi )
-print( arcLengthXY( (3,3,0), (2,2,0), 1 ) / math.pi )
-print( arcLengthXY( (0,0,0), (2,0,0), 1 ) / math.pi )
-print( arcLengthXY( (0,0,0), (-2,0,0), 1 ) / math.pi )
-print( arcLengthXY( (0,0,0), (-2,0,0), 1 ) / math.pi )
+# print( arcLengthXY( (0,0,0), (1,1,0), 1 ) / math.pi )
+# print( arcLengthXY( (0,0,0), (-1,1,0), 1 ) / math.pi )
+# print( arcLengthXY( (0,0,0), (-1,-1,0), 1 ) / math.pi )
+# print( arcLengthXY( (3,3,0), (4,4,0), 1 ) / math.pi )
+# print( arcLengthXY( (3,3,0), (2,4,0), 1 ) / math.pi )
+# print( arcLengthXY( (3,3,0), (2,2,0), 1 ) / math.pi )
+# print( arcLengthXY( (0,0,0), (2,0,0), 1 ) / math.pi )
+# print( arcLengthXY( (0,0,0), (-2,0,0), 1 ) / math.pi )
+# print( arcLengthXY( (0,0,0), (-2,0,0), 1 ) / math.pi )
 
 
 
