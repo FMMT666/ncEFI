@@ -393,8 +393,10 @@ class myGLCanvas(GLCanvas):
 			X, Y = event.GetPosition()
 
 			if self.rightDown:
-				self.viewX += (X - self.oldX) * self.distance * MOUSE_DRAG_FACTOR
-				self.viewY -= (Y - self.oldY) * self.distance * MOUSE_DRAG_FACTOR
+				xadd = (X - self.oldX) * self.distance * MOUSE_DRAG_FACTOR
+				yadd = (Y - self.oldY) * self.distance * MOUSE_DRAG_FACTOR
+				self.viewX += xadd * math.cos( math.radians( self.alpha ) ) - yadd * math.sin( math.radians( self.alpha ) )
+				self.viewY -= yadd * math.cos( math.radians( self.alpha ) ) + xadd * math.sin( math.radians( self.alpha ) )
 
 			if self.leftDown:
 				self.alpha += (X - self.oldX) * 0.5
