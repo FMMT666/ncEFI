@@ -51,7 +51,7 @@ PartList = None
 #############################################################################
 def createArc180(p1,p2,rad,step,dir):
 	pm=arcCenter180XY(p1,p2,rad,dir)
-	
+
 	if pm==None:
 		print( "ERR: createArc180: no center; p1,p2: ",p1,p2 )
 		return []
@@ -135,9 +135,11 @@ class myGLCanvas(GLCanvas):
 
 		self.viewX = 0
 		self.viewY = 0
+		self.viewZ = 0
 
 		self.oldX = 0
 		self.oldY = 0
+		self.oldZ = 0
 
 		self.leftDown  = False
 		self.rightDown = False
@@ -339,7 +341,7 @@ class myGLCanvas(GLCanvas):
 		glTranslate(-self.viewX, -self.viewY, 0)
 		glRotate(self.beta, 1.0, 0.0, 0.0)
 		glRotate(self.alpha, 0.0, 0.0, 1.0)
-		glTranslate(self.viewX, self.viewY, 0)
+		glTranslate(self.viewX, self.viewY, self.viewZ)
 
 		# a = (GLfloat * 16)()
 		# mvm = glGetFloatv(GL_MODELVIEW_MATRIX, a)
@@ -395,8 +397,9 @@ class myGLCanvas(GLCanvas):
 			if self.rightDown:
 				xadd = (X - self.oldX) * self.distance * MOUSE_DRAG_FACTOR
 				yadd = (Y - self.oldY) * self.distance * MOUSE_DRAG_FACTOR
-				self.viewX += xadd * math.cos( math.radians( self.alpha ) ) - yadd * math.sin( math.radians( self.alpha ) )
-				self.viewY -= yadd * math.cos( math.radians( self.alpha ) ) + xadd * math.sin( math.radians( self.alpha ) )
+				self.viewX += xadd * math.cos( math.radians( self.alpha ) ) - ( yadd * math.sin( math.radians( self.alpha ) ) ) * math.cos( math.radians( self.beta ) )
+				self.viewY -= xadd * math.sin( math.radians( self.alpha ) ) + ( yadd * math.cos( math.radians( self.alpha ) ) ) * math.cos( math.radians( self.beta ) )
+				self.viewZ += yadd * math.sin( math.radians( self.beta ) )
 
 			if self.leftDown:
 				self.alpha += (X - self.oldX) * 0.5
