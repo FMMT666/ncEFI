@@ -8,7 +8,14 @@ from ncEFI import *
 #---------------------------------------
 #def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
 llist = []
-llist.append(  geomCreateSlotSpiral( (20,20,0), (60,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (30,20,0), (70,30,0), 20, 5, 10, 'cc', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (30,20,0), (60,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (30,20,0), (60,60,0), 20, 5, 10, 'cc', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (30,20,0), (120,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (30,20,0), (120,40,0), 20, 5, 10, 'cw', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (-60,20,0), (-80,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (-20,-20,0), (-60,-40,0), 20, 20, 1, 'cw', clearBottom=True)  )
+llist.append(  geomCreateSlotSpiral( (-20,-20,0), (-60,-40,0), 20, 20, 1, 'cc', clearBottom=True)  )
 
 debugShowViewer( llist )
 

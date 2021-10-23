@@ -2691,10 +2691,10 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 	vecp1p2 = vecSub( np2, p1 )
 
 	# NEW 9/2021: quickfix to make p1 the center (was left of circle before)
-	p1 = ( p1[0] - dia/2.0, p1[1], p1[2] )
+	np1 = ( p1[0] - dia/2.0, p1[1], p1[2] )
 
-	y = p1[1]
-	z = p1[2]
+	y = np1[1]
+	z = np1[2]
 	if basNr == 0:
 		nr = 1
 	else:
@@ -2707,9 +2707,14 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 	depthLine = depthNorm * lenLine
 	depthArc  = depthNorm * lenArc
 
-	for i in range( 0, depthSteps ):
-		x1 = p1[0]
-		x2 = p1[0] + dia
+	if clearBottom:
+		oneMore = 1
+	else:
+		oneMore = 0
+
+	for i in range( 0, depthSteps + oneMore ):
+		x1 = np1[0]
+		x2 = np1[0] + dia
 		diaAct = dia
 		# arc at start point
 		el = elemCreateArc180( (x1,y,z), (x2,y,z-depthArc), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
@@ -2728,11 +2733,8 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 		nr += 1
 		con.append(el)
 
-		x1 = p1[0]
-
-		# TOCHK:
-#		x2 = p1[0] - diaPerRev/4.0
-		x2 = p1[0] - 0
+		x1 = np1[0]
+		x2 = np1[0] - 0
 
 		# line to start
 		el = elemCreateLineTo( el, (x1,y,z-depthLine))
@@ -2740,6 +2742,18 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 		con.append(el)
 		nr += 1
 
+		# set all incremental depths to zero, so that the last loop will not change its depth
+		if clearBottom and i == depthSteps - 1:
+			depthArc  = 0
+			depthLine = 0
+
+	# rotate around p1 to original position
+	if dir == 'cc':
+		vDir = vecSub( p2, p1 )
+	else:
+		vDir = vecSub( p1, p2 )
+	ang = math.radians( 90 ) - vecAngleXY( vDir )
+	con = geomRotateZAt( con, math.degrees(ang), p1 )
 
 	return con
 

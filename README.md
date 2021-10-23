@@ -70,6 +70,11 @@ That always worked.
 ## News
 
 ### CHANGES 2021/09/XX
+    - now finally with correct OpenGL view navigation
+    - added even more more functions
+
+
+### CHANGES 2021/09/XX
     - added even more functions
 
 
