@@ -5,8 +5,21 @@ from ncEFI import *
 
 
 
+
+
 #---------------------------------------
-#def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
+##def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+llist = []
+llist.append(  geomCreateConcentricSlots( (20,20,0), (60,30,-10), 15, 30, 15, 'cw' )  )
+
+debugShowViewer( llist )
+
+toolFullAuto( llist, 20 )
+
+
+
+#---------------------------------------
+##def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
 llist = []
 llist.append(  geomCreateSlotSpiral( (30,20,0), (70,30,0), 20, 5, 10, 'cc', clearBottom=True)  )
 llist.append(  geomCreateSlotSpiral( (30,20,0), (60,40,0), 20, 5, 10, 'cc', clearBottom=True)  )

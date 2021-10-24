@@ -10,10 +10,15 @@
 
 
 # TODO:
+#  - maybe renaming the hole functions would make sense?
+#      - geomCreateCircRingHole  -> geomCreateHoleRingCircle (CircleRing? ConcentricCircles?)
+#      - geomCreateSlotHole[...] -> geomCreateHoleRingSlot   (SlotRing?   ConcentricSlots?)
+#  - geomCreateSlotHole:
+#      - create this from ConcentricSlots and SlotSpiral
 #  - geomCreateSlotSpiral:
-#      - add "clearBottom" functionality
-#      - rotate to original position
 #      - sth like a "doNotRotate" option, for usage in geomCreateSlotHole??
+#      - add more error checks
+#  - what's with this "basNr" stuff? Remove that completely?
 #  - geomCreateSlotHole:
 #      - add geomCreateSlotSpiral as entry movement
 #      - add depth
@@ -2756,6 +2761,16 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 	con = geomRotateZAt( con, math.degrees(ang), p1 )
 
 	return con
+
+
+
+#############################################################################
+### geomCreateSlotRingHole
+###
+### Needs to be renamed (together with this CircularRingHole thing)
+#############################################################################
+def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterInc, dir ):
+	return []
 
 
 
