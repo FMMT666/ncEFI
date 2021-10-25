@@ -11,6 +11,8 @@ from ncEFI import *
 ##def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
 llist = []
 llist.append(  geomCreateConcentricSlots( (20,20,0), (60,30,-10), 15, 30, 15, 'cw' )  )
+llist.append(  geomCreateConcentricSlots( (20,60,0), (60,50,-10), 15, 30, 15, 'cc' )  )
+llist.append(  geomCreateConcentricSlots( (-50,80,0), (20,-80,-10), 10, 20, 3, 'cc' )  )
 
 debugShowViewer( llist )
 
@@ -20,19 +22,19 @@ toolFullAuto( llist, 20 )
 
 #---------------------------------------
 ##def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBottom=True, basNr=0 ):
-llist = []
-llist.append(  geomCreateSlotSpiral( (30,20,0), (70,30,0), 20, 5, 10, 'cc', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (30,20,0), (60,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (30,20,0), (60,60,0), 20, 5, 10, 'cc', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (30,20,0), (120,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (30,20,0), (120,40,0), 20, 5, 10, 'cw', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (-60,20,0), (-80,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (-20,-20,0), (-60,-40,0), 20, 20, 1, 'cw', clearBottom=True)  )
-llist.append(  geomCreateSlotSpiral( (-20,-20,0), (-60,-40,0), 20, 20, 1, 'cc', clearBottom=True)  )
+# llist = []
+# llist.append(  geomCreateSlotSpiral( (30,20,0), (70,30,0), 20, 5, 10, 'cc', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (30,20,0), (60,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (30,20,0), (60,60,0), 20, 5, 10, 'cc', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (30,20,0), (120,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (30,20,0), (120,40,0), 20, 5, 10, 'cw', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (-60,20,0), (-80,40,0), 20, 5, 10, 'cc', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (-20,-20,0), (-60,-40,0), 20, 20, 1, 'cw', clearBottom=True)  )
+# llist.append(  geomCreateSlotSpiral( (-20,-20,0), (-60,-40,0), 20, 20, 1, 'cc', clearBottom=True)  )
 
-debugShowViewer( llist )
+# debugShowViewer( llist )
 
-toolFullAuto( llist, 20 )
+# toolFullAuto( llist, 20 )
 
 
 

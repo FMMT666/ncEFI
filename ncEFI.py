@@ -1942,18 +1942,18 @@ def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 
 	vecp1p2 = vecSub( np2, p1 )
 
 	# NEW 9/2021: quickfix to make p1 the center (was left of circle before)
-	p1 = ( p1[0] - diaStart/2.0, p1[1], p1[2] )
+	np1 = ( p1[0] - diaStart/2.0, p1[1], p1[2] )
 
-	y=p1[1]
-	z=p1[2]
-	if basNr==0:
-		nr=1
+	y = np1[1]
+	z = np1[2]
+	if basNr == 0:
+		nr = 1
 	else:
-		nr=basNr
+		nr = basNr
 	# TOCHK (2021)
 	for i in range( 0, int(diaSteps) ):
-		x1 = p1[0] - ( i * diaPerRev/2.0 )
-		x2 = p1[0] + ( i * diaPerRev/2.0 ) + diaStart
+		x1 = np1[0] - ( i * diaPerRev/2.0 )
+		x2 = np1[0] + ( i * diaPerRev/2.0 ) + diaStart
 		diaAct = diaStart + ( i * diaPerRev )
 		# arc at start point
 		el = elemCreateArc180( (x1,y,z), (x2,y,z), math.fabs( diaAct/2.0 ), dir, {'pNr':nr} )
@@ -1969,8 +1969,8 @@ def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 
 		nr += 1
 		con.append(el)
 
-		x1 = p1[0] - ( i * diaPerRev/2.0 )
-		x2 = p1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/4.0
+		x1 = np1[0] - ( i * diaPerRev/2.0 )
+		x2 = np1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/4.0
 
 		# line to start
 		el = elemCreateLineTo( el, (x1,y,z))
@@ -1996,8 +1996,8 @@ def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 
 					tdir='cw'
 			else:
 				tdir=dir
-			x1 = p1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/4.0
-			x2 = p1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/2.0
+			x1 = np1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/4.0
+			x2 = np1[0] - ( i * diaPerRev/2.0 ) - diaPerRev/2.0
 			el = elemCreateArc180( (x1,y,z), (x2,y,z), math.fabs( diaPerRev ) / 8.0, tdir, {'pNr':nr} )
 			nr += 1
 			con.append(el)
@@ -2006,6 +2006,14 @@ def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 
 	# if not len(con) == ( diaSteps * 4 ) - 2:
 	# 	print( "ERR: geomCreateConcentricSlots: number of circles: needed vs. made. ", nr-1, len(con) )
 	# 	return []
+
+	# rotate around p1 to original position
+	if dir == 'cc':
+		vDir = vecSub( p2, p1 )
+	else:
+		vDir = vecSub( p1, p2 )
+	ang = math.radians( 90 ) - vecAngleXY( vDir )
+	con = geomRotateZAt( con, math.degrees(ang), p1 )
 
 	return con
 
