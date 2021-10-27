@@ -2798,16 +2798,19 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 
 
 	con = []
-	depthCurrent = p1[2]
+	depthCurrent = 0
 
 	while True:
 
 		# TODO 1: add entry movements
 
-		con += geomCreateConcentricSlots( (p1[0], p1[1], depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
+		con += geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
 
-		depthCurrent -= depthInc
-		if depthCurrent <= -depth:
+		if depthCurrent < depth:
+			depthCurrent += depthInc
+			if depthCurrent > depth:
+				depthCurrent = depth
+		else:
 			break
 
 		# TODO 2: add move to next ConcentricSlot
