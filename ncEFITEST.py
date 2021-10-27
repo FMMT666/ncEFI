@@ -5,18 +5,27 @@ from ncEFI import *
 
 
 
-
-
 #---------------------------------------
-##def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+##def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterInc, dir ):
 llist = []
-llist.append(  geomCreateConcentricSlots( (20,20,0), (60,30,-10), 15, 30, 15, 'cw' )  )
-llist.append(  geomCreateConcentricSlots( (20,60,0), (60,50,-10), 15, 30, 15, 'cc' )  )
-llist.append(  geomCreateConcentricSlots( (-50,80,0), (20,-80,-10), 10, 20, 3, 'cc' )  )
+llist.append(  geomCreateSlotRingHole( (30,10,-10), (80,40,0), 20, 40, 4, 30, 5, 5, 1, 'cw' )  )
 
 debugShowViewer( llist )
 
 toolFullAuto( llist, 20 )
+
+
+
+#---------------------------------------
+##def geomCreateConcentricSlots( p1, p2, diaStart, diaEnd, diaSteps, dir, basNr=0 ):
+# llist = []
+# llist.append(  geomCreateConcentricSlots( (20,20,0), (60,30,-10), 15, 30, 15, 'cw' )  )
+# llist.append(  geomCreateConcentricSlots( (20,60,0), (60,50,-10), 15, 30, 15, 'cc' )  )
+# llist.append(  geomCreateConcentricSlots( (-50,80,0), (20,-80,-10), 10, 20, 3, 'cc' )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
 
 
 

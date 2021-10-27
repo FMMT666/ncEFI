@@ -2776,9 +2776,45 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 ### geomCreateSlotRingHole
 ###
 ### Needs to be renamed (together with this CircularRingHole thing)
+### Creates a slot shaped hole. Start depth is taken from p1's depth (z),
+### the steps and total depth can be controlled with "depth" and "depthInc".
+### TODO: Needs more text here
 #############################################################################
 def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterInc, dir ):
-	return []
+
+	# TODO: add a lot more checkds here
+
+	if enterHeight < 0:
+		print( "ERR: geomCreateSlotRingHole: enterHeight must be > 0 (SAFETY FIRST :-)" )
+		return []
+
+	if depth < 0:
+		print( "ERR: geomCreateSlotRingHole: depth must be >= 0" )
+		return []
+
+	if depthInc < 0:
+		print( "ERR: geomCreateSlotRingHole: depthInc must be be >= 0" )
+		return []
+
+
+	con = []
+	depthCurrent = p1[2]
+
+	while True:
+
+		# TODO 1: add entry movements
+
+		con += geomCreateConcentricSlots( (p1[0], p1[1], depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
+
+		depthCurrent -= depthInc
+		if depthCurrent <= -depth:
+			break
+
+		# TODO 2: add move to next ConcentricSlot
+
+	# TODO 3: add exit movements
+
+	return con
 
 
 
