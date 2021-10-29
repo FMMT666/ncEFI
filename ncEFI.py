@@ -10,11 +10,13 @@
 
 
 # TODO:
+#  - geomCreateSlotHole:
+#      - the retract movement is doing a 180° turn; not good :-/
+#        should be splitted into a two arcs movement
+#        (probably requires a 'half a vector' function (to extract the mid point))
 #  - maybe renaming the hole functions would make sense?
 #      - geomCreateCircRingHole  -> geomCreateHoleRingCircle (CircleRing? ConcentricCircles?)
 #      - geomCreateSlotHole[...] -> geomCreateHoleRingSlot   (SlotRing?   ConcentricSlots?)
-#  - geomCreateSlotHole:
-#      - create this from ConcentricSlots and SlotSpiral
 #  - geomCreateSlotSpiral:
 #      - sth like a "doNotRotate" option, for usage in geomCreateSlotHole??
 #      - add more error checks
