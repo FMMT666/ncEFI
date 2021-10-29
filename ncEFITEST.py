@@ -6,9 +6,9 @@ from ncEFI import *
 
 
 #---------------------------------------
-##def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterInc, dir ):
+##def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterSteps, dir ):
 llist = []
-llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 40, 60, 4, 30, 7, 5, 1, 'cw' )  )
+llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 40, 80, 2, 30, 15, 20, 1, 'cc' )  )
 
 debugShowViewer( llist )
 

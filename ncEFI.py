@@ -2780,7 +2780,7 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 ### the steps and total depth can be controlled with "depth" and "depthInc".
 ### TODO: Needs more text here
 #############################################################################
-def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterInc, dir ):
+def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterSteps, dir ):
 
 	# TODO: add a lot more checkds here
 
@@ -2796,14 +2796,30 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 		print( "ERR: geomCreateSlotRingHole: depthInc must be be >= 0" )
 		return []
 
+	if enterHeight < depthInc:
+		print( "ERR: geomCreateSlotRingHole: enterHeight must be larger than depthInc: ", enterHeight, depthInc )
+		return []
+
 
 	con = []
 	depthCurrent = 0
 
+	ptRetStart = None
+
 	while True:
 
-		# TODO 1: add entry movements
+		# entry movement
+		geomEntry = geomCreateSlotSpiral( (p1[0], p1[1], p1[2] - depthCurrent + enterHeight), p2, diaStart, enterSteps, enterHeight / enterSteps, dir, clearBottom=False)
 
+		# do we need to add the "retract to next entry" move yet?
+		if ptRetStart is not None:
+			ptRetEnd = geomGetFirstPoint( geomEntry )
+			con.append(  elemCreateArc180( ptRetStart, ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
+
+		# add the entry movement
+		con += geomEntry
+
+		# create the main milling op
 		con += geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
 
 		if depthCurrent < depth:
@@ -2813,7 +2829,12 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 		else:
 			break
 
-		# TODO 2: add move to next ConcentricSlot
+		# save point to retract from
+		ptRetStart = geomGetLastPoint( con )
+		if ptRetStart is None:
+			print( "ERR: geomCreateSlotRingHole: geomGetLastPoint returned nothing valid" )
+			return []
+
 
 	# TODO 3: add exit movements
 
@@ -3526,6 +3547,70 @@ def geomTrimPointsStartToEnd( elIn, isClosed=False ):
 			elOut[0]['p1']=elOut[maxLen]['p1']
 
 	return elOut
+
+
+
+#############################################################################
+### geomGetLastPoint
+###
+### Returns the point of the last element in a geom.
+#############################################################################
+def geomGetLastPoint( geom ):
+
+	if not isinstance( geom, list ):
+		print( "ERR: geomGetLastPoint: geom is not a list: ", type(geom) )
+		return None
+
+	if len( geom ) < 1:
+		print( "ERR: geomGetLastPoint: geom is empty" )
+		return None
+
+	e = geom[-1]
+
+	if not isinstance( e, dict ):
+		print( "ERR: geomGetLastPoint: last element of geom is not a dict: ", type(e) )
+		return None
+
+	pts = elemGetPts( e )
+
+	if   len(pts) == 1:
+		return pts[0]
+	elif len(pts) == 2:
+		return pts[1]
+
+	print( "ERR: geomGetLastPoint: last element does not have valid amount of points: ", len(pts) )
+	return None
+
+
+
+#############################################################################
+### geomGetFirstPoint
+###
+### Returns the point of the last element in a geom.
+#############################################################################
+def geomGetFirstPoint( geom ):
+
+	if not isinstance( geom, list ):
+		print( "ERR: geomGetFirstPoint: geom is not a list: ", type(geom) )
+		return None
+
+	if len( geom ) < 1:
+		print( "ERR: geomGetFirstPoint: geom is empty" )
+		return None
+
+	e = geom[0]
+
+	if not isinstance( e, dict ):
+		print( "ERR: geomGetFirstPoint: first element of geom is not a dict: ", type(e) )
+		return None
+
+	pts = elemGetPts( e )
+
+	if len(pts) > 0:
+		return pts[0]
+
+	print( "ERR: geomGetFirstPoint: first element does not have valid amount of points: ", len(pts) )
+	return None
 
 
 
