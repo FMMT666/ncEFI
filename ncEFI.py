@@ -2816,7 +2816,12 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 		# do we need to add the "retract to next entry" move yet?
 		if ptRetStart is not None:
 			ptRetEnd = geomGetFirstPoint( geomEntry )
-			con.append(  elemCreateArc180( ptRetStart, ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
+			# not nice as this makes a 180° turn
+			# con.append(  elemCreateArc180( ptRetStart, ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
+
+			ptRetMid = vecExtractMid( ptRetStart, ptRetEnd )
+			con.append(  elemCreateArc180( ptRetStart, ptRetMid, 0, dir )  )
+			con.append(  elemCreateArc180( ptRetMid,   ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
 
 		# add the entry movement
 		con += geomEntry
