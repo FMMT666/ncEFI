@@ -2842,8 +2842,12 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 			print( "ERR: geomCreateSlotRingHole: geomGetLastPoint returned nothing valid" )
 			return []
 
-
-	# TODO 3: add exit movements
+	# add retract movement; will retract with two arcs to the starting point.
+	ex1 = geomGetLastPoint( con )
+	ex2 = geomGetFirstPoint( con )
+	exm = vecExtractMid( ex2, ex1 )
+	con.append(  elemCreateArc180( ex1, exm, 0, dir )  )
+	con.append(  elemCreateArc180( exm, ex2, 0, 'cw' if dir == 'cc' else 'cc' )  )
 
 	return con
 
