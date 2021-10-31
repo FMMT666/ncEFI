@@ -10,10 +10,19 @@
 
 
 # TODO:
-#  - geomCreateSlotHole:
-#      - the retract movement is doing a 180° turn; not good :-/
-#        should be splitted into a two arcs movement
-#        (probably requires a 'half a vector' function (to extract the mid point))
+#  - vertices
+#      - allow vertices in geoms
+#          - need to be ignored for the toolpath
+#      - add color data to vertex (for visualizer)
+#      - add feed rate modifier to vertex
+#          - ugh, many options exist:
+#              - absolute values given by createGeom fnctions
+#              - absolute values specified by a project ("slow", "med", "fast", e.g.)
+#              - relative as percentage of a value given by createGeom
+#              - relative as percentage of a project value  ("slower", "faster", e.g.)
+#              - ...
+#  - geomCreateSlotHole, geomCreateConcentricSlots, geomCreateCircRingHole, geomCreateConcentricCircles:
+#      - the "diaSteps" should be replaced by a "diaInc" for better usage
 #  - maybe renaming the hole functions would make sense?
 #      - geomCreateCircRingHole  -> geomCreateHoleRingCircle (CircleRing? ConcentricCircles?)
 #      - geomCreateSlotHole[...] -> geomCreateHoleRingSlot   (SlotRing?   ConcentricSlots?)
@@ -32,7 +41,6 @@
 #      - implement depth (if not already done)
 #      - implement correct amount of Bezier line segments
 #      - implement helix (if that makes sense)
-#  - brilliant stupid idea no. 2435: vertices could be used to create rapids or feed rate changes
 #  - geomCreateRadial
 #      - add the 'arc' operation
 #      - add rapid retracts (requires the "feed-rate-in-vertices" idea)
