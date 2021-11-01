@@ -10,17 +10,21 @@
 
 
 # TODO:
-#  - vertices
-#      - allow vertices in geoms
-#          - need to be ignored for the toolpath
-#      - add color data to vertex (for visualizer)
-#      - add feed rate modifier to vertex
-#          - ugh, many options exist:
-#              - absolute values given by createGeom fnctions
-#              - absolute values specified by a project ("slow", "med", "fast", e.g.)
-#              - relative as percentage of a value given by createGeom
-#              - relative as percentage of a project value  ("slower", "faster", e.g.)
-#              - ...
+# ??? REALLY?
+# ??? All elements already support 'extras', can't we just use those?
+# ???
+# ???    - vertices
+# ???        - allow vertices in geoms
+# ???            - need to be ignored for the toolpath
+# ???        - add color data to vertex (for visualizer)
+# ???        - add feed rate modifier to vertex
+# ???            - ugh, many options exist:
+# ???                - absolute values given by createGeom fnctions
+# ???                - absolute values specified by a project ("slow", "med", "fast", e.g.)
+# ???                - relative as percentage of a value given by createGeom
+# ???                - relative as percentage of a project value  ("slower", "faster", e.g.)
+# ???                - ...
+#  - allow RAPID in 'tMove' for G2/3 (set feed rate to a predefined, high value)
 #  - geomCreateSlotHole, geomCreateConcentricSlots, geomCreateCircRingHole, geomCreateConcentricCircles:
 #      - the "diaSteps" should be replaced by a "diaInc" for better usage
 #  - maybe renaming the hole functions would make sense?
@@ -176,10 +180,10 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 
 
 #############################################################################
-### extraAddExtra
+### elemAddExtra
 ###
 #############################################################################
-def extraAddExtra(elem,extra):
+def elemAddExtra(elem,extra):
 	for i in extra:
 		if i == 'pNr':
 			elem['pNr'] = extra['pNr']
@@ -200,7 +204,7 @@ def elemCreateVertex(p1,extra={}):
 	if isinstance(p1,tuple) == False:
 		return {}
 	ret={'type':'v','p1':p1}
-	extraAddExtra(ret,extra)
+	elemAddExtra(ret,extra)
 	return ret
 
 
@@ -218,7 +222,7 @@ def elemCreateLine(p1,p2,extra={}):
 		print( "ERR: elemCreateLine: p1 == p2: ",p1 )
 		return {}
 	ret={'type':'l','p1':p1,'p2':p2}
-	extraAddExtra(ret,extra)
+	elemAddExtra(ret,extra)
 	return ret
 
 
@@ -250,7 +254,7 @@ def elemCreateLineTo(e1,p2,extra={}):
 		return {}
 
 	ret={'type':'l','p1':pt,'p2':p2}
-	extraAddExtra(ret,extra)
+	elemAddExtra(ret,extra)
 	return ret
 
 
@@ -288,7 +292,7 @@ def elemCreateLineBetween(e1,e2,extra={}):
 		return {}
 
 	ret={'type':'l','p1':p1,'p2':p2}
-	extraAddExtra(ret,extra)
+	elemAddExtra(ret,extra)
 	return ret
 
 
@@ -324,7 +328,7 @@ def elemCreateArc180(p1,p2,rad,dir,extra={}):
 			print( "ERR: elemCreateArc180: rad less than dist/2: rad, dist/2",rad,dist/2.0 )
 			return {}
 	ret={'type':'a','p1':p1,'p2':p2,'rad':rad,'dir':dir}
-	extraAddExtra(ret,extra)
+	elemAddExtra(ret,extra)
 	return ret
 
 
