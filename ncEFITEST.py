@@ -6,15 +6,41 @@ from ncEFI import *
 
 
 #---------------------------------------
-##def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterSteps, dir ):
+##def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
+##                                depth, depthInc,
+##                                enterHeight, enterSteps, dir,
+##                                fBase, fEntry, fRetract     ):
 llist = []
-#llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 80, 40, 2, 30, 15, 20, 1, 'cc' )  )
-#llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 40, 80, 2, 30, 15, 20, 1, 'cw' )  )
-llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 100, 200, 10, 10, 2, 3, 1, 'cw' )  )
+
+# feedrates per part could look like this, as optional arguments, supporting
+# either None (aka, nothing; as predefined from reference), an absolute value
+# (as reference), a percentage (as a base modifier) or a RAPID instruction.
+# RAPIDS would work directly for straight moves only (already implemented),
+# but would require a double set of instructions for everything else; e.g.
+# set a high feedrate for this G2/3 move, but switch back to the base speed
+# afterwards. Would be easier to use "info" vertices here, rather than putting
+# all of this in the elements themselves.
+llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 10,
+                                            10, 2,
+                                            3, 1, 'cw',
+                                            fBase=300, fEntry='50%', fRetract='RAPID' )  )
 
 debugShowViewer( llist )
 
 toolFullAuto( llist, 20 )
+
+
+
+#---------------------------------------
+##def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterSteps, dir ):
+# llist = []
+# #llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 80, 40, 2, 30, 15, 20, 1, 'cc' )  )
+# #llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 40, 80, 2, 30, 15, 20, 1, 'cw' )  )
+# llist.append(  geomCreateSlotRingHole( (-10,10,-10), (80,40,0), 100, 200, 10, 10, 2, 3, 1, 'cw' )  )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist, 20 )
 
 
 

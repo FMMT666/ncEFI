@@ -24,6 +24,10 @@
 # ???                - relative as percentage of a value given by createGeom
 # ???                - relative as percentage of a project value  ("slower", "faster", e.g.)
 # ???                - ...
+#
+#
+#
+#
 #  - allow RAPID in 'tMove' for G2/3 (set feed rate to a predefined, high value)
 #  - geomCreateSlotHole, geomCreateConcentricSlots, geomCreateCircRingHole, geomCreateConcentricCircles:
 #      - the "diaSteps" should be replaced by a "diaInc" for better usage
@@ -2795,6 +2799,85 @@ def geomCreateSlotSpiral( p1, p2, dia, depthSteps, depthPerStep, dir, clearBotto
 ### TODO: Needs more text here
 #############################################################################
 def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc, enterHeight, enterSteps, dir ):
+
+	# TODO: add a lot more checkds here
+
+	if enterHeight < 0:
+		print( "ERR: geomCreateSlotRingHole: enterHeight must be > 0 (SAFETY FIRST :-)" )
+		return []
+
+	if depth < 0:
+		print( "ERR: geomCreateSlotRingHole: depth must be >= 0" )
+		return []
+
+	if depthInc < 0:
+		print( "ERR: geomCreateSlotRingHole: depthInc must be be >= 0" )
+		return []
+
+	if enterHeight < depthInc:
+		print( "ERR: geomCreateSlotRingHole: enterHeight must be larger than depthInc: ", enterHeight, depthInc )
+		return []
+
+
+	con = []
+	depthCurrent = 0
+
+	ptRetStart = None
+
+	while True:
+
+		# entry movement
+		geomEntry = geomCreateSlotSpiral( (p1[0], p1[1], p1[2] - depthCurrent + enterHeight), p2, diaStart, enterSteps, enterHeight / enterSteps, dir, clearBottom=False)
+
+		# do we need to add the "retract to next entry" move yet?
+		if ptRetStart is not None:
+			ptRetEnd = geomGetFirstPoint( geomEntry )
+			# not nice as this makes a 180° turn
+			# con.append(  elemCreateArc180( ptRetStart, ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
+
+			ptRetMid = vecExtractMid( ptRetStart, ptRetEnd )
+			con.append(  elemCreateArc180( ptRetStart, ptRetMid, 0, dir )  )
+			con.append(  elemCreateArc180( ptRetMid,   ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
+
+		# add the entry movement
+		con += geomEntry
+
+		# create the main milling op
+		con += geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
+
+		if depthCurrent < depth:
+			depthCurrent += depthInc
+			if depthCurrent > depth:
+				depthCurrent = depth
+		else:
+			break
+
+		# save point to retract from
+		ptRetStart = geomGetLastPoint( con )
+		if ptRetStart is None:
+			print( "ERR: geomCreateSlotRingHole: geomGetLastPoint returned nothing valid" )
+			return []
+
+	# add retract movement; will retract with two arcs to the starting point.
+	ex1 = geomGetLastPoint( con )
+	ex2 = geomGetFirstPoint( con )
+	exm = vecExtractMid( ex2, ex1 )
+	con.append(  elemCreateArc180( ex1, exm, 0, dir )  )
+	con.append(  elemCreateArc180( exm, ex2, 0, 'cw' if dir == 'cc' else 'cc' )  )
+
+	return con
+
+
+
+#############################################################################
+### geomCreateSlotRingHoleTEST
+###
+### Testing some "feedrate in vertices" code.
+#############################################################################
+def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
+                                depth, depthInc,
+								enterHeight, enterSteps, dir,
+								fBase, fEntry, fRetract):
 
 	# TODO: add a lot more checkds here
 
