@@ -25,6 +25,11 @@
 # ???                - relative as percentage of a project value  ("slower", "faster", e.g.)
 # ???                - ...
 #
+# >>> Maybe it's a better idea, to _not_ throw the feed rate args in every function, but
+# >>> write "modifierFuncs", which add them afterwards?
+# >>> The "geomCreate" functions would then just add the "info vertices", as a marker where
+# >>> entry moves, retractions or rapids begin and end.
+# >>> Otherwise every single function would require the feed rates as an argument.
 #
 #
 #
@@ -4054,6 +4059,24 @@ def toolFullAuto( geoms, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fna
 	tool += toolCreateSimpleFooter( fnameHeader )
 
 	toolFileWrite( tool, fname )
+
+
+
+#############################################################################
+### toolCalcRelativeFeedrate
+###
+### Utility function to calculate feedrates relative to a base value.
+### The parameter "modifier" can either be:
+###  - a numeric value as a factor:  retval = base * modifier
+###  - a string with a percentage:   retval = base * num('40%')
+###  - a string with a numeric value as an absolute value?
+###
+### ^^^ NEEDS TO BE CLARIFIED FIRST
+###  - negative percentages allowed?
+###
+#############################################################################
+def toolCalcFeedrate( fBase, modifier ):
+	pass
 
 
 
