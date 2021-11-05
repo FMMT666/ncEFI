@@ -4063,20 +4063,38 @@ def toolFullAuto( geoms, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fna
 
 
 #############################################################################
-### toolCalcRelativeFeedrate
+### toolCalcFeedratePercentage
 ###
 ### Utility function to calculate feedrates relative to a base value.
-### The parameter "modifier" can either be:
-###  - a numeric value as a factor:  retval = base * modifier
-###  - a string with a percentage:   retval = base * num('40%')
-###  - a string with a numeric value as an absolute value?
-###
-### ^^^ NEEDS TO BE CLARIFIED FIRST
-###  - negative percentages allowed?
-###
+### The parameter "strPercentage" must be an string, containing an integer
+### or float value followed by a percentage sign.
+### E.g. "50%", "70.34%", "200 %".
+### In case of an error, None is returned.
+### Leading and trailing spaces are ignored.
 #############################################################################
-def toolCalcFeedrate( fBase, modifier ):
-	pass
+def toolCalcFeedratePercentage( fBase, strPercentage ):
+	
+	if not isinstance( strPercentage, str ):
+		print( "ERR: toolCalcFeedratePercentage: 'strPercentage' is not a string: ", type(strPercentage) )
+		return None
+	
+	strWrk = strPercentage.strip()
+	
+	if len(strWrk) < 2:
+		print( "ERR: toolCalcFeedratePercentage: string 'strPercentage' too short: ", strPercentage )
+		return None
+
+	if strWrk[-1] != '%':
+		print( "ERR: toolCalcFeedratePercentage: 'strPercentage' does not contain a '%' sign as last digit: ", strWrk[-1] )
+		return None
+
+	try:
+		val = float( strWrk.strip(" %") )
+	except:
+		print( "ERR: toolCalcFeedratePercentage: Error converting this to a float:", strPercentage.strip(" %") )
+		return None
+
+	return (fBase / 100.0) * val
 
 
 

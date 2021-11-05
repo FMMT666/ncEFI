@@ -5,13 +5,22 @@ from ncEFI import *
 
 
 
+
+#---------------------------------------
+##def toolCalcFeedratePercentage( fBase, strPercentage ):
+
+print( toolCalcFeedratePercentage( 330, " " ) )
+print( toolCalcFeedratePercentage( 330, "%55" ) )
+print( toolCalcFeedratePercentage( 330, "  55.44 %  " ) )
+print( toolCalcFeedratePercentage( 330, "200%" ) )
+
+
+
 #---------------------------------------
 ##def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 ##                                depth, depthInc,
 ##                                enterHeight, enterSteps, dir,
 ##                                fBase, fEntry, fRetract     ):
-llist = []
-
 # feedrates per part could look like this, as optional arguments, supporting
 # either None (aka, nothing; as predefined from reference), an absolute value
 # (as reference), a percentage (as a base modifier) or a RAPID instruction.
@@ -20,14 +29,15 @@ llist = []
 # set a high feedrate for this G2/3 move, but switch back to the base speed
 # afterwards. Would be easier to use "info" vertices here, rather than putting
 # all of this in the elements themselves.
-llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 10,
-                                            10, 2,
-                                            3, 1, 'cw',
-                                            fBase=300, fEntry='50%', fRetract='RAPID' )  )
+# llist = []
+# llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 10,
+#                                             10, 2,
+#                                             3, 1, 'cw',
+#                                             fBase=300, fEntry='50%', fRetract='RAPID' )  )
 
-debugShowViewer( llist )
+# debugShowViewer( llist )
 
-toolFullAuto( llist, 20 )
+# toolFullAuto( llist, 20 )
 
 
 
