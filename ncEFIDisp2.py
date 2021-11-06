@@ -12,20 +12,23 @@ import pickle
 import math
 
 
-MOUSE_ZOOM_FACTOR_WHEEL = 0.1
-MOUSE_DRAG_FACTOR       = 0.001
+MOUSE_ZOOM_FACTOR_WHEEL   = 0.1
+MOUSE_DRAG_FACTOR         = 0.001
 
-ARC_LINES_INTERPOLATION = 10    # arcs are drawn with lines; this specifies how many are used per 180°
+ARC_LINES_INTERPOLATION   = 10    # arcs are drawn with lines; this specifies how many are used per 180°
 
-DRAW_GRID_SIZE          = 1
-DRAW_GRID_COLOR         = ( 0.0, 0.5, 1.0 )
+DRAW_GRID_SIZE            = 1
+DRAW_GRID_COLOR           = ( 0.0, 0.5, 1.0 )
 
-DRAW_VERTEX_SIZE        = 4
-DRAW_VERTEX_COLOR       = ( 0.8, 0.8, 0.0 )
-DRAW_LINE_SIZE          = 1
-DRAW_LINE_COLOR         = ( 0.8, 0.8, 0.8 )
-DRAW_ARC_SIZE           = 1
-DRAW_ARC_COLOR          = ( 0.8, 0.8, 0.8 )
+DRAW_VERTEX_SIZE          = 5
+DRAW_VERTEX_COLOR         = ( 0.8, 0.8, 0.0 )
+DRAW_VERTEX_COLOR_ENGAGE  = ( 1.0, 0.0, 0.0 )
+DRAW_VERTEX_COLOR_NORMAL  = ( 0.7, 0.7, 0.0 )
+DRAW_VERTEX_COLOR_RETRACT = ( 0.0, 1.0, 0.0 )
+DRAW_LINE_SIZE            = 1
+DRAW_LINE_COLOR           = ( 0.8, 0.8, 0.8 )
+DRAW_ARC_SIZE             = 1
+DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 
 
 
@@ -186,7 +189,17 @@ class myGLCanvas(GLCanvas):
 			p1=elem['p1']
 			glDisable(GL_LIGHTING)
 			glPointSize( DRAW_VERTEX_SIZE )
-			glColor3f( DRAW_VERTEX_COLOR[0], DRAW_VERTEX_COLOR[1], DRAW_VERTEX_COLOR[2] )
+			if 'tFeed' in elem:
+				if   elem['tFeed'] == "FEED_ENGAGE":
+					glColor3f( DRAW_VERTEX_COLOR_ENGAGE[0], DRAW_VERTEX_COLOR_ENGAGE[1], DRAW_VERTEX_COLOR_ENGAGE[2] )
+				elif elem['tFeed'] == "FEED_NORMAL":
+					glColor3f( DRAW_VERTEX_COLOR_NORMAL[0], DRAW_VERTEX_COLOR_NORMAL[1], DRAW_VERTEX_COLOR_NORMAL[2] )
+				elif elem['tFeed'] == "FEED_RETRACT":
+					glColor3f( DRAW_VERTEX_COLOR_RETRACT[0], DRAW_VERTEX_COLOR_RETRACT[1], DRAW_VERTEX_COLOR_RETRACT[2] )
+				else:
+					glColor3f( DRAW_VERTEX_COLOR[0], DRAW_VERTEX_COLOR[1], DRAW_VERTEX_COLOR[2] )
+			else:
+				glColor3f( DRAW_VERTEX_COLOR[0], DRAW_VERTEX_COLOR[1], DRAW_VERTEX_COLOR[2] )
 			glPushMatrix()
 			glBegin(GL_POINTS)
 			glVertex3f(p1[0],p1[1],p1[2])

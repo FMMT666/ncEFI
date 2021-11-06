@@ -6,13 +6,6 @@ from ncEFI import *
 
 
 
-#---------------------------------------
-##def toolCalcFeedratePercentage( fBase, strPercentage ):
-
-print( toolCalcFeedratePercentage( 330, " " ) )
-print( toolCalcFeedratePercentage( 330, "%55" ) )
-print( toolCalcFeedratePercentage( 330, "  55.44 %  " ) )
-print( toolCalcFeedratePercentage( 330, "200%" ) )
 
 
 
@@ -29,15 +22,26 @@ print( toolCalcFeedratePercentage( 330, "200%" ) )
 # set a high feedrate for this G2/3 move, but switch back to the base speed
 # afterwards. Would be easier to use "info" vertices here, rather than putting
 # all of this in the elements themselves.
-# llist = []
-# llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 10,
-#                                             10, 2,
-#                                             3, 1, 'cw',
-#                                             fBase=300, fEntry='50%', fRetract='RAPID' )  )
+llist = []
+llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 3,
+                                            30, 15,
+                                            20, 2, 'cw',
+                                            fBase=300, fEntry='50%', fRetract='RAPID' )  )
 
-# debugShowViewer( llist )
+debugShowViewer( llist )
 
-# toolFullAuto( llist, 20 )
+toolFullAuto( llist, 20 )
+
+
+
+#---------------------------------------
+##def toolCalcFeedratePercentage( fBase, strPercentage ):
+
+# print( toolCalcFeedratePercentage( 330, " " ) )
+# print( toolCalcFeedratePercentage( 330, "%55" ) )
+# print( toolCalcFeedratePercentage( 330, "  55.44 %  " ) )
+# print( toolCalcFeedratePercentage( 330, "200%" ) )
+
 
 
 

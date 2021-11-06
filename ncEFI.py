@@ -32,6 +32,12 @@
 # >>> Otherwise every single function would require the feed rates as an argument.
 #
 #
+# These should be removed. They're not required (but check first :-)
+#   pNr     <- number of element in part
+#   pNext   <- if chained -> number of next element
+#   pPrev   <- if chained -> number of previous element
+#
+#
 #
 #  - allow RAPID in 'tMove' for G2/3 (set feed rate to a predefined, high value)
 #  - geomCreateSlotHole, geomCreateConcentricSlots, geomCreateCircRingHole, geomCreateConcentricCircles:
@@ -170,7 +176,12 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 #   pNr     <- number of element in part
 #   pNext   <- if chained -> number of next element
 #   pPrev   <- if chained -> number of previous element
-#   tMove   <- 'RAPID' or 'NORMAL'; if not defined, 'NORMAL' (feed rate) is assumed
+#   tMove   <- only for lines: if set to 'RAPID', a G0 rapid move will be created instead of a G1
+#   tFeed   <- only for vertices, mark the beginning of a new feed rate here:
+#              'FEED_ENGAGE'    TESTING ONLY!!!
+#              'FEED_NORMAL'    TESTING ONLY!!!
+#              'FEED_RETRACT'   TESTING ONLY!!!
+
 
 #############################################################################
 # geometry
@@ -202,6 +213,10 @@ def elemAddExtra(elem,extra):
 			elem['pPrev'] = extra['pPrev']
 		if i == 'tMove':
 			elem['tMove'] = extra['tMove']
+
+		# TESTING TESTING TESTING
+		if i == 'tFeed':
+			elem['tFeed'] = extra['tFeed']
 
 
 
@@ -2913,21 +2928,35 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 		# entry movement
 		geomEntry = geomCreateSlotSpiral( (p1[0], p1[1], p1[2] - depthCurrent + enterHeight), p2, diaStart, enterSteps, enterHeight / enterSteps, dir, clearBottom=False)
 
+		# get the coordinate for the 1st vertex; used for "retract to next" and the feedrate vertex below
+		ptRetEnd = geomGetFirstPoint( geomEntry )
+
 		# do we need to add the "retract to next entry" move yet?
 		if ptRetStart is not None:
-			ptRetEnd = geomGetFirstPoint( geomEntry )
 			# not nice as this makes a 180° turn
 			# con.append(  elemCreateArc180( ptRetStart, ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
+
+			# TESTING: ADD FEEDRATE VERTEX
+			con.append(  elemCreateVertex( ptRetStart, {'tFeed':"FEED_RETRACT"} ) )
 
 			ptRetMid = vecExtractMid( ptRetStart, ptRetEnd )
 			con.append(  elemCreateArc180( ptRetStart, ptRetMid, 0, dir )  )
 			con.append(  elemCreateArc180( ptRetMid,   ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
 
+		# TESTING: ADD FEEDRATE VERTEX
+		con.append(  elemCreateVertex( ptRetEnd, {'tFeed':"FEED_ENGAGE"} ) )
+
 		# add the entry movement
 		con += geomEntry
 
 		# create the main milling op
-		con += geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
+		geomMill = geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
+
+		# TESTING: ADD FEEDRATE VERTEX
+		con.append(  elemCreateVertex( geomGetFirstPoint( geomMill ), {'tFeed':"FEED_NORMAL"} ) )
+
+		# add the milling op
+		con += geomMill
 
 		if depthCurrent < depth:
 			depthCurrent += depthInc
@@ -2946,6 +2975,10 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 	ex1 = geomGetLastPoint( con )
 	ex2 = geomGetFirstPoint( con )
 	exm = vecExtractMid( ex2, ex1 )
+
+	# TESTING: ADD FEEDRATE VERTEX
+	con.append(  elemCreateVertex( ex1, {'tFeed':"FEED_RETRACT"} ) )
+
 	con.append(  elemCreateArc180( ex1, exm, 0, dir )  )
 	con.append(  elemCreateArc180( exm, ex2, 0, 'cw' if dir == 'cc' else 'cc' )  )
 
