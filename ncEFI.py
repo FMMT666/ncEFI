@@ -7,6 +7,7 @@
 # Yes, really, really stupid.
 # FMMT666/ASkr 1995..2021 lol
 
+# This code has tabs. Best viewed with four of them.
 
 
 # TODO:
@@ -31,6 +32,13 @@
 # >>> entry moves, retractions or rapids begin and end.
 # >>> Otherwise every single function would require the feed rates as an argument.
 #
+# >>> Okay, the "feed rate vertices" are now built-in. Now:
+# >>>   - make the "continous" checks and toolpath creation ignore them
+# >>>   - add 'tFeed_xyz' keys to the part dict
+# >>>     - if they are missing, the toolpath will not create any feed rate commands
+# >>>       This should create a warning bc the feed rate might have been chenged
+# >>>       in the previous (part) operation!
+# >>>     - if they are present, they are generated
 #
 # These should be removed. They're not required (but check first :-)
 #   pNr     <- number of element in part
@@ -1033,16 +1041,22 @@ def partCheckContinuous( part ):
 	if len(li) == 1:
 		return True
 	e1 = partGetElement( part, li[0] )
+
+	# TODO: Change this for the new 'feed rate vertices'
 	if e1['type']=='v':
 		print( "ERR: partCheckContinuous: vertex found!" )
 		return False
+
 	for i in range( 1, len(li) ):
 		e2 = partGetElement( part, li[i] )
+
+		# TODO: Change this for the new 'feed rate vertices'
 		if e2['type'] == 'v':
 			print( "ERR: partCheckContinuous: vertex found!" )
 			return False
+
 		if not e1['p2'] == e2['p1']:
-			ez=math.fabs( vecLength( e1['p2'], e2['p1'] ) )
+			ez = math.fabs( vecLength( e1['p2'], e2['p1'] ) )
 			if ez > TOOL_CONTINUOUS_TOLERANCE:
 				print( "ERR: partCheckContinuous: p2!=p1 at number: ", i )
 				print( "                        : e1['p2']: ", e1['p2'] )
@@ -2895,11 +2909,10 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 ### Testing some "feedrate in vertices" code.
 #############################################################################
 def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
-                                depth, depthInc,
-								enterHeight, enterSteps, dir,
-								fBase, fEntry, fRetract):
+								depth, depthInc,
+								enterHeight, enterSteps, dir ):
 
-	# TODO: add a lot more checkds here
+	# TODO: add a lot more checks here
 
 	if enterHeight < 0:
 		print( "ERR: geomCreateSlotRingHole: enterHeight must be > 0 (SAFETY FIRST :-)" )

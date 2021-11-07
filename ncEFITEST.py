@@ -25,8 +25,7 @@ from ncEFI import *
 llist = []
 llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 3,
                                             30, 15,
-                                            20, 2, 'cw',
-                                            fBase=300, fEntry='50%', fRetract='RAPID' )  )
+                                            20, 2, 'cw' )  )
 
 debugShowViewer( llist )
 

@@ -15,7 +15,7 @@ for preparing the stock or quickly doing other things "live".
 
 I restored these Python fragments from an old CPIOed backup tape.  
 The only thing I remember is, that I implemented a quite cool, round
-pocket milling algorithm.
+pocket milling algorithm (and much more later on).
 
 As far as I can remember, that was my first contact with Python at all,  
 sometime around 1995, lol.  
@@ -25,9 +25,9 @@ But I want some quick action buttons in ~~EMC~~ ~~EMC2~~ LinuxCNC.
 
 
 ---
-## Wtf?
+## What Dis?
 
-Move on, there is nothing to see here, yet...
+Fun.
 
 ---
 ## Requirements
@@ -38,6 +38,9 @@ Only for 'ncEFIDisp2', the viewer:
  - wxPython
  - PyOpenGL
  - PyOpenGL_accelerate
+
+Installing wxPython will install Numpy and Pillow if not already present.  
+The PyOpenGL installation does not have any additional dependencies.
 
 The main app 'ncEFI' does not need any additional libraries, it even comes with its own
 vector math lib (yes, another big lol, I know :)
@@ -56,18 +59,39 @@ Install them with (Python 3.7 64-bit example here):
 
 
 ### macOS
-Even though Big Sur brought a lot of OpenGL problems, at least with Python 3.9.6,
-everything can be easily installed again via pip.
+Even though Big Sur brought a lot of OpenGL problems, everything can be easily
+installed via pip. That will even work with the (introduced in Catalina (?))
+"Apple Python 3.8.x" version ("/usr(bin/python3"). 
 
-The visualiser 'ncEFIDisp2' lacks some macOS-touchpad support yet.
+The visualiser 'ncEFIDisp2' also works with the macOS-touchpads.  
+Three fingers will rotate, two fingers sliding will zoom and two fingers
+with pad-press will pan.
+
+The OpenGL library has a bug and requires that the windows is resized once.  
+Might add a workaround for this in future versions.
 
 
 ### Linux
 That always worked.
 
+#### DevTerm (or possibly other embedded devices)
+Just for the fun of it, I tested this on a [clockwerk DevTerm][2].  
+
+> Do not install wxPython via pip on this device.
+
+This thing does not have enough resources to compile it and wheels do
+not exist (yet). Install this via ```apt-get``` and lookout for something
+that is named
+> ```libwxgtk3.x...```  
+> ```libwxgtk4.x...``` (unlikely)
+
 
 ---
 ## News
+
+### CHANGES 2021/11/XX
+    - now finally with "feed rate vertices", allowing important adjustment
+
 
 ### CHANGES 2021/10/XX
     - continuing to add stuff
@@ -103,4 +127,5 @@ FMMT666(ASkr)
 
 
 [1]: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopengl
+[2]: https://www.clockworkpi.com/devterm
 
