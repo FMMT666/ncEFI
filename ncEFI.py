@@ -33,12 +33,16 @@
 # >>> Otherwise every single function would require the feed rates as an argument.
 #
 # >>> Okay, the "feed rate vertices" are now built-in. Now:
-# >>>   - make the "continous" checks and toolpath creation ignore them
-# >>>   - add 'tFeed_xyz' keys to the part dict
-# >>>     - if they are missing, the toolpath will not create any feed rate commands
-# >>>       This should create a warning bc the feed rate might have been chenged
-# >>>       in the previous (part) operation!
-# >>>     - if they are present, they are generated
+# >>>   - DONE: make the "continous" checks and toolpath creation ignore them
+# >>>   - DONE: add 'tFeed_xyz' keys to the part dict
+# >>>     - DONE: if they are missing, the toolpath will not create any feed rate commands
+# >>>     - TODO: add a base feedrate to parts
+# >>>     - TODO: add at least two, the ENGAGE and RETRACT feedrates or percentage markers to parts
+# >>>     - TODO: This should create a warning bc the feed rate might have been changed
+# >>>             in the previous (part) operation!
+# >>>     - TODO: if they contain numbers (already replaced by another function): put these in the G-code
+# >>>     - TODO: if they contain the 'FEED_ENGAGE', 'FEED_NORMAL', 'FEED_RETRACT' markers, put the default values in
+
 #
 # These should be removed. They're not required (but check first :-)
 #   pNr     <- number of element in part
@@ -117,7 +121,9 @@ MINLEN_BEZIER             = 0.1     # minimum length of Bezier interpolation seg
 DEFLEN_BEZIER             = 0.5     # default length of Bezier interpolation segment; for some createGeom
 MAXLEN_BEZIER             = 2.0     # maximum length of Bezier interpolation segment; for some createGeom
 
-# default G-codes
+# default G-codes also used as "state markers" during the tool path creation
+GCODE_COMMENT        = "()"
+GCODE_FEED           = "F"
 GCODE_RAPID          = "G00"
 GCODE_LINE           = "G01"
 GCODE_ARC_CW         = "G02"
@@ -185,11 +191,14 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 #   pNext   <- if chained -> number of next element
 #   pPrev   <- if chained -> number of previous element
 #   tMove   <- only for lines: if set to 'RAPID', a G0 rapid move will be created instead of a G1
-#   tFeed   <- only for vertices, mark the beginning of a new feed rate here:
-#              'FEED_ENGAGE'    TESTING ONLY!!!
-#              'FEED_NORMAL'    TESTING ONLY!!!
-#              'FEED_RETRACT'   TESTING ONLY!!!
-
+#   tFeed   <- only for vertices, mark the beginning of a new feed rate here.
+#               tFeed can either be a string:
+#                 'FEED_ENGAGE'
+#                 'FEED_NORMAL'
+#                 'FEED_RETRACT'
+#               or a number (integers only):
+#                 900
+#   tMsg    <- only for vertices, so far; a string that will appear as a comment in the G-code file
 
 #############################################################################
 # geometry
@@ -225,6 +234,10 @@ def elemAddExtra(elem,extra):
 		# TESTING TESTING TESTING
 		if i == 'tFeed':
 			elem['tFeed'] = extra['tFeed']
+
+		# TESTING TESTING TESTING
+		if i == 'tMsg':
+			elem['tMsg'] = extra['tMsg']
 
 
 
@@ -1040,20 +1053,37 @@ def partCheckContinuous( part ):
 		return False
 	if len(li) == 1:
 		return True
-	e1 = partGetElement( part, li[0] )
 
-	# TODO: Change this for the new 'feed rate vertices'
-	if e1['type']=='v':
-		print( "ERR: partCheckContinuous: vertex found!" )
-		return False
+	# Because of the new "feedrate vertices", we now will ignore them, rather
+	# than throwing out an error message.
+	# Needs to be tested thought ...
 
-	for i in range( 1, len(li) ):
+	# find the first element that is not a vertex
+	for eStart in range( 0, len(li) ):
+		e1 = partGetElement( part, li[eStart] )
+
+		if e1['type']=='v':
+			print( "INF: partCheckContinuous: vertex found!" )
+		else:
+			break
+
+	eStart += 1
+
+	# Er, yes. If it's only one element, for whatever reason, it for
+	# sure can be seen as "continuous", lol.
+	if eStart == len(li):
+		print( "INF: partCheckContinuous: only one non-vertex element found" )
+		return True
+
+	# start with the element after the one we just found
+	for i in range( eStart, len(li) ):
+
 		e2 = partGetElement( part, li[i] )
 
-		# TODO: Change this for the new 'feed rate vertices'
+		# let's hope it's not another vertex
 		if e2['type'] == 'v':
-			print( "ERR: partCheckContinuous: vertex found!" )
-			return False
+			print( "INF: partCheckContinuous: vertex found!" )
+			continue
 
 		if not e1['p2'] == e2['p1']:
 			ez = math.fabs( vecLength( e1['p2'], e2['p1'] ) )
@@ -1074,15 +1104,28 @@ def partCheckContinuous( part ):
 def partCheckClosed( part ):
 	if not partCheckContinuous( part ): 
 		return False
-	li=partGetNumbers( part )
-	if len(li) < 2:
+	li = partGetNumbers( part )
+
+	if len(li) == 0:
 		return False
+
 	e1 = partGetElement( part, li[0] )
+
+	# This hurts a bit, but yes - if it's only one vertex, then it can be considered as "closed", lol.
+	if len(li) == 1:
+		if e1['type'] == 'v':
+			return True
+
 	e2 = partGetElement( part, li[-1] )
-	if e1['type'] == 'v' or e2['type'] == 'v':
-		return False
+
+	# let's update this for the new feedrate vertices
+	if e2['type'] == 'v':
+		if e2['p1'] == e1['p1']:
+			return True
+
 	if e2['p2'] == e1['p1']:
 		return True
+
 	return False
 
 
@@ -2966,7 +3009,7 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 		geomMill = geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
 
 		# TESTING: ADD FEEDRATE VERTEX
-		con.append(  elemCreateVertex( geomGetFirstPoint( geomMill ), {'tFeed':"FEED_NORMAL"} ) )
+		con.append(  elemCreateVertex( geomGetFirstPoint( geomMill ), {'tFeed':"FEED_NORMAL", 'tMsg':"TEST COMMENT: NOW MILLING; millmillmillmill"} ) )
 
 		# add the milling op
 		con += geomMill
@@ -3589,7 +3632,7 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 #############################################################################
 def geomTranslate( geom, vec ):
 	# TODO: probably not necessary to copy the element here
-	geomn=[]
+	geomn = []
 	if not isinstance( geom, list ):
 		print( "ERR: geomTranslate: 'geom' not a list" )
 		return []
@@ -3895,12 +3938,13 @@ def toolCreateFromPart( part ):
 		tops.append('(unnamed part)')
 
 	lastCmd = ''
-	# TODO: Probably an error for arc creatin.
+	# TODO: Probably an error for arc creation.
 	# The lastN storage shall correct the R-circles error that might be created
 	# due to rounding errors with the 'format()' function.
 	# Actually, this is a problem, because we already "somehow" moved
 	# to this position, but we don't know where we are.
 	# If the first moves are arcs or circles, we might run into trouble.
+
 	# WARNING: These are strings!
 	strLastX = None
 	strLastY = None
@@ -3917,6 +3961,32 @@ def toolCreateFromPart( part ):
 			return[]
 
 		cxyz = ''
+
+		# --- VERTEX ------------------------------------------------
+		if el['type'] == 'v':
+			if 'tMsg' in el:
+				pStr = str( el['tMsg'] )
+				if '(' in pStr or ')' in pStr:
+					print( "INF: toolCreateFromPart: nested comment in 'tMsg'; ignoring: ", pStr )
+					pStr = "ERROR IN tMsg: NESTED COMMENT"
+
+				if len(pStr) == 0:
+					pStr = "vertex with empty message"
+				cxyz = '(' + pStr + ')'
+				lastCmd = GCODE_COMMENT
+
+			if 'tFeed' in el:
+				if lastCmd == GCODE_COMMENT:
+					cxyz += '\n'
+				cxyz += '(TODO: add new feed rate here: Fxyz)'
+				lastCmd = GCODE_FEED
+			else:
+				# it's just a vertex; create a comment
+				# maybe something useful can be added in the future
+				cxyz = '(a wild vertex appears)'
+				lastCmd = ''
+
+		# --- LINE --------------------------------------------------
 		if el['type'] == 'l':
 			# process X, Y and Z actions, only if different
 			if el['p1'][0] == el['p2'][0]:
@@ -3946,6 +4016,7 @@ def toolCreateFromPart( part ):
 			cxyz = cc + ' ' + cx + ' ' + cy + ' ' + cz
 			lastCmd = GCODE_LINE
 
+		# --- ARC ---------------------------------------------------
 		if el['type'] == 'a':
 			if el['dir'] == 'cw':
 				if lastCmd == GCODE_ARC_CW:
@@ -3991,7 +4062,8 @@ def toolCreateFromPart( part ):
 				lastCmd = GCODE_ARC_CW
 			else:
 				lastCmd = GCODE_ARC_CC
-			
+
+		# --- ERROR -------------------------------------------------
 		if cxyz == '':
 			print( "ERR: toolCreateFromPart: empty nc-code line at: ", el )
 			return[]

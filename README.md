@@ -90,7 +90,8 @@ that is named
 ## News
 
 ### CHANGES 2021/11/XX
-    - now finally with "feed rate vertices", allowing important adjustment
+    - now finally with "feed rate vertices", allowing important adjustment or infos
+    - added comments for vertices that can appear in the G-code
 
 
 ### CHANGES 2021/10/XX
