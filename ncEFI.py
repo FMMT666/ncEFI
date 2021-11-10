@@ -7,49 +7,33 @@
 # Yes, really, really stupid.
 # FMMT666/ASkr 1995..2021 lol
 
-# This code has tabs. Best viewed with four of them.
+# This code uses tabs. Best viewed with four of them.
 
 
 # TODO:
-# ??? REALLY?
-# ??? All elements already support 'extras', can't we just use those?
-# ???
-# ???    - vertices
-# ???        - allow vertices in geoms
-# ???            - need to be ignored for the toolpath
-# ???        - add color data to vertex (for visualizer)
-# ???        - add feed rate modifier to vertex
-# ???            - ugh, many options exist:
-# ???                - absolute values given by createGeom fnctions
-# ???                - absolute values specified by a project ("slow", "med", "fast", e.g.)
-# ???                - relative as percentage of a value given by createGeom
-# ???                - relative as percentage of a project value  ("slower", "faster", e.g.)
-# ???                - ...
-#
-# >>> Maybe it's a better idea, to _not_ throw the feed rate args in every function, but
-# >>> write "modifierFuncs", which add them afterwards?
-# >>> The "geomCreate" functions would then just add the "info vertices", as a marker where
-# >>> entry moves, retractions or rapids begin and end.
-# >>> Otherwise every single function would require the feed rates as an argument.
 #
 # >>> Okay, the "feed rate vertices" are now built-in. Now:
 # >>>   - DONE: make the "continous" checks and toolpath creation ignore them
 # >>>   - DONE: add 'tFeed_xyz' keys to the part dict
 # >>>     - DONE: if they are missing, the toolpath will not create any feed rate commands
-# >>>     - TODO: add a base feedrate to parts
+# >>>     - DONE: add a global base feedrate; also in header file
+# >>>     - TODO: add a local base feedrate to parts, overriding the global one
 # >>>     - TODO: add at least two, the ENGAGE and RETRACT feedrates or percentage markers to parts
 # >>>     - TODO: This should create a warning bc the feed rate might have been changed
 # >>>             in the previous (part) operation!
 # >>>     - TODO: if they contain numbers (already replaced by another function): put these in the G-code
-# >>>     - TODO: if they contain the 'FEED_ENGAGE', 'FEED_NORMAL', 'FEED_RETRACT' markers, put the default values in
+# >>>     - TODO: if they contain the 'FEED_ENGAGE', 'FEED_BASE', 'FEED_RETRACT' markers, put the default values in
 
+# - there's an error in toolFeedRateCheck(); the argument is not set to the global variable
+# - toolFeedRateSet() in the test file
+# - shall there be a function to set the safe-Z postion accordingly to the global feed rate? Would make sense
+# - toolFullAuto() might set the global base feed rate too
+# - toolCreateSimpleHeader() should be able to return an error, in case the new base feed rate is invalid
 #
-# These should be removed. They're not required (but check first :-)
+# These should be removed. Theoretically, they're not required, but built-in everywhere (CHECK THIS FIRST! Might break everything!)
 #   pNr     <- number of element in part
 #   pNext   <- if chained -> number of next element
 #   pPrev   <- if chained -> number of previous element
-#
-#
 #
 #  - allow RAPID in 'tMove' for G2/3 (set feed rate to a predefined, high value)
 #  - geomCreateSlotHole, geomCreateConcentricSlots, geomCreateCircRingHole, geomCreateConcentricCircles:
@@ -130,7 +114,8 @@ GCODE_ARC_CW         = "G02"
 GCODE_ARC_CC         = "G03"
 
 # default safe-Z height
-GCODE_OP_SAFEZ = 10.0
+GCODE_OP_SAFEZ     = 10.0  # the default, safe z-height if nothing else is given or overridden
+GCODE_OP_BFEED     = 0     # the base feed rate; needs to be set by code; via toolFeedRateSet()
 
 # default G-code end for when no "start G-code" file is given
 GCODE_PRG_START = [\
@@ -155,12 +140,12 @@ GCODE_PRG_START = [\
 'M0        (pause and display message)',\
 'G4 P1     (wait for 1 second)',\
 '',\
-'F900',\
+'F(GCODE_OP_BFEED)      (base feed rate, set in code)',\
 '']
 
 # default G-code end for when no "end G-code" file is given
 GCODE_PRG_END = [\
-'G00 Z(GCODE_OP_SAFEZ)',\
+'G00 Z(GCODE_OP_SAFEZ)   (the default safe-z position, set in code)',\
 '',\
 'M02']
 
@@ -194,7 +179,7 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 #   tFeed   <- only for vertices, mark the beginning of a new feed rate here.
 #               tFeed can either be a string:
 #                 'FEED_ENGAGE'
-#                 'FEED_NORMAL'
+#                 'FEED_BASE'
 #                 'FEED_RETRACT'
 #               or a number (integers only):
 #                 900
@@ -213,6 +198,20 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 #   p1={'type':'p', 'name':'outer','elements':[l1,l2,l3,l4]}
 #   p2={'type':'p', 'name':'altc1','elements':[a1,l2,l3,l4]}
 #   p3={'type':'p', 'name':'altc2','elements':[l1,l2,a2,l4]}
+#
+# allowed extensions, aka "extras"
+#   tFeed_Engage  <-+
+#   tFeed_Base    <-+
+#   tFeed_Retract <-+
+#                   |
+#                   For all of the three feed rate specifiers:
+#                     - a number > 0           : an absolute feed rate, e.g. "300"
+#                     - a string 'nnn%'        : a percentage of the local or global (GCODE_OP_BFEED) base feed rate, e.g. '50%'
+#                     - a 0 (zero) or '0%'     : no feed rate output in the G-Code for this operation
+#                   For "tFeed_Base" specials:
+#                     - if 0 (zero) or 'nnn%', the _global_ feed rate (GCODE_OP_BFEED, parsed from the last valid Fnnn value in
+#                       GCODE_PRG_START or set by 'toolFeedRateSet()') or a percentage of it, is used as a base feed rate for this part.
+#                     - if > 0, then this ("local") value will be used as a base feed rate for tFeed_Base and tFeed_Retract
 
 
 
@@ -3009,7 +3008,7 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 		geomMill = geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
 
 		# TESTING: ADD FEEDRATE VERTEX
-		con.append(  elemCreateVertex( geomGetFirstPoint( geomMill ), {'tFeed':"FEED_NORMAL", 'tMsg':"TEST COMMENT: NOW MILLING; millmillmillmill"} ) )
+		con.append(  elemCreateVertex( geomGetFirstPoint( geomMill ), {'tFeed':"FEED_BASE", 'tMsg':"TEST COMMENT: NOW MILLING; millmillmillmill"} ) )
 
 		# add the milling op
 		con += geomMill
@@ -3846,13 +3845,28 @@ def toolReadTextFile( fname ):
 def toolCreateSimpleHeader( fname=None ):
 	head=[]
 
+
+	if not toolFeedRateCheck():
+		return ["(###)","(### ERROR: INVALID GCODE_OP_BFEED)", "(###)",""]
+
+
 	if fname is not None:
 		headFile = toolReadTextFile ( fname + '_start.nc' )
 		if headFile:
+			# check for magic names
+			for i in range(len(headFile)):
+				if '(GCODE_OP_BFEED)' in headFile[i]:
+					# override immutable string
+					headFile[i] = headFile[i].replace( '(GCODE_OP_BFEED)', str(GCODE_OP_BFEED) )
+
 			return headFile
 
-	for i in GCODE_PRG_START:
-		head.append(i)
+	for line in GCODE_PRG_START:
+		if '(GCODE_OP_BFEED)' in line:
+			# override immutable string
+			line = line.replace( '(GCODE_OP_BFEED)', str(GCODE_OP_BFEED) )
+
+		head.append(line)
 
 	return head
 
@@ -4121,7 +4135,7 @@ def toolFileAppend( tools, fname='ncEFI.nc' ):
 ### will be used.
 ### The name of the G-code output file can be overriden with 'fname'.
 #############################################################################
-def toolFullAuto( geoms, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fnameHeader=None ):
+def toolFullAuto( geoms, feedRate=GCODE_OP_BFEED, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fnameHeader=None ):
 
 	# avoid overwriting files if someone swaps arguments
 	forbiddenFileNames = ['ncEFI', 'ncVec', 'ncPRG', 'README', '.gitignore', 'testlol']
@@ -4147,6 +4161,14 @@ def toolFullAuto( geoms, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fna
 	if not isinstance( safeZ, (int, float, complex)) or isinstance(safeZ, bool):
 		print( "ERR: toolFullAuto: 'safeZ' is not a number ", type(safeZ) )
 		return False
+
+	if not toolFeedRateCheck( feedRate ):
+		print( "ERR: toolFullAuto: base feed rate is invalid: ", feedRate )
+		return False
+
+	# TODO: overriding this "should" [tm] be safe
+	global GCODE_OP_BFEED
+	GCODE_OP_BFEED = feedRate
 
 	if safeZ < 0:
 		print( "WARNING: 'safeZ' is < 0: ", safeZ )
@@ -4213,6 +4235,51 @@ def toolCalcFeedratePercentage( fBase, strPercentage ):
 		return None
 
 	return (fBase / 100.0) * val
+
+
+
+#############################################################################
+### toolFeedRateSet
+###
+### Sets the global base feed rate.
+#############################################################################
+def toolFeedRateSet( feedRate ):
+
+	if toolFeedRateCheck( feedRate ):
+		global GCODE_OP_BFEED
+		GCODE_OP_BFEED = feedRate
+		return True
+
+	print( "ERR: toolFeedRateSet: error setting feed rate to: ", feedRate )
+	return False
+
+
+
+#############################################################################
+### toolFeedRateCheck
+###
+### Checks if the given feed rate is set and valid.
+### With empty arguments, the global feed rate is checked
+#############################################################################
+def toolFeedRateCheck( feedRate = GCODE_OP_BFEED ):
+
+	if not isinstance( feedRate, int ):
+		print( "ERR: toolFeedRateCheck: feed rate is not an integer: ", type(feedRate) )
+		return False
+
+	if feedRate < 1:
+		print( "ERR: toolFeedRateCheck: feed rate is 0 or negative: ", feedRate )
+		return False
+
+	if feedRate < 100:
+		print( "INF: toolFeedRateCheck: WARNING! LOW FEED RATE: ", feedRate )
+
+	# TODO: do we need to check a max feed rate? if yes, what's the max value?
+	if feedRate > 9999:
+		print( "ERR: toolFeedRateCheck: feed rate is >9999: ", feedRate )
+		return False
+	
+	return True
 
 
 

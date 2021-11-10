@@ -18,4 +18,4 @@ G04 P3    (wait for 3 seconds)
 
 G43 H1    (set tool offset)
 
-F900
+F(GCODE_OP_BFEED)      (base feed rate, set in code)

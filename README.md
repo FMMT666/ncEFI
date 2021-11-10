@@ -92,6 +92,9 @@ that is named
 ### CHANGES 2021/11/XX
     - now finally with "feed rate vertices", allowing important adjustment or infos
     - added comments for vertices that can appear in the G-code
+    - new global base feed rate
+    - WARNING: toolFullAuto()'s 1st parameter was changed to be a feed rate; safe Z now 2nd
+    - header now parsed to contain GCODE_OP_BFEED; will be replaced by a code set value
 
 
 ### CHANGES 2021/10/XX
