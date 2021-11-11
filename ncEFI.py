@@ -24,8 +24,10 @@
 # >>>     - TODO: if they contain numbers (already replaced by another function): put these in the G-code
 # >>>     - TODO: if they contain the 'FEED_ENGAGE', 'FEED_BASE', 'FEED_RETRACT' markers, put the default values in
 
-# - there's an error in toolFeedRateCheck(); the argument is not set to the global variable
 # - toolFeedRateSet() in the test file
+# - Maybe the global safe-Z variable should be handled like the feed rate,
+#   so that the default value, without overriding it, causes an error? 
+#   Would be safer.
 # - shall there be a function to set the safe-Z postion accordingly to the global feed rate? Would make sense
 # - toolFullAuto() might set the global base feed rate too
 # - toolCreateSimpleHeader() should be able to return an error, in case the new base feed rate is invalid
@@ -4135,7 +4137,17 @@ def toolFileAppend( tools, fname='ncEFI.nc' ):
 ### will be used.
 ### The name of the G-code output file can be overriden with 'fname'.
 #############################################################################
-def toolFullAuto( geoms, feedRate=GCODE_OP_BFEED, safeZ=GCODE_OP_SAFEZ, names=None, fname='ncEFI.nc', fnameHeader=None ):
+def toolFullAuto( geoms, feedRate=None, safeZ=None, names=None, fname='ncEFI.nc', fnameHeader=None ):
+
+	global GCODE_OP_BFEED
+	global GCODE_OP_SAFEZ
+
+
+	if feedRate is None:
+		feedRate = GCODE_OP_BFEED
+	
+	if safeZ is None:
+		safeZ = GCODE_OP_SAFEZ
 
 	# avoid overwriting files if someone swaps arguments
 	forbiddenFileNames = ['ncEFI', 'ncVec', 'ncPRG', 'README', '.gitignore', 'testlol']
@@ -4167,14 +4179,12 @@ def toolFullAuto( geoms, feedRate=GCODE_OP_BFEED, safeZ=GCODE_OP_SAFEZ, names=No
 		return False
 
 	# TODO: overriding this "should" [tm] be safe
-	global GCODE_OP_BFEED
 	GCODE_OP_BFEED = feedRate
 
 	if safeZ < 0:
 		print( "WARNING: 'safeZ' is < 0: ", safeZ )
 
 	# TODO: overriding this "should" [tm] be safe
-	global GCODE_OP_SAFEZ
 	GCODE_OP_SAFEZ = safeZ
 
 	# create parts
@@ -4261,7 +4271,10 @@ def toolFeedRateSet( feedRate ):
 ### Checks if the given feed rate is set and valid.
 ### With empty arguments, the global feed rate is checked
 #############################################################################
-def toolFeedRateCheck( feedRate = GCODE_OP_BFEED ):
+def toolFeedRateCheck( feedRate = None ):
+
+	if feedRate is None:
+		feedRate = GCODE_OP_BFEED
 
 	if not isinstance( feedRate, int ):
 		print( "ERR: toolFeedRateCheck: feed rate is not an integer: ", type(feedRate) )

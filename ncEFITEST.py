@@ -8,7 +8,6 @@ from ncEFI import *
 
 
 
-
 #---------------------------------------
 ##def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 ##                                depth, depthInc,
@@ -29,7 +28,15 @@ llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 3
 
 debugShowViewer( llist )
 
-toolFullAuto( llist, 20 )
+## should give an error (0 feed rate)
+#toolFullAuto( llist )
+
+## should give a warning (low feed rate)
+## implemented because the feed rate was the safe-Z position in earlier code variants
+#toolFullAuto( llist, 20)
+
+## should be okay
+toolFullAuto( llist, 900 )
 
 
 
