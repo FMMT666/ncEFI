@@ -3994,7 +3994,7 @@ def toolCreateFromPart( part ):
 			if 'tFeed' in el:
 				if lastCmd == GCODE_COMMENT:
 					cxyz += '\n'
-				cxyz += '(TODO: add new feed rate here: Fxyz)'
+				cxyz += '(FEEDRATE VERTEX FOUND: ' + str( el['tFeed'] ) + ')'
 				lastCmd = GCODE_FEED
 			else:
 				# it's just a vertex; create a comment
