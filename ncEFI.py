@@ -18,6 +18,17 @@
 # >>>     - DONE: if they are missing, the toolpath will not create any feed rate commands
 # >>>     - DONE: add a global base feedrate; also in header file
 # >>>     - TODO: add a local base feedrate to parts, overriding the global one
+# >>>             YO SHIT: Very clever to allow geoms to be passed to ToolFullAuto().
+# >>>                      The planed feed rates _ENGAGE, _BASE, and _RERACT would now need to
+# >>>                      to be in the geoms too - and that's not possible because a geom is
+# >>>                      just a list, which may contain an unlimited amount of other geoms.
+# >>>
+# >>>                  No wait, that's not true. Each of the geoms is a single entry in a list.
+# >>>                  That could and should be treated as a part.
+# >>>            
+# >>>       >>>   ANYWAY, THIS NEEDS A NEW STRATEGY
+# >>>             Same keys in geoms, for example??
+# >>>
 # >>>     - TODO: add at least two, the ENGAGE and RETRACT feedrates or percentage markers to parts
 # >>>     - TODO: This should create a warning bc the feed rate might have been changed
 # >>>             in the previous (part) operation!
@@ -1232,6 +1243,57 @@ def partRotateZAt( part, ang, center ):
 		partn['elements'].append(  elemRotateZAt( elem, ang, center )  )
 	
 	return partn
+
+
+
+#############################################################################
+### partPrintInfo
+###
+#############################################################################
+def partPrintInfo( part ):
+
+	#	part = { 'name':name, 'type':'p', 'elements':[] }
+
+	if not isinstance( part, dict ):
+		print( "ERR: partPrintInfo: not a part:", type(part) )
+		return
+	
+	if not 'type' in part:
+		print( "ERR: partPrintInfo: part misses 'type' key" )
+		return
+	
+	if part['type'] != 'p':
+		print( "ERR: partPrintInfo: not a part or wrong 'type': ", type( part['type'] ) )
+		return
+
+	if not 'elements' in part:
+		print( "ERR: partPrintInfo: part misses 'elements' list" )
+		return
+
+	if not isinstance( part['elements'], list ):
+		print( "ERR: partPrintInfo: part's 'elements' value is not a list: ", type( part['elements'] ) )
+		return
+
+	if not 'name' in part:
+		print( "ERR: partPrintInfo: part misses 'name' key" )
+		return
+
+	if not isinstance( part['name'], str ):
+		print( "ERR: partPrintInfo: part's 'name' value is not a string: ", type( part['name'] ) )
+		return
+
+	# should be safe to output some infos now :)
+	if len( part['name'] ) == 0:
+		strName = '<no name>'
+	else:
+		strName = part['name']
+	print( "-----" )
+	print( "  PART: " + strName + ' with ' + str( len( part['elements'] ) ) + ' elements' )
+	for k,v in part:
+		if k in ['name', 'type', 'elements']:
+			continue
+		print( "    " + str(k) + " = " + str(v))
+
 
 
 
@@ -4195,7 +4257,7 @@ def toolFullAuto( geoms, feedRate=None, safeZ=None, names=None, fname='ncEFI.nc'
 		if names is not None:
 			name = names[n]
 			if not isinstance(name,str):
-				print( "WARNING: toolFullAuto: 'names' contains other types than strings" )
+				print( "INF: toolFullAuto: 'names' contains other types than strings" )
 				names = None
 				name = "no name"
 		parts.append( partCreate( name, e ) )
