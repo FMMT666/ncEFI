@@ -19,7 +19,7 @@
 # >>>     - DONE: add a global base feedrate; also in header file
 # >>>     - TODO: add a local base feedrate to parts, overriding the global one
 # >>>             YO SHIT: Very clever to allow geoms to be passed to ToolFullAuto().
-# >>>                      The planed feed rates _ENGAGE, _BASE, and _RERACT would now need to
+# >>>                      The planned feed rates _ENGAGE, _BASE, and _RERACT would now need to
 # >>>                      to be in the geoms too - and that's not possible because a geom is
 # >>>                      just a list, which may contain an unlimited amount of other geoms.
 # >>>
@@ -28,6 +28,13 @@
 # >>>            
 # >>>       >>>   ANYWAY, THIS NEEDS A NEW STRATEGY
 # >>>             Same keys in geoms, for example??
+# >>>
+# >>>       >>>   No. That would not be okay.
+# >>>       >>>   Actually, the toolFullAuto() is the limiting element.
+# >>>       >>>   Without it, the part functions _Create or _AddElelemnts
+# >>>       >>>   or something new like _AddFeed could be used. 
+# >>>
+# >>>
 # >>>
 # >>>     - TODO: add at least two, the ENGAGE and RETRACT feedrates or percentage markers to parts
 # >>>     - TODO: This should create a warning bc the feed rate might have been changed
