@@ -5,7 +5,7 @@
 # ncEFI
 # Some stupid G-Code ideas I had about 25 years ago.
 # Yes, really, really stupid.
-# FMMT666/ASkr 1995..2021 lol
+# FMMT666/ASkr 1995..2022 lol
 
 # This code uses tabs. Best viewed with four of them.
 

@@ -61,7 +61,9 @@ Install them with (Python 3.7 64-bit example here):
 ### macOS
 Even though Big Sur brought a lot of OpenGL problems, everything can be easily
 installed via pip. That will even work with the (introduced in Catalina (?))
-"Apple Python 3.8.x" version ("/usr(bin/python3"). 
+"Apple Python 3.8.x" version ("/usr/bin/python3").  
+Will work with X from either MacPorts ("ports") or Homebrew ("brew"), as well as
+XQuartz.
 
 The visualiser 'ncEFIDisp2' also works with the macOS-touchpads.  
 Three fingers will rotate, two fingers sliding will zoom and two fingers
@@ -88,6 +90,10 @@ that is named
 
 ---
 ## News
+
+### CHANGES 2022/01/XX
+    - changes for macOS display
+
 
 ### CHANGES 2021/11/XX
     - now finally with "feed rate vertices", allowing important adjustment or infos
