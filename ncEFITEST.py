@@ -28,6 +28,11 @@ llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 3
 
 debugShowViewer( llist )
 
+
+## doesn't matter where this appears as long as it's before toolFullAuto()
+toolFeedRateSet( 4444 )
+
+
 ## should give an error (0 feed rate)
 #toolFullAuto( llist )
 
@@ -36,7 +41,10 @@ debugShowViewer( llist )
 #toolFullAuto( llist, 20)
 
 ## should be okay
-toolFullAuto( llist, 900 )
+#toolFullAuto( llist, 900 )
+
+## should use the value from toolFeedRateSet() above
+toolFullAuto( llist )
 
 
 

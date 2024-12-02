@@ -19,7 +19,7 @@ G43 H1    (set tool offset)
 M0        (pause and display message)
 G4 P1     (wait for 1 second)
 
-F900      (base feed rate, set in code)
+F4444      (base feed rate, set in code)
 
 (rapid to: no name)
 G00 Z10.0

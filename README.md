@@ -39,6 +39,9 @@ Only for 'ncEFIDisp2', the viewer:
  - PyOpenGL
  - PyOpenGL_accelerate
 
+> As of 11/2024 it is recommended to install everything via your system's package manager if available.  
+> Especially under macOS on ARM machines.
+
 Installing wxPython will install Numpy and Pillow if not already present.  
 The PyOpenGL installation does not have any additional dependencies.
 
@@ -59,9 +62,14 @@ Install them with (Python 3.7 64-bit example here):
 
 
 ### macOS
+
+#### Intel
+
 Even though Big Sur brought a lot of OpenGL problems, everything can be easily
 installed via pip. That will even work with the (introduced in Catalina (?))
-"Apple Python 3.8.x" version ("/usr(bin/python3"). 
+"Apple Python 3.8.x" version ("/usr/bin/python3").  
+Will work with X from either MacPorts ("ports") or Homebrew ("brew"), as well as
+XQuartz.
 
 The visualiser 'ncEFIDisp2' also works with the macOS-touchpads.  
 Three fingers will rotate, two fingers sliding will zoom and two fingers
@@ -70,9 +78,25 @@ with pad-press will pan.
 The OpenGL library has a bug and requires that the windows is resized once.  
 Might add a workaround for this in future versions.
 
+#### ARM
+
+For Apple Silicon, M1..M4 the complete installation needs to be done via MacPorts or Homebrew.
+This also requires a Python version from there.
+
+Example packages for Ports with Python 3.12, as of 11/2024:
+
+    py312-opengl                   @3.1.7_0 (active)
+    py312-opengl-accelerate        @3.1.7_0 (active)
+
+    py312-wxpython-4.0             @4.2.1_0 (active)
+
+Notice that this might install an insane amount of other dependencies,
+e.g. GCC et.al., in case they are missing.
 
 ### Linux
 That always worked.
+
+As of 11/2024 it's also recommended to install everything via your package manager if available.
 
 #### DevTerm (or possibly other embedded devices)
 Just for the fun of it, I tested this on a [clockwerk DevTerm][2].  
@@ -88,6 +112,14 @@ that is named
 
 ---
 ## News
+
+### CHANGES 2024/11/XX
+    - added notes for Apple Silicon
+
+
+### CHANGES 2022/01/XX
+    - changes for macOS display
+
 
 ### CHANGES 2021/11/XX
     - now finally with "feed rate vertices", allowing important adjustment or infos
