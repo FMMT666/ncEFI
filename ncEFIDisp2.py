@@ -117,17 +117,20 @@ def createArc180(p1,p2,rad,step,dir):
 class myGLCanvas(GLCanvas):
 	def __init__(self, *args, **kwargs):
 
+		# TODO: probably not necessary (needs testing)
 		glutInit(['lmfao'])
 
 		GLCanvas.__init__(self, *args, **kwargs)
-		self.Bind(wx.EVT_PAINT,      self.OnPaint)
-		self.Bind(wx.EVT_SIZE,       self.OnResize)
-		self.Bind(wx.EVT_LEFT_DOWN,  self.OnLeftDown)
-		self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-		self.Bind(wx.EVT_LEFT_UP,    self.OnLeftUp)
-		self.Bind(wx.EVT_RIGHT_UP,   self.OnRightUp)
-		self.Bind(wx.EVT_MOTION,     self.OnMouse)
-		self.Bind(wx.EVT_MOUSEWHEEL, self.OnWheel)
+		self.Bind(wx.EVT_PAINT,          self.OnPaint)
+		self.Bind(wx.EVT_SIZE,           self.OnResize)
+		self.Bind(wx.EVT_LEFT_DOWN,      self.OnLeftDown)
+		self.Bind(wx.EVT_RIGHT_DOWN,     self.OnRightDown)
+		self.Bind(wx.EVT_LEFT_UP,        self.OnLeftUp)
+		self.Bind(wx.EVT_RIGHT_UP,       self.OnRightUp)
+		self.Bind(wx.EVT_MOTION,         self.OnMouse)
+		self.Bind(wx.EVT_MOUSEWHEEL,     self.OnWheel)
+		# self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
+		# self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
 
 		self.init = False
 		self.width, self.height = self.GetSize()
@@ -442,6 +445,11 @@ class myGLCanvas(GLCanvas):
 
 
 	#-----------------------------------------------------------------------------------------------
+	# def OnClose( self, e ):
+	# 	self.Destroy()
+
+
+	#-----------------------------------------------------------------------------------------------
 	def InitGL( self ):
 		glLightfv( GL_LIGHT0, GL_DIFFUSE,  (0.8, 0.8, 0.8, 1.0) )
 		glLightfv( GL_LIGHT0, GL_AMBIENT,  (0.2, 0.2, 0.2, 1.0) )
@@ -468,7 +476,10 @@ class ToolPanel(wx.Panel):
 		self.button4 = wx.Button( self, label="Button 4" )
 		self.button5 = wx.Button( self, label="Button 5" )
 		self.check1 = wx.CheckBox( self, label="Chkbox 1" )
-		self.Bind(wx.EVT_CHECKBOX, self.cbCheckbox1)
+
+		self.Bind(wx.EVT_CHECKBOX,       self.cbCheckbox1)
+		# self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
+		# self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
 
 		self.sizer = wx.BoxSizer( wx.VERTICAL )
 
@@ -489,10 +500,20 @@ class ToolPanel(wx.Panel):
 	def cbCheckbox1(self, e):
 		print("checkbox 1 says ", e)
 
+	#-----------------------------------------------------------------------------------------------
+	# def OnClose( self, e ):
+	# 	self.Destroy()
+
+
 #===================================================================================================
 class MainWin(wx.Frame):
 	def __init__(self, *args, **kwargs):
 		wx.Frame.__init__(self, title='OpenGL', *args, **kwargs)
+
+
+#		self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
+#		self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
+
 
 		self.canvas = myGLCanvas(self, size=(640, 480))
 
@@ -509,6 +530,17 @@ class MainWin(wx.Frame):
 		self.SetSizerAndFit(self.sizer)
 
 		self.Show()
+
+
+	#-----------------------------------------------------------------------------------------------
+	# def OnClose( self, e ):
+	# 	# self.panel.Destroy()
+	# 	# self.sizer.Destroy()
+	# 	# self.canvas.Destroy()
+	# 	# self.Destroy()
+
+	# 	pass
+
 
 #===================================================================================================
 
