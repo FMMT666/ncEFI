@@ -3,9 +3,9 @@
 
 
 # ncEFI
-# Some stupid G-Code ideas I had about 25 years ago.
+# Some stupid G-Code ideas I had about 27 years ago.
 # Yes, really, really stupid.
-# FMMT666/ASkr 1995..2022 lol
+# FMMT666/ASkr 1995..2024 lol
 
 # This code uses tabs. Best viewed with four of them.
 
@@ -42,6 +42,8 @@
 # >>>     - TODO: if they contain numbers (already replaced by another function): put these in the G-code
 # >>>     - TODO: if they contain the 'FEED_ENGAGE', 'FEED_BASE', 'FEED_RETRACT' markers, put the default values in
 
+# - algorithm for parallel lines, inside of a closed polygon; maybe give this a try
+#   in case this conflicts with the arcs or beziers, they could be converted to lines prior to this
 # - toolFeedRateSet() in the test file
 # - Maybe the global safe-Z variable should be handled like the feed rate,
 #   so that the default value, without overriding it, causes an error? 
@@ -3435,7 +3437,7 @@ def geomCreateSlotContourFromElement(el,dist,basNr=0):
 ### It simply "moves" along the slots (with nice blendings, indeed 8)
 ### The geometry must meet the following conditions:
 ### - direction of elements has to be counter-clockwise (mhh, not always...)
-### - dist has to negative (aka.: we follow the left side of the slots)
+### - dist has to be negative (aka.: we follow the left side of the slots)
 #############################################################################
 def geomCreateLeftContourBAK(part,dist,basNr=0):
 
