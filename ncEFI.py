@@ -3115,7 +3115,7 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 
 
 #############################################################################
-### geomCreateSimpleContour
+### geomCreateContour
 ###
 ### All elements in a part are moved along a perpendicular line, which length
 ### is given by "dist".
@@ -3693,6 +3693,78 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 
 			
 	return con
+
+
+
+#############################################################################
+### geomCreatePolyOffset
+###
+### Creates a list of points between every 3-set of points (forming two vectors)
+### at half the angle between the two vectors.
+### These points can then (after some additional cleanup) be used to create
+### parallel lines to the original geometry, aka offset lines or polygons.
+### If offset is negative, the parallel lines are created to the left side of the
+### original geometry, if positive, to the right side.
+### The points' z-values are ignored.
+#############################################################################
+def geomCreatePolyOffset( listOfPoints, offset, basNr=0 ):
+
+	if not isinstance( listOfPoints, list ):
+		print("ERR: geomCreatePolyOffset: listOfPoints is not a list: ", type(listOfPoints))
+		return []
+
+	if len( listOfPoints ) < 3:
+		print("ERR: geomCreatePolyOffset: listOfPoints has not enough points (<3): ", len(listOfPoints))
+		return []
+
+	if offset == 0:
+		print("ERR: geomCreatePolyOffset: offset is zero" )
+		return []
+
+
+	lenList = len( listOfPoints )	
+
+	geom = []
+
+
+
+
+	# ----- DEBUG PLOTTING
+	j = None
+	for i in listOfPoints:
+		geom.append( elemCreateVertex( i ) )
+		if j is not None:
+			geom.append( elemCreateLine( j, i ) )
+		j = i
+	geom.append( elemCreateLine( i, listOfPoints[0] ) )
+
+
+
+
+	for i in range( lenList ):
+		pts = []
+		for j in range( 3 ):
+			pts.append( listOfPoints[ (i+j) % lenList] )
+		
+		v1 = vecExtract( pts[1], pts[0] )
+		v2 = vecExtract( pts[1], pts[2] )
+		a1 = vecAngleXY( v1 )
+		a2 = vecAngleXY( v2 )
+
+		ad = vecAngleDiffXY( v2, v1 )
+		an = ad / 2.0 + a2
+		vn = ( offset * ( 1.0 + math.fabs( 1.0/math.tan(ad/2.0))), 0, 0)
+
+
+		vn = vecRotateZ( vn, -an )
+
+#		print( pts[0], pts[1], pts[2], v1, v2, a1, a2, an )
+		print( ad )
+
+		geom.append( elemCreateLine( pts[1], vecAdd( pts[1], vn )) )
+
+
+	return geom
 
 
 

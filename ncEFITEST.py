@@ -6,6 +6,30 @@ from ncEFI import *
 
 
 
+llist = []
+#llist.append( geomCreatePolyOffset( [ (-10,-10,0), (30,-20,0),(40,50,0),(-30,20,0)  ], 5 ) )
+#llist.append( geomCreatePolyOffset( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], 5 ) )
+llist.append( geomCreatePolyOffset( [ (0,00,0), (50,0,0),(00,10,0) ], 2 ) )
+
+
+debugShowViewer( llist )
+
+
+
+
+#---------------------------------------
+# llist = []
+# llist.append( geomCreateSlotPoly( [(-90,0,0), (-80,10,0), (-50,0,-10)], 2, smoothEnter=False ) )
+# llist.append( geomCreateSlotPoly( [(-30,0,0), (-10,10,0), (10,-10,0), (30,0,-10)], 4, smoothEnter=True ) )
+# llist.append( geomCreateSlotPoly( [(40,60,0), (80,60,0), (80,20,0), (40,20,0),(40,60,-15)], 5, smoothEnter=True ) )
+# llist.append( geomCreateSlotPoly( [(40, 0,0), (80, 0,0), (80,-40,0), (40,-40,0),(40, 0,-15)], 5, smoothEnter=False ) )
+# llist.append( geomCreateSlotPoly( [(-50, -50,0), (50, -50, -20)], 5, smoothEnter=False ) )
+# llist.append( geomCreateSlotPoly( [(-50, -80,0), (50, -80, -20)], 5, smoothEnter=True ) )
+
+# debugShowViewer( llist )
+
+# toolFullAuto( llist )
+
 
 
 #---------------------------------------
@@ -21,30 +45,28 @@ from ncEFI import *
 # set a high feedrate for this G2/3 move, but switch back to the base speed
 # afterwards. Would be easier to use "info" vertices here, rather than putting
 # all of this in the elements themselves.
-llist = []
-llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 3,
-                                            30, 15,
-                                            20, 2, 'cc' )  )
+# llist = []
+# llist.append(  geomCreateSlotRingHoleTEST(  (-10,10,-10), (80,40,0), 100, 200, 3,
+#                                             30, 15,
+#                                             20, 2, 'cc' )  )
+# debugShowViewer( llist )
 
-debugShowViewer( llist )
-
-
-## doesn't matter where this appears as long as it's before toolFullAuto()
-toolFeedRateSet( 4444 )
+# ## doesn't matter where this appears as long as it's before toolFullAuto()
+# toolFeedRateSet( 4444 )
 
 
-## should give an error (0 feed rate)
-#toolFullAuto( llist )
+# ## should give an error (0 feed rate)
+# #toolFullAuto( llist )
 
-## should give a warning (low feed rate)
-## implemented because the feed rate was the safe-Z position in earlier code variants
-#toolFullAuto( llist, 20)
+# ## should give a warning (low feed rate)
+# ## implemented because the feed rate was the safe-Z position in earlier code variants
+# #toolFullAuto( llist, 20)
 
-## should be okay
-#toolFullAuto( llist, 900 )
+# ## should be okay
+# #toolFullAuto( llist, 900 )
 
-## should use the value from toolFeedRateSet() above
-toolFullAuto( llist )
+# ## should use the value from toolFeedRateSet() above
+# toolFullAuto( llist )
 
 
 
