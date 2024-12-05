@@ -3708,67 +3708,59 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 
 
 #############################################################################
-### geomCreatePolyOffsetPoints
+### geomCreatePolyVertsOffset
 ###
-### Creates a list of points between every 3-set of points (forming two vectors)
-### at half the angle between the two vectors.
-### These points can then (after some additional cleanup) be used to create
-### parallel lines to the original geometry, aka offset lines or polygons.
-### If offset is negative, the parallel lines are created to the left side of the
-### original geometry, if positive, to the right side.
-### The points' z-values are ignored.
 #############################################################################
-def geomCreatePolyOffsetPoints(
-		listOfPoints: list,
-		offset: float,
-		basNr: int = 0 ) -> list:
+def geomCreatePolyVertsOffset( geomVerts: list, offset: float, basNr: int = 0 ) -> list:
 	"""
-	Create a list of points between every 3-set of points (forming two vectors) at half the angle between the two vectors.
+	Offsets the vertices of a geom.
+	The vertices will be created on a vector going through the middle of the angle formed by
+	three vertices; acting as two vectors going out from the mid-vertex.
 
-	These points can then (after some additional cleanup) be used to create parallel lines to the original geometry, aka offset lines or polygons.
+	In case offset is 0, nothing is changed. Yep.
+
+	The created vertices can then (after some additional cleanup) be used to create parallel lines to the original geometry, aka offset lines or polygons.
 	If the offset is negative, the parallel lines are created to the left side of the original geometry; if positive, to the right side.
-	The points' z-values are ignored.
+	The vertices' z-values are ignored; and their order should be given anti-clockwise.
 
 	Args:
-		listOfPoints (list): A list of points representing the original geometry.
-		offset (float): The offset value determining how far the parallel lines are from the original geometry.
+		geomVerts (list): A list of vertices representing the original geometry, e.g.
+		offset (float): The offset value determining how far the vertices are from the original geometry. <0 means inside, >0 means outside.
 		basNr (int, optional): An optional base number, default is 0.
 
 	Returns:
-		list: A list of points representing the offset geometry.
+		list: A geom with vertices, shifted by the given offset.
 	"""
-	if not isinstance( listOfPoints, list ):
-		print("ERR: geomCreatePolyOffsetPoints: listOfPoints is not a list: ", type(listOfPoints))
+	if not isinstance( geomVerts, list ):
+		print("ERR: geomCreatePolyVertsOffset: geomVerts is not a list: ", type(geomVerts))
 		return []
 
-	if len( listOfPoints ) < 3:
-		print("ERR: geomCreatePolyOffsetPoints: listOfPoints has not enough points (<3): ", len(listOfPoints))
+	if len( geomVerts ) < 3:
+		print("ERR: geomCreatePolyVertsOffset: geomVerts has not enough points (<3): ", len(geomVerts))
 		return []
 
-	if offset == 0:
-		print("ERR: geomCreatePolyOffsetPoints: offset is zero" )
+	if not isinstance( geomVerts[0], dict ):
+		print("ERR: geomCreatePolyVertsOffset: content of geomVerts is not a dict: ", type(geomVerts[0]))
 		return []
 
 
-	lenList = len( listOfPoints )	
+
+	lenGeom = len( geomVerts )	
 
 	geom = []
 
-	# ----- DEBUG PLOTTING
-	# j = None
-	# for i in listOfPoints:
-	# 	geom.append( elemCreateVertex( i ) )
-	# 	if j is not None:
-	# 		geom.append( elemCreateLine( j, i ) )
-	# 	j = i
-	# geom.append( elemCreateLine( i, listOfPoints[0] ) )
 
-	for i in range( lenList ):
+	# a shortcut in case offset == 0
+	if offset == 0.0:
+		return geomVerts
+
+
+	for i in range( lenGeom ):
 		pts = []
 
 		# iterate through the list; end at the first entry again (modulo)
 		for j in range( 3 ):
-			pts.append( listOfPoints[ (i+j) % lenList] )
+			pts.append( geomVerts[ (i+j) % lenGeom]['p1'] )
 		
 		v1 = vecExtract( pts[1], pts[0] ) # vector "to the left"
 		v2 = vecExtract( pts[1], pts[2] ) # vector "to the right"
@@ -3780,7 +3772,7 @@ def geomCreatePolyOffsetPoints(
 
 		# small angles or large ones toward 2*Pi will cause a divide by zero
 		if ( adabs := math.fabs(ad) ) < MINOFFSETANGLE or (adabs + MINOFFSETANGLE) > (2.0 * math.pi) :
-			print("ERR: geomCreatePolyOffsetPoints: angle of poly corner too small/large: ", ad )
+			print("ERR: geomCreatePolyVertsOffset: angle of poly corner too small/large: ", ad )
 			return []
 
 		# recalculate the length of the offset vector and also the direction;
@@ -3793,6 +3785,88 @@ def geomCreatePolyOffsetPoints(
 		geom.append( elemCreateVertex( vecAdd( pts[1], vn ) ) )
 
 	return geom
+
+
+
+#############################################################################
+### geomCreatePolyVerts
+###
+#############################################################################
+def geomCreatePolyVerts( listOfPoints: list, basNr: int = 0 ) -> list:
+	"""
+	Create a geom of vertices from a list of points.
+	The list of points should be given anti-clockwise.
+
+	Args:
+		listOfPoints (list): A list of points representing the original geometry, e.g. [ (0,0,0), (10,0,0), (0,10,0), (0,10,0), ... ]
+		basNr (int, optional): An optional base number, default is 0.
+
+	Returns:
+		list: A geom with vertices.
+	"""
+
+	geom = []
+
+	for i in listOfPoints:
+		geom.append( elemCreateVertex( i ) )
+
+	return geom
+
+
+
+#############################################################################
+### geomCreatePoly
+###
+#############################################################################
+def geomCreatePoly( geomVerts: list, basNr: int = 0 ) -> list:
+	"""
+	Creates a closed polygon as a geom made of vectors from a list of vertices.
+
+	Args:
+		geomVerts (list): A geom (list of vertices) representing the geometry.
+		basNr (int, optional): An optional base number, default is 0.
+
+	Returns:
+		list: A geom of vectors.
+	"""
+	if not isinstance( geomVerts, list ):
+		print("ERR: geomCreatePoly: geomVerts is not a list: ", type(geomVerts))
+		return []
+
+	lenList = len( geomVerts )
+
+	if lenList < 3:
+		print("ERR: geomCreatePoly: geomVerts has not enough points (<3): ", len(geomVerts))
+		return []
+
+
+	geom = []
+
+	for i in range( lenList ):
+		geom.append( elemCreateLine( geomVerts[i]['p1'], geomVerts[ (i+1) % lenList ]['p1'] ) )
+
+
+	return geom
+
+
+
+#############################################################################
+### geomCreatePolyFromVerts
+###
+### Creates a closed polygon as a geom made of vectors from a list of points.
+#############################################################################
+def geomCreatePolyFromVerts( listOfPoints: list, basNr: int = 0 ) -> list:
+	"""
+	Creates a closed polygon as a geom made of vectors from a list of points.
+
+	Args:
+		listOfPoints (list): A list of points representing the original geometry.
+		E.g. [ (0,0,0), (10,0,0), (0,10,0), (0,10,0) ]
+		basNr (int, optional): An optional base number, default is 0.
+
+	Returns:
+		list: A polygon as a geom consiting of lines.
+	"""
 
 
 

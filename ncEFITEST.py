@@ -6,15 +6,51 @@ from ncEFI import *
 
 
 
+
+
+#---------------------------------------
 llist = []
-# llist.append( geomCreatePolyOffsetPoints( [ (-10,-10,0), (30,-20,0),(40,50,0),(-30,20,0)  ], -5 ) )
-# llist.append( geomCreatePolyOffsetPoints( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], -5 ) )
-# llist.append( geomCreatePolyOffsetPoints( [ (0,0,0), (50,0,0),(0,10,0),(0,5,0) ], -2 ) )
-# llist.append( geomCreatePolyOffsetPoints( [ (0,0,0), (50,0,0),(0,10,0),(2.5,5,0) ], -2 ) )
-llist.append( geomCreatePolyOffsetPoints( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], 5 ) )
+
+lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-40,40,0)  ]
+llist += geomCreatePoly( gV := geomCreatePolyVerts( lstPts ) )
+
+llist += (gO := geomCreatePolyVertsOffset( gV, -8 ))
+llist += geomCreatePoly( gO )
+
 
 
 debugShowViewer( llist )
+
+
+
+
+
+#---------------------------------------
+# llist = []
+# # VERTSOFFSET WAS CHANGED TO ACCEPT A GEOM OF VERTS, NOT JUST A LIST OF POINTS ANYMORE
+# # OLD llist.append( geomCreatePolyVertsOffset( [ (-10,-10,0), (30,-20,0),(40,50,0),(-30,20,0)  ], -5 ) )
+# # OLD llist.append( geomCreatePolyVertsOffset( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], -5 ) )
+# # OLD llist.append( geomCreatePolyVertsOffset( [ (0,0,0), (50,0,0),(0,10,0),(0,5,0) ], -2 ) )
+# # OLD llist.append( geomCreatePolyVertsOffset( [ (0,0,0), (50,0,0),(0,10,0),(2.5,5,0) ], -2 ) )
+# # OLD llist.append( geomCreatePolyVertsOffset( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], 5 ) )
+
+# lstPts = [ (-40,-40,0), (0,-10,0),(40,-40,0),(40,40,0),(0,10,0),(-40,40,0)  ]
+
+# OLD gV1 = geomCreatePolyVertsOffset( lstPts, -5 )
+# OLD gV2 = geomCreatePolyVertsOffset( lstPts, 5 )
+
+# OLD gV0a = geomCreatePolyVertsOffset( lstPts, 0 )
+# OLD gV0a = geomTranslate( gV0a, (0,0,10) )
+# gV0b = geomCreatePolyVerts( lstPts )
+
+# gPi = geomCreatePoly( gV1 )
+# gPo = geomCreatePoly( gV2 )
+# gPO = geomCreatePoly( gP1 )
+
+# llist += gP1 + gV1 + gV2 + gV0a + gV0b + gPi + gPo + gPO
+
+
+# debugShowViewer( llist )
 
 
 
