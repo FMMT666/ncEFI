@@ -13,37 +13,45 @@
 # TODO:
 #
 # >>> Okay, the "feed rate vertices" are now built-in. Now:
-# >>>   - DONE: make the "continous" checks and toolpath creation ignore them
-# >>>   - DONE: add 'tFeed_xyz' keys to the part dict
-# >>>     - DONE: if they are missing, the toolpath will not create any feed rate commands
-# >>>     - DONE: add a global base feedrate; also in header file
-# >>>     - TODO: add a local base feedrate to parts, overriding the global one
-# >>>             YO SHIT: Very clever to allow geoms to be passed to ToolFullAuto().
-# >>>                      The planned feed rates _ENGAGE, _BASE, and _RERACT would now need to
-# >>>                      to be in the geoms too - and that's not possible because a geom is
-# >>>                      just a list, which may contain an unlimited amount of other geoms.
+# >>>  - DONE: make the "continous" checks and toolpath creation ignore them
+# >>>  - DONE: add 'tFeed_xyz' keys to the part dict
+# >>>    - DONE: if they are missing, the toolpath will not create any feed rate commands
+# >>>    - DONE: add a global base feedrate; also in header file
+# >>>    - TODO: add a local base feedrate to parts, overriding the global one
+# >>>            YO SHIT: Very clever to allow geoms to be passed to ToolFullAuto().
+# >>>                     The planned feed rates _ENGAGE, _BASE, and _RERACT would now need to
+# >>>                     to be in the geoms too - and that's not possible because a geom is
+# >>>                     just a list, which may contain an unlimited amount of other geoms.
 # >>>
-# >>>                  No wait, that's not true. Each of the geoms is a single entry in a list.
-# >>>                  That could and should be treated as a part.
-# >>>            
-# >>>       >>>   ANYWAY, THIS NEEDS A NEW STRATEGY
-# >>>             Same keys in geoms, for example??
+# >>>                 No wait, that's not true. Each of the geoms is a single entry in a list.
+# >>>                 That could and should be treated as a part.
+# >>>           
+# >>>      >>>   ANYWAY, THIS NEEDS A NEW STRATEGY
+# >>>            Same keys in geoms, for example??
 # >>>
-# >>>       >>>   No. That would not be okay.
-# >>>       >>>   Actually, the toolFullAuto() is the limiting element.
-# >>>       >>>   Without it, the part functions _Create or _AddElelemnts
-# >>>       >>>   or something new like _AddFeed could be used. 
+# >>>      >>>   No. That would not be okay.
+# >>>      >>>   Actually, the toolFullAuto() is the limiting element.
+# >>>      >>>   Without it, the part functions _Create or _AddElelemnts
+# >>>      >>>   or something new like _AddFeed could be used. 
+# >>>
+# >>>    - TODO: add at least two, the ENGAGE and RETRACT feedrates or percentage markers to parts
+# >>>    - TODO: This should create a warning bc the feed rate might have been changed
+# >>>            in the previous (part) operation!
+# >>>    - TODO: if they contain numbers (already replaced by another function): put these in the G-code
+# >>>    - TODO: if they contain the 'FEED_ENGAGE', 'FEED_BASE', 'FEED_RETRACT' markers, put the default values in
+# >>> 
+# >>>  - algorithm for contours of closed polygons:
+# >>>    - DONE: calc points between half angles; in- and outside
+# >>>    - TODO: method to identify crossing half-angle vectors (ncVec.py)
+# >>>    - TODO: outer contours with arcs
+# >>>    - TODO: algorithm for arcs in inner contour possible?
+# >>>
+# >>>  - TODO: type annotations would be helpful; even testing became a pita
+# >>>  - TODO: docstrings for all functions
+# >>>  - TODO: pylint stopped working; wasn't able to make flake8 work in VSCode
+# >>>  - DONE: the segmentation fault upon exit is caused by a (now fixed in git) bug; will self-heal someday
 # >>>
 # >>>
-# >>>
-# >>>     - TODO: add at least two, the ENGAGE and RETRACT feedrates or percentage markers to parts
-# >>>     - TODO: This should create a warning bc the feed rate might have been changed
-# >>>             in the previous (part) operation!
-# >>>     - TODO: if they contain numbers (already replaced by another function): put these in the G-code
-# >>>     - TODO: if they contain the 'FEED_ENGAGE', 'FEED_BASE', 'FEED_RETRACT' markers, put the default values in
-
-# - algorithm for parallel lines, inside of a closed polygon; maybe give this a try
-#   in case this conflicts with the arcs or beziers, they could be converted to lines prior to this
 # - toolFeedRateSet() in the test file
 # - Maybe the global safe-Z variable should be handled like the feed rate,
 #   so that the default value, without overriding it, causes an error? 
@@ -73,6 +81,8 @@
 #      - add retract movement
 #      - rotate geom to final position
 #  - add proper "ERR:" prints in ncVec
+#  - ncVec's rotate and vecAngle functions handle angles in the opposite direction (ugh)
+#    rotate is right-handed, vecAngle is left-handed; for positive angles
 #  - add arcLength for z changes (half helix)
 #  - geomCreateConcentricRects
 #      - implement depth (if not already done)
@@ -81,10 +91,10 @@
 #  - geomCreateRadial
 #      - add the 'arc' operation
 #      - add rapid retracts (requires the "feed-rate-in-vertices" idea)
-#  - geomCreateRectSpiral       REALLY?
-#  - geomCreateRectSpiralHelix  REALLY?
 #  - geomCreatePoly
 #  - geomCreatePolyHelix
+#  - geomCreateRectSpiral       REALLY?
+#  - geomCreateRectSpiralHelix  REALLY?
 #  - improve geomCreateCircRingHole:
 #      - arguments' names
 #      - 'clear' does (yet) nothing
@@ -122,10 +132,11 @@ import pickle
 from ncVec import *
 
 # some tolerances and precision things
-TOOL_CONTINUOUS_TOLERANCE = 0.001   # checks for tool path continuity; if mm, this makes 1um...
-MINLEN_BEZIER             = 0.1     # minimum length of Bezier interpolation segment; for some createGeom
-DEFLEN_BEZIER             = 0.5     # default length of Bezier interpolation segment; for some createGeom
-MAXLEN_BEZIER             = 2.0     # maximum length of Bezier interpolation segment; for some createGeom
+TOOL_CONTINUOUS_TOLERANCE = 0.001                # checks for tool path continuity; if mm, this makes 1um...
+MINLEN_BEZIER             = 0.1                  # minimum length of Bezier interpolation segment; for some createGeom
+DEFLEN_BEZIER             = 0.5                  # default length of Bezier interpolation segment; for some createGeom
+MAXLEN_BEZIER             = 2.0                  # maximum length of Bezier interpolation segment; for some createGeom
+MINOFFSETANGLE            = 2.0 * math.pi / 365  # minimum allowed angle for offsetting calcs; see: vn = ( offset / math.sin( ad / 2.0 ), 0, 0)
 
 # default G-codes also used as "state markers" during the tool path creation
 GCODE_COMMENT        = "()"
@@ -3697,7 +3708,7 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 
 
 #############################################################################
-### geomCreatePolyOffset
+### geomCreatePolyOffsetPoints
 ###
 ### Creates a list of points between every 3-set of points (forming two vectors)
 ### at half the angle between the two vectors.
@@ -3707,18 +3718,35 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 ### original geometry, if positive, to the right side.
 ### The points' z-values are ignored.
 #############################################################################
-def geomCreatePolyOffset( listOfPoints, offset, basNr=0 ):
+def geomCreatePolyOffsetPoints(
+		listOfPoints: list,
+		offset: float,
+		basNr: int = 0 ) -> list:
+	"""
+	Create a list of points between every 3-set of points (forming two vectors) at half the angle between the two vectors.
 
+	These points can then (after some additional cleanup) be used to create parallel lines to the original geometry, aka offset lines or polygons.
+	If the offset is negative, the parallel lines are created to the left side of the original geometry; if positive, to the right side.
+	The points' z-values are ignored.
+
+	Args:
+		listOfPoints (list): A list of points representing the original geometry.
+		offset (float): The offset value determining how far the parallel lines are from the original geometry.
+		basNr (int, optional): An optional base number, default is 0.
+
+	Returns:
+		list: A list of points representing the offset geometry.
+	"""
 	if not isinstance( listOfPoints, list ):
-		print("ERR: geomCreatePolyOffset: listOfPoints is not a list: ", type(listOfPoints))
+		print("ERR: geomCreatePolyOffsetPoints: listOfPoints is not a list: ", type(listOfPoints))
 		return []
 
 	if len( listOfPoints ) < 3:
-		print("ERR: geomCreatePolyOffset: listOfPoints has not enough points (<3): ", len(listOfPoints))
+		print("ERR: geomCreatePolyOffsetPoints: listOfPoints has not enough points (<3): ", len(listOfPoints))
 		return []
 
 	if offset == 0:
-		print("ERR: geomCreatePolyOffset: offset is zero" )
+		print("ERR: geomCreatePolyOffsetPoints: offset is zero" )
 		return []
 
 
@@ -3726,43 +3754,43 @@ def geomCreatePolyOffset( listOfPoints, offset, basNr=0 ):
 
 	geom = []
 
-
-
-
 	# ----- DEBUG PLOTTING
-	j = None
-	for i in listOfPoints:
-		geom.append( elemCreateVertex( i ) )
-		if j is not None:
-			geom.append( elemCreateLine( j, i ) )
-		j = i
-	geom.append( elemCreateLine( i, listOfPoints[0] ) )
-
-
-
+	# j = None
+	# for i in listOfPoints:
+	# 	geom.append( elemCreateVertex( i ) )
+	# 	if j is not None:
+	# 		geom.append( elemCreateLine( j, i ) )
+	# 	j = i
+	# geom.append( elemCreateLine( i, listOfPoints[0] ) )
 
 	for i in range( lenList ):
 		pts = []
+
+		# iterate through the list; end at the first entry again (modulo)
 		for j in range( 3 ):
 			pts.append( listOfPoints[ (i+j) % lenList] )
 		
-		v1 = vecExtract( pts[1], pts[0] )
-		v2 = vecExtract( pts[1], pts[2] )
-		a1 = vecAngleXY( v1 )
-		a2 = vecAngleXY( v2 )
+		v1 = vecExtract( pts[1], pts[0] ) # vector "to the left"
+		v2 = vecExtract( pts[1], pts[2] ) # vector "to the right"
+		a1 = vecAngleXY( v1 )             # absolute angle of v1
+		a2 = vecAngleXY( v2 )             # absolute angle of v2
 
-		ad = vecAngleDiffXY( v2, v1 )
-		an = ad / 2.0 + a2
-		vn = ( offset * ( 1.0 + math.fabs( 1.0/math.tan(ad/2.0))), 0, 0)
+		ad = vecAngleDiffXY( v2, v1 )     # angle between v1 and v2
+		an = ad / 2.0 + a2                # half angle between v1 and v2 (where the points will be placed)
 
+		# small angles or large ones toward 2*Pi will cause a divide by zero
+		if ( adabs := math.fabs(ad) ) < MINOFFSETANGLE or (adabs + MINOFFSETANGLE) > (2.0 * math.pi) :
+			print("ERR: geomCreatePolyOffsetPoints: angle of poly corner too small/large: ", ad )
+			return []
 
+		# recalculate the length of the offset vector and also the direction;
+		# negative offset values shall move to the left (inside), positive to the right (outside)
+		vn = ( -offset / math.sin( ad / 2.0 ), 0, 0)
+
+		# [...] and rotate it in place
 		vn = vecRotateZ( vn, -an )
 
-#		print( pts[0], pts[1], pts[2], v1, v2, a1, a2, an )
-		print( ad )
-
-		geom.append( elemCreateLine( pts[1], vecAdd( pts[1], vn )) )
-
+		geom.append( elemCreateVertex( vecAdd( pts[1], vn ) ) )
 
 	return geom
 

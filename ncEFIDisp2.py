@@ -511,8 +511,8 @@ class MainWin(wx.Frame):
 		wx.Frame.__init__(self, title='OpenGL', *args, **kwargs)
 
 
-#		self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
-#		self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
+		self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
+		self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
 
 
 		self.canvas = myGLCanvas(self, size=(640, 480))
@@ -533,13 +533,13 @@ class MainWin(wx.Frame):
 
 
 	#-----------------------------------------------------------------------------------------------
-	# def OnClose( self, e ):
-	# 	# self.panel.Destroy()
-	# 	# self.sizer.Destroy()
-	# 	# self.canvas.Destroy()
-	# 	# self.Destroy()
+	def OnClose( self, e ):
+#		self.panel.Destroy()
+#		self.sizer.Destroy()
+#		self.canvas.Destroy()
+		self.Destroy()
 
-	# 	pass
+		pass
 
 
 #===================================================================================================

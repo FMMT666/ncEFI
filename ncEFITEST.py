@@ -7,9 +7,11 @@ from ncEFI import *
 
 
 llist = []
-#llist.append( geomCreatePolyOffset( [ (-10,-10,0), (30,-20,0),(40,50,0),(-30,20,0)  ], 5 ) )
-#llist.append( geomCreatePolyOffset( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], 5 ) )
-llist.append( geomCreatePolyOffset( [ (0,00,0), (50,0,0),(00,10,0) ], 2 ) )
+# llist.append( geomCreatePolyOffsetPoints( [ (-10,-10,0), (30,-20,0),(40,50,0),(-30,20,0)  ], -5 ) )
+# llist.append( geomCreatePolyOffsetPoints( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], -5 ) )
+# llist.append( geomCreatePolyOffsetPoints( [ (0,0,0), (50,0,0),(0,10,0),(0,5,0) ], -2 ) )
+# llist.append( geomCreatePolyOffsetPoints( [ (0,0,0), (50,0,0),(0,10,0),(2.5,5,0) ], -2 ) )
+llist.append( geomCreatePolyOffsetPoints( [ (-5,-10,0), (0,-20,0),(40,50,0),(-10,0,0)  ], 5 ) )
 
 
 debugShowViewer( llist )
