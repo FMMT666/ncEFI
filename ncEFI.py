@@ -137,6 +137,9 @@ MINLEN_BEZIER             = 0.1                  # minimum length of Bezier inte
 DEFLEN_BEZIER             = 0.5                  # default length of Bezier interpolation segment; for some createGeom
 MAXLEN_BEZIER             = 2.0                  # maximum length of Bezier interpolation segment; for some createGeom
 MINOFFSETANGLE            = 2.0 * math.pi / 365  # minimum allowed angle for offsetting calcs; see: vn = ( offset / math.sin( ad / 2.0 ), 0, 0)
+RAYCAST_POINTS            = [ (+9965, +210, 0),  # raycast test points
+                              (-7434,-6234, 0),
+                              ( -320,-9764,0) ]
 
 # default G-codes also used as "state markers" during the tool path creation
 GCODE_COMMENT        = "()"
@@ -3713,9 +3716,9 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 #############################################################################
 def geomCreatePolyVertsOffset( geomVerts: list, offset: float, basNr: int = 0 ) -> list:
 	"""
-	Offsets the vertices of a geom.
+	Offsets the vertices of a PolyVerts-geom.
 	The vertices will be created on a vector going through the middle of the angle formed by
-	three vertices; acting as two vectors going out from the mid-vertex.
+	three vertices; acting as two lines going out from the mid-vertex.
 
 	In case offset is 0, nothing is changed. Yep.
 
@@ -3784,6 +3787,73 @@ def geomCreatePolyVertsOffset( geomVerts: list, offset: float, basNr: int = 0 ) 
 
 		geom.append( elemCreateVertex( vecAdd( pts[1], vn ) ) )
 
+	# because the algorithm starts at the second vertex, they're now all off by one
+	geom.insert( 0, geom.pop() )
+
+	return geom
+
+
+
+#############################################################################
+### geomCreatePolyOffset
+###
+#############################################################################
+def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> list:
+	# Here's the strategy [tm] *** FOR INSIDE OFFSETS ***:
+	#   - extract verts from poly
+	#   - use geomCreatePolyVertsOffset() to create the offset vertices
+	#   - use geomCreatePoly() to create (A): the offset lines
+	#   - use geomCreatePoly() to create (B): the half angle lines; from the old vertices to the corresponding new ones (p1 -> p1', p2 -> p2', ...)
+	# So far, I can think of two methods, which needs both be tested, to determine which vertices need to be deleted:
+	#   - if a created vertex is outside of the original polygon, delete it;
+	#     GUESS: it most likely needs to be "moved back" along the lines, until we hit the first intersection of two offset lines
+	#   - if one of the half-angle lines intersects one of the offset lines, delete the vertex
+	#     GUESS: it most likely needs to be "moved back" along the lines, until we hit the first intersection of two offset lines
+
+	# TODO: sanity checks
+	#   - check if geomPoly ia a poly (and not a list of verts)
+
+	geom = []
+
+	geomVerts = geomExtractPolyVerts( geomPoly )
+	offsVerts = geomCreatePolyVertsOffset( geomVerts, offset, basNr )
+
+	if len( geomVerts ) != len( offsVerts ):
+		print("ERR: geomCreatePolyOffset: size of original and offset verts list don't match: ", len(geomVerts), len(offsVerts) )
+		return []
+
+	angleLines = []
+	for i in range( len( geomVerts ) ):
+		angleLines.append( elemCreateLine( geomVerts[i]['p1'], offsVerts[i]['p1'] ) )
+
+	geomLines = geomCreatePoly( geomVerts, basNr )
+	offsLines = geomCreatePoly( offsVerts, basNr )
+
+	# DEBUG
+	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
+
+
+	return geom
+
+
+
+#############################################################################
+### geomExtractPolyVerts
+###
+#############################################################################
+def geomExtractPolyVerts( geomPoly: list ) -> list:
+
+	geom = []
+
+	for i in geomPoly:
+
+		if i['type'] == 'a':
+			print("ERR: geomExtractPolyVerts: arcs are not supported; skipped: ", i )
+			continue
+
+		if i['type'] == 'l':
+			geom.append( elemCreateVertex( i['p1'] ) )
+
 	return geom
 
 
@@ -3847,26 +3917,6 @@ def geomCreatePoly( geomVerts: list, basNr: int = 0 ) -> list:
 
 
 	return geom
-
-
-
-#############################################################################
-### geomCreatePolyFromVerts
-###
-### Creates a closed polygon as a geom made of vectors from a list of points.
-#############################################################################
-def geomCreatePolyFromVerts( listOfPoints: list, basNr: int = 0 ) -> list:
-	"""
-	Creates a closed polygon as a geom made of vectors from a list of points.
-
-	Args:
-		listOfPoints (list): A list of points representing the original geometry.
-		E.g. [ (0,0,0), (10,0,0), (0,10,0), (0,10,0) ]
-		basNr (int, optional): An optional base number, default is 0.
-
-	Returns:
-		list: A polygon as a geom consiting of lines.
-	"""
 
 
 
@@ -4057,6 +4107,66 @@ def geomGetFirstPoint( geom ):
 
 	print( "ERR: geomGetFirstPoint: first element does not have valid amount of points: ", len(pts) )
 	return None
+
+
+
+#############################################################################
+### geomCheckVertexInPoly
+###
+#############################################################################
+def geomCheckPointInPoly( vertex: dict, geomPoly: list ) -> bool:
+	"""
+	Checks if a vertex is in- or outside of a polygon.
+	Uses the simple ray casting algorithm
+
+	Args:
+		geomPoly (list): A polygon geom (list of vectors) representing the geometry.
+		vertex (dict): one vertex element
+
+	Returns:
+		bool: True/False for inside/outside of polygon
+		None: on error
+	"""
+
+	if not isinstance( geomPoly, list ):
+		print("ERR: geomCheckPointInPoly: geomVerts is not a list: ", type(geomPoly))
+		return None
+
+	lenList = len( geomPoly )
+
+	if lenList < 3:
+		print("ERR: geomCheckPointInPoly: geomVerts has not enough points (<3): ", len(geomPoly))
+		return None
+	
+
+	hits = []
+
+	for rayPoint in RAYCAST_POINTS:
+		hitCount = 0
+		ray = elemCreateLine( vertex['p1'], rayPoint )
+
+		for line in geomPoly:
+			if ( hpos := elemIntersectsElemXY( line, ray ) ) != []:
+				hitCount += 1
+
+		# even result == outside, odd result == inside
+		hits.append( hitCount % 2 )
+
+	if hits[0] == hits[1] == hits[2]:
+
+		# DEBUG ONLY
+		print("RAYCAST RESULTS: ", hits )
+
+		# if hitCount modulo 2 is 0, the point is outside
+		if hits[0] == 0:
+			return False
+		else:
+			return True
+	else:
+		print("ERR: geomCheckPointInPoly: raycasting mismatch: ", hits )
+		return None
+
+
 
 
 

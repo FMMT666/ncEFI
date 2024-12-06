@@ -6,20 +6,39 @@ from ncEFI import *
 
 
 
-
-
 #---------------------------------------
 llist = []
 
-lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-40,40,0)  ]
-llist += geomCreatePoly( gV := geomCreatePolyVerts( lstPts ) )
+lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
 
-llist += (gO := geomCreatePolyVertsOffset( gV, -8 ))
-llist += geomCreatePoly( gO )
 
+gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
+
+
+llist += gPOff1
 
 
 debugShowViewer( llist )
+
+
+
+
+
+#---------------------------------------
+# llist = []
+
+# lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+# llist += ( gP1 := geomCreatePoly( gV := geomCreatePolyVerts( lstPts ) ) )
+
+# #llist += (gO := geomCreatePolyVertsOffset( gV, -2 ))
+# llist += (gO := geomCreatePolyVertsOffset( gV, -5 ))
+# #llist += (gO := geomCreatePolyVertsOffset( gV, -15 ))
+# llist += geomCreatePoly( gO )
+
+# geomCheckPointInPoly( elemCreateVertex( ( 0, 0, 0) ), gP1 )
+# geomCheckPointInPoly( elemCreateVertex( (10,10, 0) ), gP1 )
+
+# debugShowViewer( llist )
 
 
 

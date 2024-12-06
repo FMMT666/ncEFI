@@ -113,6 +113,10 @@ that is named
 ---
 ## News
 
+### CHANGES 2024/12/XX
+    - started poly offset functionality & tools
+
+
 ### CHANGES 2024/11/XX
     - added notes for Apple Silicon
 
