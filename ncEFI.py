@@ -46,6 +46,7 @@
 # >>>    - TODO: outer contours with arcs
 # >>>    - TODO: algorithm for arcs in inner contour possible?
 # >>>
+# >>>  - TODO: add debug-color to elements in extras
 # >>>  - TODO: type annotations would be helpful; even testing became a pita
 # >>>  - TODO: docstrings for all functions
 # >>>  - TODO: pylint stopped working; wasn't able to make flake8 work in VSCode
@@ -3829,8 +3830,19 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	geomLines = geomCreatePoly( geomVerts, basNr )
 	offsLines = geomCreatePoly( offsVerts, basNr )
 
-	# DEBUG
-	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
+
+	offsVertsCleaned = []
+	offsVertsDeleted = []
+	for i in offsVerts:
+		if geomCheckVertexInPoly( i, geomPoly ):
+			offsVertsCleaned.append( i )
+		else:
+			offsVertsDeleted.append( i )
+
+	# DEBUG SHOW ALL
+#	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
+	geom = angleLines + offsLines + geomLines + offsVertsCleaned
+
 
 
 	return geom
@@ -4114,7 +4126,7 @@ def geomGetFirstPoint( geom ):
 ### geomCheckVertexInPoly
 ###
 #############################################################################
-def geomCheckPointInPoly( vertex: dict, geomPoly: list ) -> bool:
+def geomCheckVertexInPoly( vertex: dict, geomPoly: list ) -> bool:
 	"""
 	Checks if a vertex is in- or outside of a polygon.
 	Uses the simple ray casting algorithm
@@ -4129,13 +4141,13 @@ def geomCheckPointInPoly( vertex: dict, geomPoly: list ) -> bool:
 	"""
 
 	if not isinstance( geomPoly, list ):
-		print("ERR: geomCheckPointInPoly: geomVerts is not a list: ", type(geomPoly))
+		print("ERR: geomCheckVertexInPoly: geomVerts is not a list: ", type(geomPoly))
 		return None
 
 	lenList = len( geomPoly )
 
 	if lenList < 3:
-		print("ERR: geomCheckPointInPoly: geomVerts has not enough points (<3): ", len(geomPoly))
+		print("ERR: geomCheckVertexInPoly: geomVerts has not enough points (<3): ", len(geomPoly))
 		return None
 	
 
@@ -4163,7 +4175,7 @@ def geomCheckPointInPoly( vertex: dict, geomPoly: list ) -> bool:
 		else:
 			return True
 	else:
-		print("ERR: geomCheckPointInPoly: raycasting mismatch: ", hits )
+		print("ERR: geomCheckVertexInPoly: raycasting mismatch: ", hits )
 		return None
 
 
