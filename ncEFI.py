@@ -3812,11 +3812,15 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	#   - use geomCreatePolyVertsOffset() to create the offset vertices
 	#   - use geomCreatePoly() to create (A): the offset lines
 	#   - use geomCreatePoly() to create (B): the half angle lines; from the old vertices to the corresponding new ones (p1 -> p1', p2 -> p2', ...)
-	# So far, I can think of two methods, which needs both be tested, to determine which vertices need to be deleted:
-	#   - if a created vertex is outside of the original polygon, delete it;
-	#     GUESS: it most likely needs to be "moved back" along the lines, until we hit the first intersection of two offset lines
-	#   - if one of the half-angle lines intersects one of the offset lines, delete the vertex
-	#     GUESS: it most likely needs to be "moved back" along the lines, until we hit the first intersection of two offset lines
+	#   - create all verts at the new intersections and put them in the correct order
+	#   - check them, one by one, and delete, if:
+	#     - GUESS: they are outside of the original polygon
+	#     - GUESS: if the corresponding "half-angle line" intersects one of the offset lines
+	#     - GUESS: if the corresponding "half-angle line" intersects another "half-angle line" *MIGHT BE A WRONG GUESS*
+	#     - CLEAR: calc distance from the offset verts to the [...](**1**) lines. if the distance is smaller than the offset, delete the vert
+	#   - create the offset lines from the remaining vertices
+	# 
+	# (**1**) Need to check which ones. For self-intersecting polygons, this might be a problem.
 
 	# TODO: sanity checks
 	#   - check if geomPoly ia a poly (and not a list of verts)
@@ -4192,13 +4196,53 @@ def geomCheckVertexInPoly( vertex: dict, geomPoly: list ) -> bool:
 
 
 #############################################################################
+### geomCheckPolyIsClosed
+###
+#############################################################################
+def geomCheckPolyIsClosed( geomPoly: list ) -> bool:
+	"""
+	Checks if a geom is closed.
+	No sanity checks for stupid geometries, like two lines over each other or,
+	e.g. six lines formed like a (Mercedes-Benz) star, with two lines over each other.
+	A vertex will cause an error.
+
+	Args:
+		geomPoly (list): A geom representing the geometry.
+
+	Returns:
+		bool: True if closed, False if not; None if an error occured.
+	"""
+
+	if not isinstance( geomPoly, list ):
+		print("ERR: geomCheckPolyIsClosed: geomPoly is not a list: ", type(geomPoly))
+		return None
+
+	lenList = len( geomPoly )
+
+	for i in range( lenList ):
+		if ( it:= geomPoly[i]['type'] )!= 'l' and it != 'a':
+			print("ERR: geomCheckPolyIsClosed: element is not a line or an arc: ", i )
+			return None
+
+		e2 = (i+1)%lenList
+
+		if geomPoly[i]['p2'] != geomPoly[ e2 ]['p1']:
+			# DEBUG
+			print("DBG: geomCheckPolyIsClosed: not closed at ", i, geomPoly[i], geomPoly[ e2 ] )
+			return False
+
+	return True
+
+
+
+#############################################################################
 ### geomExtractPolyIntersections
 ###
 #############################################################################
 def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 	"""
 	Calculates self intersections in a geom.
-	Currently only lines are supported.
+	Only lines are supported.
 
 	Args:
 		geomPoly (list): A geom (list of lines) representing the geometry.
@@ -4214,8 +4258,9 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 
 	lenList = len( geomPoly )
 
-	if lenList < 3:
-		print("ERR: geomCheckVgeomExtractPolyIntersectionsertexInPoly: geomPoly has not enough elements (<3): ", len(geomPoly))
+	# See note below. Four lines are the minimum for an intersection to occur.
+	if lenList < 4:
+		print("ERR: geomExtractPolyIntersections: geomPoly has not enough elements (<4): ", len(geomPoly))
 		return None
 
 	for i in geomPoly:
@@ -4223,14 +4268,37 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 			print("ERR: geomExtractPolyIntersections: element is not a line: ", i )
 			return None
 
-	if geomPoly[0]['p1'] != geomPoly[-1]['p2']:
+	if not geomCheckPolyIsClosed( geomPoly ):
 		print("ERR: geomExtractPolyIntersections: polygon is not closed")
 		return None
 
 
-	for i in range( lenList ):
-		elemIntersectsElemXY( geomPoly[i], geomPoly[  (i+1) % lenList ]  )
+	# Well, actually, if the poly is closed (and only has lines), four lines is the minimum
+	# for an intersection to occur.
+	# To avoid having duplicate intersections (1,3 == 3,1), only check upwards.
+	# To avoid counting end points as intersections (e1['p2'] == e2['p1'], or vice versa), check coordinates.
 
+	# lenList is always >=4 here
+
+	for i in range( lenList ):
+		for j in range( lenList ):
+
+			# not required anymore
+			indElem2 = (j+1) % lenList
+
+			if geomPoly[i]['p2'] == geomPoly[indElem2]['p1'] or geomPoly[i]['p1'] == geomPoly[indElem2]['p2']:
+				# print("DBG: geomExtractPolyIntersections: skipping same point intersections: ", geomPoly[i])
+				continue
+
+			hitsPts = elemIntersectsElemXY( geomPoly[i], geomPoly[ indElem2 ]  )
+
+			# DEBUG
+			if hitsPts:
+				print("INTERSECTIONS ", i, indElem2, hitsPts )
+
+
+
+	# TODO: create a nice format here that also returns the number of the intersecting elements
 
 
 
