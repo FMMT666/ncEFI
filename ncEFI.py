@@ -671,12 +671,19 @@ def elemReverse(elem):
 #############################################################################
 ### elemIntersectsElemXY
 ###
-### Returns a list of intersection points, sorted by distance from el1['p1'].
-### z is ignored
-### return value(s) is/are:
-### [ [<dist>,(<x>,<y>,<z>)],[<dist>, ...] ]
 #############################################################################
 def elemIntersectsElemXY(e1,e2):
+	"""
+	Returns a list of intersection points, sorted by distance from e1['p1'].
+	z is ignored
+
+	Args:
+		e1 (dict): 1st element; line or arc
+		e2 (dict): 2nd element; line or arc
+
+	Returns:
+		list: A list of lists with [ <distance>, (<x>,<y>,<z>) ] values
+	"""
 	hits=[]
 
 	# line on line
@@ -3839,6 +3846,10 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 		else:
 			offsVertsDeleted.append( i )
 
+
+	intsVerts = geomExtractPolyIntersections( offsLines )
+
+
 	# DEBUG SHOW ALL
 #	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
 	geom = angleLines + offsLines + geomLines + offsVertsCleaned
@@ -4178,6 +4189,52 @@ def geomCheckVertexInPoly( vertex: dict, geomPoly: list ) -> bool:
 		print("ERR: geomCheckVertexInPoly: raycasting mismatch: ", hits )
 		return None
 
+
+
+#############################################################################
+### geomExtractPolyIntersections
+###
+#############################################################################
+def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
+	"""
+	Calculates self intersections in a geom.
+	Currently only lines are supported.
+
+	Args:
+		geomPoly (list): A geom (list of lines) representing the geometry.
+		basNr (int, optional): An optional base number, default is 0.
+
+	Returns:
+		list: A geom (list) of vertices.
+	"""
+
+	if not isinstance( geomPoly, list ):
+		print("ERR: geomExtractPolyIntersections: geomPoly is not a list: ", type(geomPoly))
+		return None
+
+	lenList = len( geomPoly )
+
+	if lenList < 3:
+		print("ERR: geomCheckVgeomExtractPolyIntersectionsertexInPoly: geomPoly has not enough elements (<3): ", len(geomPoly))
+		return None
+
+	for i in geomPoly:
+		if i['type'] != 'l':
+			print("ERR: geomExtractPolyIntersections: element is not a line: ", i )
+			return None
+
+	if geomPoly[0]['p1'] != geomPoly[-1]['p2']:
+		print("ERR: geomExtractPolyIntersections: polygon is not closed")
+		return None
+
+
+	for i in range( lenList ):
+		elemIntersectsElemXY( geomPoly[i], geomPoly[  (i+1) % lenList ]  )
+
+
+
+
+	return []	
 
 
 
