@@ -672,7 +672,7 @@ def elemReverse(elem):
 ### elemIntersectsElemXY
 ###
 #############################################################################
-def elemIntersectsElemXY(e1,e2):
+def elemIntersectsElemXY( e1:dict, e2:dict ) -> list:
 	"""
 	Returns a list of intersection points, sorted by distance from e1['p1'].
 	z is ignored
@@ -3842,6 +3842,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	offsLines = geomCreatePoly( offsVerts, basNr )
 
 
+	# delete everything outside the original polygon
 	offsVertsCleaned = []
 	offsVertsDeleted = []
 	for i in offsVerts:
@@ -3856,7 +3857,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 	# DEBUG SHOW ALL
 #	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
-	geom = angleLines + offsLines + geomLines + offsVertsCleaned
+	geom = angleLines + offsLines + geomLines + offsVertsCleaned + intsVerts
 
 
 
@@ -4280,6 +4281,7 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 
 	# lenList is always >=4 here
 
+	interVerts = []
 	for i in range( lenList ):
 		for j in range( lenList ):
 
@@ -4290,19 +4292,30 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 				# print("DBG: geomExtractPolyIntersections: skipping same point intersections: ", geomPoly[i])
 				continue
 
+			# reminder: this returns a list with lists [ [], [], ... ]
+			# But there *should* only be one entry; bc a line can only intersect another line once.
 			hitsPts = elemIntersectsElemXY( geomPoly[i], geomPoly[ indElem2 ]  )
 
 			# DEBUG
 			if hitsPts:
 				print("INTERSECTIONS ", i, indElem2, hitsPts )
 
+				if len( hitsPts ) > 1:
+					print("ERR: geomExtractPolyIntersections: more than one intersection: ", hitsPts )
+					return None
+
+				# create a new vertex at the intersection
+				# TODO: The numbers of the elements which were involved in the intersection
+				#       should be returned too, somehow.
+				interVerts.append( elemCreateVertex( hitsPts[0][1] ) )
 
 
-	# TODO: create a nice format here that also returns the number of the intersecting elements
+
+	# TODO: REMOVE DUPLICATES!
 
 
 
-	return []	
+	return interVerts
 
 
 

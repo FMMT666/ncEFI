@@ -141,6 +141,64 @@ def vecCrossProduct(v1, v2):
 
 
 #############################################################################
+### vecDotProduct
+###
+#############################################################################
+def vecDotProduct(v1, v2):
+	dp = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
+	return dp
+
+
+#############################################################################
+### vecDistPoint
+###
+#############################################################################
+def vecDistPoint(p1, v1):
+	# if v1 has zero length, return the distance between p1 and the origin
+	if v1 == (0,0,0):
+		return vecLength(p1)
+	
+	# project point p1 onto vector v1
+	proj_len = vecDotProduct(p1,v1) / vecDotProduct(v1,v1)
+	proj_point = (v1[0] * proj_len, v1[1] * proj_len, v1[2] * proj_len)
+
+	# distance between p1 and the projection point
+	dist = math.sqrt((p1[0] - proj_point[0])**2 + (p1[1] - proj_point[1])**2 + (p1[2] - proj_point[2])**2)
+
+	return dist
+
+
+#############################################################################
+### vecDistPointLine
+###
+#############################################################################
+def vecDistPointLine(p1, pv1, pv2):
+	# if the line has zero length, return the distance between p1 and the origin
+	if pv1 == pv2:
+		return vecLength(p1)
+
+	# Vector from pv1 to pv2
+	line_vec = (pv2[0] - pv1[0], pv2[1] - pv1[1], pv2[2] - pv1[2])
+
+	# Vector from pv1 to p1
+	point_vec = (p1[0] - pv1[0], p1[1] - pv1[1], p1[2] - pv1[2])
+
+	# Project point_vec onto line_vec
+	proj_len = vecDotProduct(point_vec, line_vec) / vecDotProduct(line_vec, line_vec)
+	proj_point = (pv1[0] + line_vec[0] * proj_len, pv1[1] + line_vec[1] * proj_len, pv1[2] + line_vec[2] * proj_len)
+
+	# Check if the projection point is outside the line segment
+	if proj_len < 0:
+		proj_point = pv1
+	elif proj_len > 1:
+		proj_point = pv2
+	# Calculate the distance between p1 and the projection point
+	dist = math.sqrt((p1[0] - proj_point[0])**2 + (p1[1] - proj_point[1])**2 + (p1[2] - proj_point[2])**2)
+
+	return dist
+
+
+#############################################################################
 ### vecScale
 ### 0 = normalized
 #############################################################################
