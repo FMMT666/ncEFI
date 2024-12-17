@@ -4298,7 +4298,7 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 
 			# DEBUG
 			if hitsPts:
-				print("INTERSECTIONS ", i, indElem2, hitsPts )
+				# print("INTERSECTIONS ", i, indElem2, hitsPts )
 
 				if len( hitsPts ) > 1:
 					print("ERR: geomExtractPolyIntersections: more than one intersection: ", hitsPts )
@@ -4311,8 +4311,20 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 
 
 
-	# TODO: REMOVE DUPLICATES!
+	# remove duplicates
+	if interVerts:
+		for i in range( len(interVerts) - 1 ):
 
+			print("DBG: geomExtractPolyIntersections: intersection PRE:  ", i )
+
+		# iterate backwards to avoid "list index out of range", while removing elements
+		for j in range(len(interVerts) - 1, i, -1):
+			if interVerts[i]['p1'] == interVerts[j]['p1']:
+				interVerts.pop(j)
+
+
+	for i in interVerts:
+		print("DBG: geomExtractPolyIntersections: intersection POST: ", i )
 
 
 	return interVerts
