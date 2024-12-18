@@ -3851,13 +3851,23 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 		else:
 			offsVertsDeleted.append( i )
 
-
+	# create new verts at the intersections of the angle lines; we'll need them later
 	intsVerts = geomExtractPolyIntersections( offsLines )
+
+
+
+
+
+	# TODO: remove all verts from offsVertsCleaned that are too close to the angle lines (distance point-line)
+
+
+
 
 
 	# DEBUG SHOW ALL
 #	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
-	geom = angleLines + offsLines + geomLines + offsVertsCleaned + intsVerts
+#	geom = angleLines + offsLines + geomLines + offsVertsCleaned + intsVerts
+	geom = angleLines + offsLines + geomLines + intsVerts
 
 
 
@@ -4317,11 +4327,10 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 
 			print("DBG: geomExtractPolyIntersections: intersection PRE:  ", i )
 
-		# iterate backwards to avoid "list index out of range", while removing elements
-		for j in range(len(interVerts) - 1, i, -1):
-			if interVerts[i]['p1'] == interVerts[j]['p1']:
-				interVerts.pop(j)
-
+			# iterate backwards to avoid "list index out of range", while removing elements
+			for j in range(len(interVerts) - 1, i, -1):
+				if interVerts[i]['p1'] == interVerts[j]['p1']:
+					interVerts.pop(j)
 
 	for i in interVerts:
 		print("DBG: geomExtractPolyIntersections: intersection POST: ", i )
