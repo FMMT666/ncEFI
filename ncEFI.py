@@ -789,6 +789,60 @@ def elemNextAngle(e1,e2):
 
 
 #############################################################################
+### elemDistance
+###
+### Returns the distance of two elements (if applicable)
+#############################################################################
+def elemDistance(e1,e2):
+    """
+    Berechnet die minimale Distanz zwischen zwei Elementen.
+    
+    Args:
+        e1 (dict): Element 1 (vertex, line, arc)
+        e2 (dict): Element 2 (vertex, line, arc)
+    
+    Returns:
+        float: Minimale Distanz oder None bei Fehler
+    """
+    if not ('type' in e1 and 'type' in e2):
+        print("ERR: elemDistance: missing type in element")
+        return None
+
+    # Vertex-Vertex
+    if e1['type'] == 'v' and e2['type'] == 'v':
+        return vecLength(e1['p1'], e2['p1'])
+        
+    # Vertex-Line
+    if e1['type'] == 'v' and e2['type'] == 'l':
+        return vecDistPointToLineXY(e1['p1'], e2['p1'], e2['p2'])
+    if e1['type'] == 'l' and e2['type'] == 'v':
+        return vecDistPointToLineXY(e2['p1'], e1['p1'], e1['p2'])
+        
+    # Vertex-Arc
+    if e1['type'] == 'v' and e2['type'] == 'a':
+        return arcDistPointOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'])
+    if e1['type'] == 'a' and e2['type'] == 'v':
+        return arcDistPointOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'])
+        
+    # Line-Line
+    if e1['type'] == 'l' and e2['type'] == 'l':
+        return vecDistLineToLineXY(e1['p1'], e1['p2'], e2['p1'], e2['p2'])
+        
+    # Line-Arc
+    if e1['type'] == 'l' and e2['type'] == 'a':
+        return arcDistLineOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'], e1['p2'])
+    if e1['type'] == 'a' and e2['type'] == 'l':
+        return arcDistLineOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'], e2['p2'])
+        
+    # Arc-Arc
+    if e1['type'] == 'a' and e2['type'] == 'a':
+        return arcDistBowToBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], 
+                                e2['p1'], e2['p2'], e2['rad'], e2['dir'])
+    
+    return None
+
+
+#############################################################################
 ### elemDebugPrint
 ###
 #############################################################################
