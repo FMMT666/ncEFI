@@ -5,8 +5,9 @@
 import math
 
 
-LINTOL = 0.0001  # 100nm (if units are "mm")
-RADTOL = 0.0001  # < 1m Grad
+LINTOL = 0.0001        # 100nm (if units are "mm")
+FINTOL = 0.0000000001  # 0.1nm a finer tolerance (NTOL)
+RADTOL = 0.0001        # < 1m Grad
 
 
 
@@ -143,6 +144,7 @@ def vecCrossProduct(v1, v2):
 #############################################################################
 ### vecDotProduct
 ###
+### TODO: UNCHECKED!
 #############################################################################
 def vecDotProduct(v1, v2):
 	dp = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
@@ -152,6 +154,7 @@ def vecDotProduct(v1, v2):
 #############################################################################
 ### vecDistPoint
 ###
+### TODO: UNCHECKED!
 #############################################################################
 def vecDistPoint(p1, v1):
 	# if v1 has zero length, return the distance between p1 and the origin
@@ -171,8 +174,9 @@ def vecDistPoint(p1, v1):
 #############################################################################
 ### vecDistPointLine
 ###
+### TODO: UNCHECKED!
 #############################################################################
-def vecDistPointLine(p1, pv1, pv2):
+def vecDistPointLine(p1: tuple, pv1: tuple, pv2: tuple) -> float:
 	# if the line has zero length, return the distance between p1 and the origin
 	if pv1 == pv2:
 		return vecLength(p1)
@@ -196,6 +200,88 @@ def vecDistPointLine(p1, pv1, pv2):
 	dist = math.sqrt((p1[0] - proj_point[0])**2 + (p1[1] - proj_point[1])**2 + (p1[2] - proj_point[2])**2)
 
 	return dist
+
+
+#############################################################################
+### vecDistPointLineXY
+###
+#############################################################################
+def vecDistPointLineXY(pt: tuple, l1: tuple, l2: tuple) -> float:
+	"""
+	Calculate minimum distance from point to line segment in XY plane.
+	Actually rendundant, as the "true 3D" vecDistPointLine() function can do the same.
+	But, anyway ...
+	
+	Args:
+		pt: Point coordinates (x,y,z)
+		l1: Line start point (x,y,z)
+		l2: Line end point (x,y,z)
+	
+	Returns:
+		float: Minimum distance from point to line segment
+	"""
+	# Check if line points are identical
+	if vecLength(l1, l2) < FINTOL:
+		return vecLength(pt, l1)
+		
+	# Line vector and point-to-line-start vector
+	v = vecSub(l2, l1)
+	w = vecSub(pt, l1)
+	
+	# Project w onto v
+	len_sq = v[0]*v[0] + v[1]*v[1]  # Only XY components
+	if len_sq < LINTOL:
+		return vecLength(pt, l1)
+		
+	# Calculate projection parameter
+	t = (w[0]*v[0] + w[1]*v[1]) / len_sq
+	
+	# Check if projection is beyond line segment
+	if t <= 0.0:
+		return vecLength(pt, l1)
+	if t >= 1.0:
+		return vecLength(pt, l2)
+		
+	# Calculate projection point and distance
+	proj = (l1[0] + t*v[0], l1[1] + t*v[1], l1[2])
+	return vecLength(pt, proj)
+
+
+#############################################################################
+### vecDistLineLineXY
+###
+### TODO: UNCHECKED!
+#############################################################################
+def vecDistLineLineXY(l1p1: tuple, l1p2: tuple, l2p1: tuple, l2p2: tuple) -> float:
+	"""
+	Calculate minimum distance between two lines in XY plane.
+	Uses only vector operations, no dependencies on higher-level functions.
+	
+	Args:
+		l1p1, l1p2: First line points (x,y,z)
+		l2p1, l2p2: Second line points (x,y,z)
+	
+	Returns:
+		float: Minimum distance between lines
+	"""
+	# vectors of the lines
+	v1 = vecSub(l1p2, l1p1)
+	v2 = vecSub(l2p2, l2p1)
+	
+	# cross product to test if lines are parallel
+	cross = v1[0]*v2[1] - v1[1]*v2[0]
+	
+	# if they are parallel, calculate distance between lines
+	if abs(cross) < LINTOL:
+		# Berechne minimale Distanz von Endpunkten zur anderen Linie
+		d1 = vecDistPointLineXY(l2p1, l1p1, l1p2)
+		d2 = vecDistPointLineXY(l2p2, l1p1, l1p2)
+		d3 = vecDistPointLineXY(l1p1, l2p1, l2p2)
+		d4 = vecDistPointLineXY(l1p2, l2p1, l2p2)
+		return min(d1, d2, d3, d4)
+	
+	# Linien schneiden sich
+	return 0.0
 
 
 #############################################################################

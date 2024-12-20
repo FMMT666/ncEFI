@@ -139,8 +139,8 @@ DEFLEN_BEZIER             = 0.5                  # default length of Bezier inte
 MAXLEN_BEZIER             = 2.0                  # maximum length of Bezier interpolation segment; for some createGeom
 MINOFFSETANGLE            = 2.0 * math.pi / 365  # minimum allowed angle for offsetting calcs; see: vn = ( offset / math.sin( ad / 2.0 ), 0, 0)
 RAYCAST_POINTS            = [ (+9965, +210, 0),  # raycast test points
-                              (-7434,-6234, 0),
-                              ( -320,-9764,0) ]
+							(-7434,-6234, 0),
+							( -320,-9764,0) ]
 
 # default G-codes also used as "state markers" during the tool path creation
 GCODE_COMMENT        = "()"
@@ -793,53 +793,58 @@ def elemNextAngle(e1,e2):
 ###
 ### Returns the distance of two elements (if applicable)
 #############################################################################
-def elemDistance(e1,e2):
-    """
-    Berechnet die minimale Distanz zwischen zwei Elementen.
-    
-    Args:
-        e1 (dict): Element 1 (vertex, line, arc)
-        e2 (dict): Element 2 (vertex, line, arc)
-    
-    Returns:
-        float: Minimale Distanz oder None bei Fehler
-    """
-    if not ('type' in e1 and 'type' in e2):
-        print("ERR: elemDistance: missing type in element")
-        return None
+def elemDistance( e1:dict, e2:dict ) -> float:
+	"""
+	Returns the minimal distance between two elements.
+	So far, only vertex-line and line-line distances are supported.
 
-    # Vertex-Vertex
-    if e1['type'] == 'v' and e2['type'] == 'v':
-        return vecLength(e1['p1'], e2['p1'])
-        
-    # Vertex-Line
-    if e1['type'] == 'v' and e2['type'] == 'l':
-        return vecDistPointToLineXY(e1['p1'], e2['p1'], e2['p2'])
-    if e1['type'] == 'l' and e2['type'] == 'v':
-        return vecDistPointToLineXY(e2['p1'], e1['p1'], e1['p2'])
-        
-    # Vertex-Arc
-    if e1['type'] == 'v' and e2['type'] == 'a':
-        return arcDistPointOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'])
-    if e1['type'] == 'a' and e2['type'] == 'v':
-        return arcDistPointOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'])
-        
-    # Line-Line
-    if e1['type'] == 'l' and e2['type'] == 'l':
-        return vecDistLineToLineXY(e1['p1'], e1['p2'], e2['p1'], e2['p2'])
-        
-    # Line-Arc
-    if e1['type'] == 'l' and e2['type'] == 'a':
-        return arcDistLineOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'], e1['p2'])
-    if e1['type'] == 'a' and e2['type'] == 'l':
-        return arcDistLineOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'], e2['p2'])
-        
-    # Arc-Arc
-    if e1['type'] == 'a' and e2['type'] == 'a':
-        return arcDistBowToBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], 
-                                e2['p1'], e2['p2'], e2['rad'], e2['dir'])
-    
-    return None
+	Args:
+		e1 (dict): vertex, line
+		e2 (dict): vertex, line
+	
+	Returns:
+		float: distance or None in case of an error
+	"""
+	if not ('type' in e1 and 'type' in e2):
+		print("ERR: elemDistance: missing type in element")
+		return None
+
+	if e1['type'] == 'a' or e2['type'] == 'a':
+		print("ERR: elemDistance: arc distance not supported yet")
+		return None
+
+	# Vertex-Vertex
+	if e1['type'] == 'v' and e2['type'] == 'v':
+		return vecLength(e1['p1'], e2['p1'])
+		
+	# Vertex-Line
+	if e1['type'] == 'v' and e2['type'] == 'l':
+		return vecDistPointLine(e1['p1'], e2['p1'], e2['p2'])
+	if e1['type'] == 'l' and e2['type'] == 'v':
+		return vecDistPointLine(e2['p1'], e1['p1'], e1['p2'])
+		
+	# Vertex-Arc
+	# if e1['type'] == 'v' and e2['type'] == 'a':
+	# 	return arcDistPointOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'])
+	# if e1['type'] == 'a' and e2['type'] == 'v':
+	# 	return arcDistPointOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'])
+		
+	# Line-Line
+	if e1['type'] == 'l' and e2['type'] == 'l':
+		return vecDistLineLineXY(e1['p1'], e1['p2'], e2['p1'], e2['p2'])
+		
+	# Line-Arc
+	# if e1['type'] == 'l' and e2['type'] == 'a':
+	# 	return arcDistLineOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'], e1['p2'])
+	# if e1['type'] == 'a' and e2['type'] == 'l':
+	# 	return arcDistLineOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'], e2['p2'])
+		
+	# Arc-Arc
+	# if e1['type'] == 'a' and e2['type'] == 'a':
+	# 	return arcDistBowToBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], 
+	# 							e2['p1'], e2['p2'], e2['rad'], e2['dir'])
+	
+	return None
 
 
 #############################################################################

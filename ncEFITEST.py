@@ -8,17 +8,40 @@ from ncEFI import *
 
 #---------------------------------------
 llist = []
+# line = elemCreateLine( (-50,-30,0), (70,50,0) )
+line = elemCreateLine( (-50,-30,-30), (70,50,30) )
 
-lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+llist.append( line )
 
+import random
 
-gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
+for i in range(5000):
+	# p = (random.uniform(-100, 100), random.uniform(-100, 100), 0 )
+	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30) )
+	v = elemCreateVertex( p )
 
-
-llist += gPOff1
+	if elemDistance( line, v ) > 10:
+		llist.append( v )
 
 
 debugShowViewer( llist )
+
+
+
+
+#---------------------------------------
+# llist = []
+
+# lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+
+
+# gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
+
+
+# llist += gPOff1
+
+
+# debugShowViewer( llist )
 
 
 
