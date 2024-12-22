@@ -115,6 +115,7 @@ that is named
 
 ### CHANGES 2024/12/XX
     - started poly offset functionality & tools
+    - added some 3D-space distance functions
 
 
 ### CHANGES 2024/11/XX

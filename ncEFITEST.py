@@ -6,25 +6,92 @@ from ncEFI import *
 
 
 
-#---------------------------------------
-llist = []
-# line = elemCreateLine( (-50,-30,0), (70,50,0) )
-line = elemCreateLine( (-50,-30,-30), (70,50,30) )
 
-llist.append( line )
+
+#---------------------------------------
+# TEST line to line distance in 3D space with debug output
+llist = []
+debug_list = []
+line = elemCreateLine((-50,-30,-30), (70,50,30))
+llist.append(line)
 
 import random
 
-for i in range(5000):
-	# p = (random.uniform(-100, 100), random.uniform(-100, 100), 0 )
-	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30) )
-	v = elemCreateVertex( p )
+vList = []
+for i in range(3000):  # Reduziert von 3000
+	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30))
+	vList.append(elemCreateVertex(p))
 
-	if elemDistance( line, v ) > 10:
-		llist.append( v )
+# Test mit Debug-Ausgaben
+for i in range(4000):  # Reduziert von 4000
+	l = elemCreateLineBetween(random.choice(vList), random.choice(vList))
+	if l != {}:
+		dist = elemDistance(l, line)
+		if dist > 10:
+			llist.append(l)
+			# Debug für Endpunktdistanzen
+			ep_dist = min(
+				elemDistance( elemCreateVertex(l['p1']), line ),
+				elemDistance( elemCreateVertex(l['p2']), line )
+			)
+
+			if ep_dist < 10:
+				print( "Wrong distance: ", ep_dist)
+				print( "line: ", l )
+
+debugShowViewer(llist)
 
 
-debugShowViewer( llist )
+
+
+
+#---------------------------------------
+# TEST line to line distance in 3D space
+# llist = []
+# # line = elemCreateLine( (-50,-30,0), (70,50,0) )
+# line = elemCreateLine( (-50,-30,-30), (70,50,30) )
+
+# llist.append( line )
+
+# import random
+
+# # create a list of randomly placed vertices
+# vList = []
+# for i in range(3000):
+# 	# p = (random.uniform(-100, 100), random.uniform(-100, 100), 0 )
+# 	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30) )
+# 	vList.append( elemCreateVertex( p ) )
+
+# # create test-lines between randomly selected point
+# for i in range(4000):
+# 	l = elemCreateLineBetween( random.choice(vList), random.choice(vList) )
+# 	if l != {} and elemDistance( l, line ) > 10:
+# 		llist.append( l )
+
+# debugShowViewer( llist )
+
+
+
+#---------------------------------------
+# TEST vertex to line distance in 3D space
+# llist = []
+# # line = elemCreateLine( (-50,-30,0), (70,50,0) )
+# line = elemCreateLine( (-50,-30,-30), (70,50,30) )
+
+# llist.append( line )
+
+# import random
+
+# for i in range(5000):
+# 	# p = (random.uniform(-100, 100), random.uniform(-100, 100), 0 )
+# 	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30) )
+# 	v = elemCreateVertex( p )
+
+# 	if elemDistance( line, v ) > 10:
+# 		llist.append( v )
+
+
+# debugShowViewer( llist )
 
 
 

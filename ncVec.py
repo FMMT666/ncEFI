@@ -174,9 +174,19 @@ def vecDistPoint(p1, v1):
 #############################################################################
 ### vecDistPointLine
 ###
-### TODO: UNCHECKED!
 #############################################################################
 def vecDistPointLine(p1: tuple, pv1: tuple, pv2: tuple) -> float:
+	"""
+	Calculate minimum distance from a point to a line segment in 3D space.
+	
+	Args:
+		p1: Point coordinates (x,y,z)
+		pv1: Line start point (x,y,z)
+		pv2: Line end point (x,y,z)
+	
+	Returns:
+		float: Minimum distance from point to line segment
+	"""
 	# if the line has zero length, return the distance between p1 and the origin
 	if pv1 == pv2:
 		return vecLength(p1)
@@ -282,6 +292,257 @@ def vecDistLineLineXY(l1p1: tuple, l1p2: tuple, l2p1: tuple, l2p2: tuple) -> flo
 	
 	# Linien schneiden sich
 	return 0.0
+
+
+#############################################################################
+### vecDistLineLine
+###
+### Does not work 100% correctly. Use vecDistLineLine4 instead.
+#############################################################################
+def vecDistLineLine(l1p1: tuple, l1p2: tuple, l2p1: tuple, l2p2: tuple) -> float:
+	"""
+	Calculate minimum distance between two line segments in 3D space.
+	
+	Args:
+		l1p1, l1p2: First line points (x,y,z)
+		l2p1, l2p2: Second line points (x,y,z)
+	
+	Returns:
+		float: Minimum distance between lines
+	"""
+	# Direction vectors
+	v1 = vecSub(l1p2, l1p1)
+	v2 = vecSub(l2p2, l2p1)
+	
+	# Vector between line starts
+	r = vecSub(l1p1, l2p1)
+	
+	# Squared lengths
+	a = vecDotProduct(v1, v1)
+	b = vecDotProduct(v1, v2)
+	c = vecDotProduct(v2, v2)
+	d = vecDotProduct(v1, r)
+	e = vecDotProduct(v2, r)
+	
+	# Check for zero lengths
+	if a < LINTOL or c < LINTOL:
+		return vecLength(l1p1, l2p1)
+	
+	# Parameters of closest points
+	det = a*c - b*b
+	s = 0.0
+	t = 0.0
+	
+	if det < LINTOL:  # Lines are parallel
+		d1 = vecDistPointLine(l2p1, l1p1, l1p2)
+		d2 = vecDistPointLine(l2p2, l1p1, l1p2)
+		d3 = vecDistPointLine(l1p1, l2p1, l2p2)
+		d4 = vecDistPointLine(l1p2, l2p1, l2p2)
+		return min(d1, d2, d3, d4)
+	else:
+		s = (b*e - c*d) / det
+		t = (a*e - b*d) / det
+		
+	# Clamp s and t to [0,1]
+	s = max(0.0, min(1.0, s))
+	t = max(0.0, min(1.0, t))
+	
+	# Closest points on lines
+	p1 = vecAdd(l1p1, vecScale(v1, s))  # vecScale statt vecMult
+	p2 = vecAdd(l2p1, vecScale(v2, t))  # vecScale statt vecMult
+	
+	return vecLength(p1, p2)
+
+
+#############################################################################
+### vecDistLineLine2
+###
+### Does not work 100% correctly. Use vecDistLineLine4 instead.
+#############################################################################
+def vecDistLineLine2(l1p1: tuple, l1p2: tuple, l2p1: tuple, l2p2: tuple) -> float:
+	"""
+	Calculate minimum distance between two line segments in 3D space.
+	Handles special cases like parallel lines and very short segments.
+	
+	Args:
+		l1p1, l1p2: First line points (x,y,z)
+		l2p1, l2p2: Second line points (x,y,z)
+	
+	Returns:
+		float: Minimum distance between lines
+	"""
+	# Check for degenerate lines
+	l1_len = vecLength(l1p1, l1p2)
+	l2_len = vecLength(l2p1, l2p2)
+	if l1_len < LINTOL or l2_len < LINTOL:
+		return vecLength(l1p1, l2p1)
+
+	# Direction vectors
+	v1 = vecSub(l1p2, l1p1)
+	v2 = vecSub(l2p2, l2p1)
+	
+	# Vector between line starts
+	r = vecSub(l1p1, l2p1)
+	
+	# Squared lengths
+	a = vecDotProduct(v1, v1)
+	b = vecDotProduct(v1, v2)
+	c = vecDotProduct(v2, v2)
+	d = vecDotProduct(v1, r)
+	e = vecDotProduct(v2, r)
+	
+	# Check for parallel lines
+	det = a*c - b*b
+	if abs(det) < LINTOL*max(a,c):
+		# Use endpoint distances for parallel lines
+		d1 = vecDistPointLine(l2p1, l1p1, l1p2)
+		d2 = vecDistPointLine(l2p2, l1p1, l1p2)
+		d3 = vecDistPointLine(l1p1, l2p1, l2p2)
+		d4 = vecDistPointLine(l1p2, l2p1, l2p2)
+		return min(d1, d2, d3, d4)
+	
+	# Parameters of closest points
+	s = (b*e - c*d) / det
+	t = (a*e - b*d) / det
+	
+	# Clamp parameters to [0,1]
+	s = max(0.0, min(1.0, s))
+	t = max(0.0, min(1.0, t))
+	
+	# Closest points on lines
+	p1 = vecAdd(l1p1, vecScale(v1, s))
+	p2 = vecAdd(l2p1, vecScale(v2, t))
+	
+	return vecLength(p1, p2)
+
+
+#############################################################################
+### vecDistLineLine3
+###
+### Does not work 100% correctly. Use vecDistLineLine4 instead.
+#############################################################################
+def vecDistLineLine3(l1p1: tuple, l1p2: tuple, l2p1: tuple, l2p2: tuple) -> float:
+	"""
+	Calculate minimum distance between two line segments in 3D space.
+	Enhanced endpoint checking for near-parallel cases.
+	
+	Args:
+		l1p1, l1p2: First line points (x,y,z)
+		l2p1, l2p2: Second line points (x,y,z)
+	
+	Returns:
+		float: Minimum distance between lines
+	"""
+	# Check endpoints first
+	d_endpoints = min(
+		vecLength(l1p1, l2p1),
+		vecLength(l1p1, l2p2),
+		vecLength(l1p2, l2p1),
+		vecLength(l1p2, l2p2)
+	)
+
+	# Check if endpoints are very close
+	if d_endpoints < LINTOL:
+		return d_endpoints
+
+	# Direction vectors
+	v1 = vecSub(l1p2, l1p1)
+	v2 = vecSub(l2p2, l2p1)
+	
+	# Vector between line starts
+	r = vecSub(l1p1, l2p1)
+	
+	# Squared lengths
+	a = vecDotProduct(v1, v1)
+	b = vecDotProduct(v1, v2)
+	c = vecDotProduct(v2, v2)
+	d = vecDotProduct(v1, r)
+	e = vecDotProduct(v2, r)
+	
+	# Check for degenerate/short lines
+	if a < LINTOL or c < LINTOL:
+		return d_endpoints
+
+	# Parameters of closest points
+	det = a*c - b*b
+	if det < LINTOL*max(a,c):  # Nearly parallel
+		return min(
+			vecDistPointLine(l2p1, l1p1, l1p2),
+			vecDistPointLine(l2p2, l1p1, l1p2),
+			vecDistPointLine(l1p1, l2p1, l2p2),
+			vecDistPointLine(l1p2, l2p1, l2p2)
+		)
+
+	s = (b*e - c*d) / det
+	t = (a*e - b*d) / det
+	
+	# Clamp s and t to [0,1]
+	s = max(0.0, min(1.0, s))
+	t = max(0.0, min(1.0, t))
+	
+	# Calculate closest points
+	p1 = vecAdd(l1p1, vecScale(v1, s))
+	p2 = vecAdd(l2p1, vecScale(v2, t))
+	
+	return min(vecLength(p1, p2), d_endpoints)
+
+
+#############################################################################
+### vecDistLineLine4
+###
+### Seems to work, phew.
+#############################################################################
+def vecDistLineLine4(l1p1: tuple, l1p2: tuple, l2p1: tuple, l2p2: tuple) -> float:
+	"""
+	Calculate minimum distance between two line segments in 3D space.
+	
+	Args:
+		l1p1, l1p2: First line points (x,y,z)
+		l2p1, l2p2: Second line points (x,y,z)
+	
+	Returns:
+		float: Minimum distance between lines
+	"""
+	# Calculate endpoint to line distances first
+	d1 = vecDistPointLine(l2p1, l1p1, l1p2)
+	d2 = vecDistPointLine(l2p2, l1p1, l1p2)
+	d3 = vecDistPointLine(l1p1, l2p1, l2p2)
+	d4 = vecDistPointLine(l1p2, l2p1, l2p2)
+	d_min = min(d1, d2, d3, d4)
+
+	# Direction vectors
+	v1 = vecSub(l1p2, l1p1)
+	v2 = vecSub(l2p2, l2p1)
+	r = vecSub(l1p1, l2p1)
+	
+	# Check for degenerate lines
+	a = vecDotProduct(v1, v1)
+	b = vecDotProduct(v1, v2)
+	c = vecDotProduct(v2, v2)
+	if a < LINTOL or c < LINTOL:
+		return d_min
+		
+	d = vecDotProduct(v1, r)
+	e = vecDotProduct(v2, r)
+	
+	# Calculate parameters
+	det = a*c - b*b
+	if det < LINTOL*max(a,c):  # Nearly parallel
+		return d_min
+		
+	s = (b*e - c*d) / det
+	t = (a*e - b*d) / det
+	
+	# Clamp parameters
+	s = max(0.0, min(1.0, s))
+	t = max(0.0, min(1.0, t))
+	
+	# Calculate closest points
+	p1 = vecAdd(l1p1, vecScale(v1, s))
+	p2 = vecAdd(l2p1, vecScale(v2, t))
+	
+	# Return minimum of calculated distances
+	return min(vecLength(p1, p2), d_min)
 
 
 #############################################################################

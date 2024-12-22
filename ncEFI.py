@@ -53,6 +53,7 @@
 # >>>  - DONE: the segmentation fault upon exit is caused by a (now fixed in git) bug; will self-heal someday
 # >>>
 # >>>
+# - all "elemCreate" functions return "{}" if an error occurs; maybe "None" would be better?
 # - toolFeedRateSet() in the test file
 # - Maybe the global safe-Z variable should be handled like the feed rate,
 #   so that the default value, without overriding it, causes an error? 
@@ -818,6 +819,7 @@ def elemDistance( e1:dict, e2:dict ) -> float:
 		return vecLength(e1['p1'], e2['p1'])
 		
 	# Vertex-Line
+	# Tested and working
 	if e1['type'] == 'v' and e2['type'] == 'l':
 		return vecDistPointLine(e1['p1'], e2['p1'], e2['p2'])
 	if e1['type'] == 'l' and e2['type'] == 'v':
@@ -828,11 +830,16 @@ def elemDistance( e1:dict, e2:dict ) -> float:
 	# 	return arcDistPointOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'])
 	# if e1['type'] == 'a' and e2['type'] == 'v':
 	# 	return arcDistPointOnBowXY(e1['p1'], e1['p2'], e1['rad'], e1['dir'], e2['p1'])
-		
+
+
+
 	# Line-Line
 	if e1['type'] == 'l' and e2['type'] == 'l':
-		return vecDistLineLineXY(e1['p1'], e1['p2'], e2['p1'], e2['p2'])
-		
+		return vecDistLineLine4(e1['p1'], e1['p2'], e2['p1'], e2['p2'])
+
+
+
+
 	# Line-Arc
 	# if e1['type'] == 'l' and e2['type'] == 'a':
 	# 	return arcDistLineOnBowXY(e2['p1'], e2['p2'], e2['rad'], e2['dir'], e1['p1'], e1['p2'])
