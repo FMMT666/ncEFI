@@ -7,39 +7,57 @@ from ncEFI import *
 
 
 
+#---------------------------------------
+llist = []
+
+# lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+lstPts = [ (-40,-40,0), (-3,-3,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+
+
+gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
+
+
+llist += gPOff1
+
+
+debugShowViewer( llist )
+
+
+
+
 
 #---------------------------------------
 # TEST line to line distance in 3D space with debug output
-llist = []
-debug_list = []
-line = elemCreateLine((-50,-30,-30), (70,50,30))
-llist.append(line)
+# llist = []
+# debug_list = []
+# line = elemCreateLine((-50,-30,-30), (70,50,30))
+# llist.append(line)
 
-import random
+# import random
 
-vList = []
-for i in range(3000):  # Reduziert von 3000
-	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30))
-	vList.append(elemCreateVertex(p))
+# vList = []
+# for i in range(3000):  # Reduziert von 3000
+# 	p = (random.uniform(-30, 30), random.uniform(-30, 30), random.uniform(-30, 30))
+# 	vList.append(elemCreateVertex(p))
 
-# Test mit Debug-Ausgaben
-for i in range(4000):  # Reduziert von 4000
-	l = elemCreateLineBetween(random.choice(vList), random.choice(vList))
-	if l != {}:
-		dist = elemDistance(l, line)
-		if dist > 10:
-			llist.append(l)
-			# Debug für Endpunktdistanzen
-			ep_dist = min(
-				elemDistance( elemCreateVertex(l['p1']), line ),
-				elemDistance( elemCreateVertex(l['p2']), line )
-			)
+# # Test mit Debug-Ausgaben
+# for i in range(4000):  # Reduziert von 4000
+# 	l = elemCreateLineBetween(random.choice(vList), random.choice(vList))
+# 	if l != {}:
+# 		dist = elemDistance(l, line)
+# 		if dist > 10:
+# 			llist.append(l)
+# 			# Debug für Endpunktdistanzen
+# 			ep_dist = min(
+# 				elemDistance( elemCreateVertex(l['p1']), line ),
+# 				elemDistance( elemCreateVertex(l['p2']), line )
+# 			)
 
-			if ep_dist < 10:
-				print( "Wrong distance: ", ep_dist)
-				print( "line: ", l )
+# 			if ep_dist < 10:
+# 				print( "Wrong distance: ", ep_dist)
+# 				print( "line: ", l )
 
-debugShowViewer(llist)
+# debugShowViewer(llist)
 
 
 

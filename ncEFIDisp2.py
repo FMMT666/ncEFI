@@ -17,17 +17,17 @@ MOUSE_DRAG_FACTOR         = 0.001
 
 ARC_LINES_INTERPOLATION   = 10    # arcs are drawn with lines; this specifies how many are used per 180°
 
-DRAW_GRID_SIZE            = 1
+DRAW_GRID_SIZE            = 1.0
 DRAW_GRID_COLOR           = ( 0.0, 0.5, 1.0 )
 
-DRAW_VERTEX_SIZE          = 5
+DRAW_VERTEX_SIZE          = 5.0
 DRAW_VERTEX_COLOR         = ( 0.8, 0.8, 0.0 )
 DRAW_VERTEX_COLOR_ENGAGE  = ( 1.0, 0.0, 0.0 )
 DRAW_VERTEX_COLOR_NORMAL  = ( 0.7, 0.7, 0.0 )
 DRAW_VERTEX_COLOR_RETRACT = ( 0.0, 1.0, 0.0 )
-DRAW_LINE_SIZE            = 1
+DRAW_LINE_SIZE            = 1.0
 DRAW_LINE_COLOR           = ( 0.8, 0.8, 0.8 )
-DRAW_ARC_SIZE             = 1
+DRAW_ARC_SIZE             = 1.0
 DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 
 
@@ -191,8 +191,13 @@ class myGLCanvas(GLCanvas):
 		if elem['type']=='v':
 			p1=elem['p1']
 			glDisable(GL_LIGHTING)
-			glPointSize( DRAW_VERTEX_SIZE )
-			if 'tFeed' in elem:
+			if 'tSize' in elem:
+				glPointSize( elem['tSize'] )
+			else:
+				glPointSize( DRAW_VERTEX_SIZE )
+			if 'tColor' in elem:
+				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
+			elif 'tFeed' in elem:
 				if   elem['tFeed'] == "FEED_ENGAGE":
 					glColor3f( DRAW_VERTEX_COLOR_ENGAGE[0], DRAW_VERTEX_COLOR_ENGAGE[1], DRAW_VERTEX_COLOR_ENGAGE[2] )
 				elif elem['tFeed'] == "FEED_NORMAL":
@@ -215,7 +220,10 @@ class myGLCanvas(GLCanvas):
 			p2=elem['p2']
 			glDisable(GL_LIGHTING)
 			glLineWidth( DRAW_LINE_SIZE )
-			glColor3f( DRAW_LINE_COLOR[0], DRAW_LINE_COLOR[1], DRAW_LINE_COLOR[2] )
+			if 'tColor' in elem:
+				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
+			else:
+				glColor3f( DRAW_LINE_COLOR[0], DRAW_LINE_COLOR[1], DRAW_LINE_COLOR[2] )
 			glPushMatrix()
 			glBegin(GL_LINES)
 			glVertex3f(p1[0],p1[1],p1[2])
@@ -233,7 +241,10 @@ class myGLCanvas(GLCanvas):
 			lines = createArc180(p1,p2,rad,ARC_LINES_INTERPOLATION,dir)
 			glDisable(GL_LIGHTING)
 			glLineWidth( DRAW_ARC_SIZE )
-			glColor3f( DRAW_ARC_COLOR[0], DRAW_ARC_COLOR[1], DRAW_ARC_COLOR[2] )
+			if 'tColor' in elem:
+				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
+			else:
+				glColor3f( DRAW_ARC_COLOR[0], DRAW_ARC_COLOR[1], DRAW_ARC_COLOR[2] )
 			glPushMatrix()
 			glBegin(GL_LINES)
 			for i in range(0,len(lines)-1):

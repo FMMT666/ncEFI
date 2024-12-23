@@ -67,41 +67,46 @@
 #   pNext   <- if chained -> number of next element
 #   pPrev   <- if chained -> number of previous element
 #
+#  - add wrapper functions for the extras, like def "elemAddColor()":
+#    - elemAddFeedRate()
+#    - elemAddMessage()
+#	 - elemAddColor()
+
 #  - allow RAPID in 'tMove' for G2/3 (set feed rate to a predefined, high value)
 #  - geomCreateSlotHole, geomCreateConcentricSlots, geomCreateCircRingHole, geomCreateConcentricCircles:
-#      - the "diaSteps" should be replaced by a "diaInc" for better usage
+#    - the "diaSteps" should be replaced by a "diaInc" for better usage
 #  - maybe renaming the hole functions would make sense?
-#      - geomCreateCircRingHole  -> geomCreateHoleRingCircle (CircleRing? ConcentricCircles?)
-#      - geomCreateSlotHole[...] -> geomCreateHoleRingSlot   (SlotRing?   ConcentricSlots?)
+#    - geomCreateCircRingHole  -> geomCreateHoleRingCircle (CircleRing? ConcentricCircles?)
+#    - geomCreateSlotHole[...] -> geomCreateHoleRingSlot   (SlotRing?   ConcentricSlots?)
 #  - geomCreateSlotSpiral:
-#      - sth like a "doNotRotate" option, for usage in geomCreateSlotHole??
-#      - add more error checks
+#    - sth like a "doNotRotate" option, for usage in geomCreateSlotHole??
+#    - add more error checks
 #  - what's with this "basNr" stuff? Remove that completely?
 #  - geomCreateSlotHole:
-#      - add geomCreateSlotSpiral as entry movement
-#      - add depth
-#      - add retract movement
-#      - rotate geom to final position
+#    - add geomCreateSlotSpiral as entry movement
+#    - add depth
+#    - add retract movement
+#    - rotate geom to final position
 #  - add proper "ERR:" prints in ncVec
 #  - ncVec's rotate and vecAngle functions handle angles in the opposite direction (ugh)
 #    rotate is right-handed, vecAngle is left-handed; for positive angles
 #  - add arcLength for z changes (half helix)
 #  - geomCreateConcentricRects
-#      - implement depth (if not already done)
-#      - implement correct amount of Bezier line segments
-#      - implement helix (if that makes sense)
+#    - implement depth (if not already done)
+#    - implement correct amount of Bezier line segments
+#    - implement helix (if that makes sense)
 #  - geomCreateRadial
-#      - add the 'arc' operation
-#      - add rapid retracts (requires the "feed-rate-in-vertices" idea)
+#    - add the 'arc' operation
+#    - add rapid retracts (requires the "feed-rate-in-vertices" idea)
 #  - geomCreatePoly
 #  - geomCreatePolyHelix
 #  - geomCreateRectSpiral       REALLY?
 #  - geomCreateRectSpiralHelix  REALLY?
 #  - improve geomCreateCircRingHole:
-#      - arguments' names
-#      - 'clear' does (yet) nothing
-#      - the new retract movement should be an arc
-#      - ...
+#    - arguments' names
+#    - 'clear' does (yet) nothing
+#    - the new retract movement should be an arc
+#    - ...
 #  - after implementing the possibility to read nc header and footer a file, the variables do not make sense any more
 #  - geomCreateSpiralToCircle() needs more error checks
 #  - geomCreateHelix() uses 'finish' for 'finish' (lol), but shold have sth likr "clearBottom=True"#  - more error checks for 'dir' (almost everywhere)
@@ -119,9 +124,9 @@
 #  - add spiral pocket geom (using SpiralHelix and Circle)
 #  - split ncEFI into several files, maybe elem, geom, part, tool?
 #  - change geomCreateConcentricCircles
-#      - rename to geomCreateConcentricCirclesConnected
-#      - add another approach to connect the circles via a spiral
-#      - make use of the new geomCreateCircle() function
+#    - rename to geomCreateConcentricCirclesConnected
+#    - add another approach to connect the circles via a spiral
+#    - make use of the new geomCreateCircle() function
 #  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
 
 
@@ -222,6 +227,8 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 #               or a number (integers only):
 #                 900
 #   tMsg    <- only for vertices, so far; a string that will appear as a comment in the G-code file
+#   tColor  <- a tuple with color information ( r, g, b ), each rangin from 0.0 to 1.0; for the graphical viewer
+#   tSize   <- a float value for the size of the element; for the graphical viewer
 
 #############################################################################
 # geometry
@@ -258,7 +265,11 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 ###
 #############################################################################
 def elemAddExtra(elem,extra):
+
+	# TODO: add error checks for all the extras
+
 	for i in extra:
+		# --- number/position of element in part; not really in use for now
 		if i == 'pNr':
 			elem['pNr'] = extra['pNr']
 		if i == 'pNext':
@@ -269,13 +280,71 @@ def elemAddExtra(elem,extra):
 			elem['tMove'] = extra['tMove']
 
 		# TESTING TESTING TESTING
+		# --- feed rate markers (only for vertices)
 		if i == 'tFeed':
 			elem['tFeed'] = extra['tFeed']
 
 		# TESTING TESTING TESTING
+		# --- comment/string that will appear in the G-code file
 		if i == 'tMsg':
 			elem['tMsg'] = extra['tMsg']
+		
+		# TESTING TESTING TESTING
+		# --- color information for the graphical viewer
+		if i == 'tColor':
+			elem['tColor'] = extra['tColor']
 
+		# TESTING TESTING TESTING
+		# --- size information for the graphical viewer
+		if i == 'tSize':
+			elem['tSize'] = extra['tSize']
+
+
+#############################################################################
+### elemAddColor
+###
+#############################################################################
+def elemAddColor( elem: dict, color: tuple) -> None:
+	"""
+	Adds a color tuple to the element's extra dictionary.
+
+	Args:
+		elem (dict): The element to add the color to
+		color (tuple): The color tuple (r,g,b) to add
+
+	"""
+	if type(color) != tuple or len(color) != 3:
+		print( "ERR: elemAddColor: color is not a tuple: ", elem, color )
+		return
+
+	if min(color) < 0.0 or max(color) > 1.0:
+		print( "ERR: elemAddColor: color out of range: ", elem, color )
+		return
+
+	elemAddExtra( elem, { 'tColor': color } )
+
+
+#############################################################################
+### elemAddSize
+###
+#############################################################################
+def elemAddSize( elem: dict, size: int | float) -> None:
+	"""
+	Adds a size value to the element's extra dictionary.
+
+	Args:
+		elem (dict): The element to add the size to
+		size (float): The size value to add
+
+	"""
+	if type(size) != float and type(size) != int:
+		print( "ERR: elemAddSize: size is not a number: ", elem, size )
+		return
+	
+	if size < 1.0:
+		size = 1.0
+
+	elemAddExtra( elem, { 'tSize': size } )
 
 
 #############################################################################
@@ -858,7 +927,7 @@ def elemDistance( e1:dict, e2:dict ) -> float:
 ### elemDebugPrint
 ###
 #############################################################################
-def elemDebugPrint(e1):
+def elemDebugPrint( e1: dict, extras: bool = False) -> None:
 	prt=''
 
 	if 'pNr' in e1:
@@ -866,24 +935,35 @@ def elemDebugPrint(e1):
 	else:
 		pNr = -1
 
+	# --- LINE
 	if e1['type'] == 'l':
 		print( "LINE   %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f)" % (pNr, \
-			e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2]) )
-		return
-
-	if e1['type'] == 'a':
+			e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2]), end='' )
+	# --- ARC
+	elif e1['type'] == 'a':
 		print( "ARC    %4d: (%8.3f %8.3f %8.2f) (%8.3f %8.3f %8.3f) %8.3f %s" % (pNr, \
-			e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2],e1['rad'],e1['dir']) )
-		return
-
-	if e1['type'] == 'v':
+			e1['p1'][0],e1['p1'][1],e1['p1'][2],e1['p2'][0],e1['p2'][1],e1['p2'][2],e1['rad'],e1['dir']), end='' )
+	# --- VERTEX
+	elif e1['type'] == 'v':
 		print( "VERTEX %4d: (%8.3f %8.3f %8.2f)" % (pNr, \
-			e1['p1'][0],e1['p1'][1],e1['p1'][2] ) )
-		return
+			e1['p1'][0],e1['p1'][1],e1['p1'][2] ), end='' )	
+	# --- UNKNOWN
+	else:
+		print( "UEO    %4d of type %c " % (e1['pNr'],e1['type']), end='' )
 
-	print( "UEO    %4d of type %c " % (e1['pNr'],e1['type']) )
+	if extras == True:
+		if 'tMove' in e1:
+			print( " tMove=",  e1['tMove'],  sep='', end='' )
+		if 'tColor' in e1:
+			print( " tColor=", e1['tColor'], sep='', end='' )
+		if 'tFeed' in e1:
+			print( " tFeed=",  e1['tFeed'],  sep='', end='' )
+		if 'tMsg' in e1:
+			print( " tMsg=",   e1['tMsg'],   sep='', end='' )
+		if 'tSize' in e1:
+			print( " tSize=",  e1['tSize'],  sep='', end='' )
 
-
+	print( )
 
 
 #############################################################################
@@ -3893,20 +3973,23 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 	geom = []
 
+	# verts of the original polygon
 	geomVerts = geomExtractPolyVerts( geomPoly )
+
+	# create verts of the offset polygon
 	offsVerts = geomCreatePolyVertsOffset( geomVerts, offset, basNr )
 
 	if len( geomVerts ) != len( offsVerts ):
 		print("ERR: geomCreatePolyOffset: size of original and offset verts list don't match: ", len(geomVerts), len(offsVerts) )
 		return []
 
+	# create "half-angle" lines at the corners (debug visibility)
 	angleLines = []
 	for i in range( len( geomVerts ) ):
 		angleLines.append( elemCreateLine( geomVerts[i]['p1'], offsVerts[i]['p1'] ) )
 
 	geomLines = geomCreatePoly( geomVerts, basNr )
 	offsLines = geomCreatePoly( offsVerts, basNr )
-
 
 	# delete everything outside the original polygon
 	offsVertsCleaned = []
@@ -3921,20 +4004,32 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	intsVerts = geomExtractPolyIntersections( offsLines )
 
 
+	# DEBUG (and tColor/tSize test)
+	for i in intsVerts:
+		elemAddColor( i, ( 1.0, 0.0, 0.0 ) )
+		elemAddSize( i, 10 )
+	for i in offsLines:
+		elemAddColor( i, ( 0.0, 1.0, 0.0 ) )
+		elemAddSize( i, 3 )
 
+	# remove all verts from offsVertsCleaned that are too close to the offset lines (distance point-line)
+	for i in range( len(offsVertsCleaned)-1, -1, -1 ):
+		for j in geomPoly:
+			if (dist := elemDistance( offsVertsCleaned[i], j )) <  ( math.fabs(offset) - FINTOL ):
 
+				# DEBUG ONLY
+				print("DBG: geomCreatePolyOffset: deleting vert: ", offsVertsCleaned[i], " DIST: ", dist, "OFFS(abs):", math.fabs(offset)  )
 
-	# TODO: remove all verts from offsVertsCleaned that are too close to the angle lines (distance point-line)
-
-
+				offsVertsCleaned.pop(i)
+				break
 
 
 
 	# DEBUG SHOW ALL
 #	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
-#	geom = angleLines + offsLines + geomLines + offsVertsCleaned + intsVerts
-	geom = angleLines + offsLines + geomLines + intsVerts
-
+	geom = angleLines + offsLines + geomLines + offsVertsCleaned + intsVerts
+	# geom = angleLines + offsLines + geomLines + offsVertsCleaned
+	# geom = angleLines + offsLines + geomLines + intsVerts
 
 
 	return geom
@@ -4384,8 +4479,6 @@ def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
 				# TODO: The numbers of the elements which were involved in the intersection
 				#       should be returned too, somehow.
 				interVerts.append( elemCreateVertex( hitsPts[0][1] ) )
-
-
 
 	# remove duplicates
 	if interVerts:

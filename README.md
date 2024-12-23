@@ -116,6 +116,8 @@ that is named
 ### CHANGES 2024/12/XX
     - started poly offset functionality & tools
     - added some 3D-space distance functions
+    - added tColor in element's extras (for viewer)
+    - added tSize  in element's extras (for viewer)
 
 
 ### CHANGES 2024/11/XX
