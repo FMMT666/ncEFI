@@ -81,7 +81,7 @@
 #  - geomCreateSlotSpiral:
 #    - sth like a "doNotRotate" option, for usage in geomCreateSlotHole??
 #    - add more error checks
-#  - what's with this "basNr" stuff? Remove that completely?
+#  - what's with this "basNr" stuff? Don't rememeber what that's for. Same geometrie reused in other geometries? Fear of shuffled lists or dicts?
 #  - geomCreateSlotHole:
 #    - add geomCreateSlotSpiral as entry movement
 #    - add depth
@@ -127,7 +127,6 @@
 #    - rename to geomCreateConcentricCirclesConnected
 #    - add another approach to connect the circles via a spiral
 #    - make use of the new geomCreateCircle() function
-#  - whatever the 'basNr' parameter in some geom function shall do - it doesn't; purpose??
 
 
 import os       # only for 'debugShowViewer()'
@@ -3148,7 +3147,7 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 
 		# do we need to add the "retract to next entry" move yet?
 		if ptRetStart is not None:
-			ptRetEnd = geomGetFirstPoint( geomEntry )
+			ptRetEnd = geomGetFirstVert( geomEntry )
 			# not nice as this makes a 180° turn
 			# con.append(  elemCreateArc180( ptRetStart, ptRetEnd, 0, 'cw' if dir == 'cc' else 'cc' )  )
 
@@ -3170,14 +3169,14 @@ def geomCreateSlotRingHole( p1, p2, diaStart, diaEnd, diaSteps, depth, depthInc,
 			break
 
 		# save point to retract from
-		ptRetStart = geomGetLastPoint( con )
+		ptRetStart = geomGetLastVert( con )
 		if ptRetStart is None:
-			print( "ERR: geomCreateSlotRingHole: geomGetLastPoint returned nothing valid" )
+			print( "ERR: geomCreateSlotRingHole: geomGetLastVert returned nothing valid" )
 			return []
 
 	# add retract movement; will retract with two arcs to the starting point.
-	ex1 = geomGetLastPoint( con )
-	ex2 = geomGetFirstPoint( con )
+	ex1 = geomGetLastVert( con )
+	ex2 = geomGetFirstVert( con )
 	exm = vecExtractMid( ex2, ex1 )
 	con.append(  elemCreateArc180( ex1, exm, 0, dir )  )
 	con.append(  elemCreateArc180( exm, ex2, 0, 'cw' if dir == 'cc' else 'cc' )  )
@@ -3225,7 +3224,7 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 		geomEntry = geomCreateSlotSpiral( (p1[0], p1[1], p1[2] - depthCurrent + enterHeight), p2, diaStart, enterSteps, enterHeight / enterSteps, dir, clearBottom=False)
 
 		# get the coordinate for the 1st vertex; used for "retract to next" and the feedrate vertex below
-		ptRetEnd = geomGetFirstPoint( geomEntry )
+		ptRetEnd = geomGetFirstVert( geomEntry )
 
 		# do we need to add the "retract to next entry" move yet?
 		if ptRetStart is not None:
@@ -3249,7 +3248,7 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 		geomMill = geomCreateConcentricSlots( (p1[0], p1[1], p1[2] - depthCurrent), p2, diaStart, diaEnd, diaSteps, dir )
 
 		# TESTING: ADD FEEDRATE VERTEX
-		con.append(  elemCreateVertex( geomGetFirstPoint( geomMill ), {'tFeed':"FEED_BASE", 'tMsg':"TEST COMMENT: NOW MILLING; millmillmillmill"} ) )
+		con.append(  elemCreateVertex( geomGetFirstVert( geomMill ), {'tFeed':"FEED_BASE", 'tMsg':"TEST COMMENT: NOW MILLING; millmillmillmill"} ) )
 
 		# add the milling op
 		con += geomMill
@@ -3262,14 +3261,14 @@ def geomCreateSlotRingHoleTEST( p1, p2, diaStart, diaEnd, diaSteps,
 			break
 
 		# save point to retract from
-		ptRetStart = geomGetLastPoint( con )
+		ptRetStart = geomGetLastVert( con )
 		if ptRetStart is None:
-			print( "ERR: geomCreateSlotRingHole: geomGetLastPoint returned nothing valid" )
+			print( "ERR: geomCreateSlotRingHole: geomGetLastVert returned nothing valid" )
 			return []
 
 	# add retract movement; will retract with two arcs to the starting point.
-	ex1 = geomGetLastPoint( con )
-	ex2 = geomGetFirstPoint( con )
+	ex1 = geomGetLastVert( con )
+	ex2 = geomGetFirstVert( con )
 	exm = vecExtractMid( ex2, ex1 )
 
 	# TESTING: ADD FEEDRATE VERTEX
@@ -3760,7 +3759,7 @@ def geomCreateLeftContourBAK(part,dist,basNr=0):
 		# end if ang==0
 	# end for        
 
-	# con = geomTrimPointsStartToEnd( con, partCheckClosed(part) )
+	# con = geomTrimVertsStartToEnd( con, partCheckClosed(part) )
 
 	return con
 
@@ -3857,7 +3856,7 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 				break        
 
 
-	con = geomTrimPointsStartToEnd( con, partCheckClosed(part) )
+	con = geomTrimVertsStartToEnd( con, partCheckClosed(part) )
 
 			
 	return con
@@ -3868,7 +3867,7 @@ def geomCreateLeftContour( part, dist, basNr=0 ):
 ### geomCreatePolyVertsOffset
 ###
 #############################################################################
-def geomCreatePolyVertsOffset( geomVerts: list, offset: float, basNr: int = 0 ) -> list:
+def geomCreatePolyVertsOffset( geomVerts: list, offset: float ) -> list:
 	"""
 	Offsets the vertices of a PolyVerts-geom.
 	The vertices will be created on a vector going through the middle of the angle formed by
@@ -3883,7 +3882,6 @@ def geomCreatePolyVertsOffset( geomVerts: list, offset: float, basNr: int = 0 ) 
 	Args:
 		geomVerts (list): A list of vertices representing the original geometry, e.g.
 		offset (float): The offset value determining how far the vertices are from the original geometry. <0 means inside, >0 means outside.
-		basNr (int, optional): An optional base number, default is 0.
 
 	Returns:
 		list: A geom with vertices, shifted by the given offset.
@@ -3953,20 +3951,40 @@ def geomCreatePolyVertsOffset( geomVerts: list, offset: float, basNr: int = 0 ) 
 ###
 #############################################################################
 def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> list:
-	# Here's the strategy [tm] *** FOR INSIDE OFFSETS ***:
-	#   - extract verts from poly
-	#   - use geomCreatePolyVertsOffset() to create the offset vertices
-	#   - use geomCreatePoly() to create (A): the offset lines
-	#   - use geomCreatePoly() to create (B): the half angle lines; from the old vertices to the corresponding new ones (p1 -> p1', p2 -> p2', ...)
-	#   - create all verts at the new intersections and put them in the correct order
-	#   - check them, one by one, and delete, if:
-	#     - GUESS: they are outside of the original polygon
-	#     - GUESS: if the corresponding "half-angle line" intersects one of the offset lines
-	#     - GUESS: if the corresponding "half-angle line" intersects another "half-angle line" *MIGHT BE A WRONG GUESS*
-	#     - CLEAR: calc distance from the offset verts to the [...](**1**) lines. if the distance is smaller than the offset, delete the vert
-	#   - create the offset lines from the remaining vertices
+	#
+	# So far, only the inside offsets are implemented, without any collision checks
+	# to other geometry. Only self-intersections are checked.
+	# A general approach would be to check and split all offset lines at any
+	# intersection with other lines.
+	# In theory[TM], it would then be irrelevant if the offset is inside or outside.
+	# In theory, yes.
+	# For now, just consider the inside offsets and check for self-intersections.
+	# Have to start somewhere ...
+	#
+	# INSIDE OFFSETS' STRATEGY
+	#
+	#   [X] extract verts from poly
+	#   [X] use geomCreatePolyVertsOffset() to create the offset vertices
+	#   [X] use geomCreatePoly() to create (A): the offset lines
+	#   [X] use geomCreatePoly() to create (B): the half angle lines; from the old vertices to the corresponding new ones (p1 -> p1', p2 -> p2', ...)
+	#   [ ] create all verts at the new intersections and put them in the correct order
+	#   [ ] check them, one by one, and delete (**2**), if:
+	#      [X] CLEAR: calc distance from the offset verts to the [...](**1**) lines. if the distance is smaller than the offset, delete the vert
+	#      [X] CLEAR: they are outside of the original polygon
+	#      [ ] GUESS: the verts of the offset lines might be inside the original polygon after crossing other lines
+	#      [ ] GUESS: if the corresponding "half-angle line" intersects one of the offset lines
+	#      [ ] GUESS: if the corresponding "half-angle line" intersects another "half-angle line" *MIGHT BE A WRONG GUESS*
+	#   [ ] create the offset lines from the remaining vertices
+	#      [ ] split the offset lines at intersections with other offset lines.
 	# 
+	# OUTSIDE OFFSETS' STRATEGY
+	#
+	#   [ ] In theory, if all lines are splitat any intersection, the inside and outside offsets should be the same. In theory.
+	#
+	#
 	# (**1**) Need to check which ones. For self-intersecting polygons, this might be a problem.
+	# (**2**) Actually, before deleting them, it might be a better strategy to just mark them as invalid and delete them later. "tDelete" or similar.
+	#
 
 	# TODO: sanity checks
 	#   - check if geomPoly ia a poly (and not a list of verts)
@@ -3977,7 +3995,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	geomVerts = geomExtractPolyVerts( geomPoly )
 
 	# create verts of the offset polygon
-	offsVerts = geomCreatePolyVertsOffset( geomVerts, offset, basNr )
+	offsVerts = geomCreatePolyVertsOffset( geomVerts, offset )
 
 	if len( geomVerts ) != len( offsVerts ):
 		print("ERR: geomCreatePolyOffset: size of original and offset verts list don't match: ", len(geomVerts), len(offsVerts) )
@@ -3991,14 +4009,12 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	geomLines = geomCreatePoly( geomVerts, basNr )
 	offsLines = geomCreatePoly( offsVerts, basNr )
 
-	# delete everything outside the original polygon
-	offsVertsCleaned = []
-	offsVertsDeleted = []
+	# mark all verts for deletion which are outside of the original polygon
 	for i in offsVerts:
-		if geomCheckVertexInPoly( i, geomPoly ):
-			offsVertsCleaned.append( i )
-		else:
-			offsVertsDeleted.append( i )
+		# TODO: this might return None
+		if not geomCheckVertexInPoly( i, geomPoly ):
+			i['tDelete'] = True
+			elemAddColor( i, ( 1.0, 0.0, 1.0 ) )
 
 	# create new verts at the intersections of the angle lines; we'll need them later
 	intsVerts = geomExtractPolyIntersections( offsLines )
@@ -4006,29 +4022,35 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 	# DEBUG (and tColor/tSize test)
 	for i in intsVerts:
-		elemAddColor( i, ( 1.0, 0.0, 0.0 ) )
-		elemAddSize( i, 10 )
+		elemAddColor( i, ( 1.0, 0.0, 1.0 ) )
+		elemAddSize( i, 5 )
 	for i in offsLines:
-		elemAddColor( i, ( 0.0, 1.0, 0.0 ) )
+		elemAddColor( i, ( 0.0, 0.0, 1.0 ) )
 		elemAddSize( i, 3 )
 
-	# remove all verts from offsVertsCleaned that are too close to the offset lines (distance point-line)
-	for i in range( len(offsVertsCleaned)-1, -1, -1 ):
+
+	# mark all verts for deletion which are too close to the offset lines (distance point-line)
+	for i in range( len(offsVerts)-1, -1, -1 ):
 		for j in geomPoly:
-			if (dist := elemDistance( offsVertsCleaned[i], j )) <  ( math.fabs(offset) - FINTOL ):
+			if (dist := elemDistance( offsVerts[i], j )) <  ( math.fabs(offset) - FINTOL ):
+				offsVerts[i]['tDelete'] = True
+				elemAddColor( offsVerts[i], ( 1.0, 0.0, 0.0 ) )
+				elemAddSize( offsVerts[i], 6 )
 
-				# DEBUG ONLY
-				print("DBG: geomCreatePolyOffset: deleting vert: ", offsVertsCleaned[i], " DIST: ", dist, "OFFS(abs):", math.fabs(offset)  )
+				# print("DBG: geomCreatePolyOffset: deleting vert: ", offsVerts[i], " DIST: ", dist, "OFFS(abs):", math.fabs(offset)  )
 
-				offsVertsCleaned.pop(i)
 				break
+
+
+
+	# TODO: throw all verts into one list and split every line at those, which are not endpoints
 
 
 
 	# DEBUG SHOW ALL
 #	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
-	geom = angleLines + offsLines + geomLines + offsVertsCleaned + intsVerts
-	# geom = angleLines + offsLines + geomLines + offsVertsCleaned
+	geom = angleLines + offsLines + geomLines + geomPoly + intsVerts + offsVerts
+	# geom = angleLines + offsLines + geomLines + geomPoly
 	# geom = angleLines + offsLines + geomLines + intsVerts
 
 
@@ -4213,7 +4235,7 @@ def geomRotateZAt( geom, ang, center ):
 
 
 #############################################################################
-### geomTrimPointsStartToEnd
+### geomTrimVertsStartToEnd
 ###
 ### Trims a list of elements:
 ### The startpoint of the _next_ element is set to the end position of
@@ -4221,7 +4243,7 @@ def geomRotateZAt( geom, ang, center ):
 ### No checks are done!
 ### Elements have to be in the right order!
 #############################################################################
-def geomTrimPointsStartToEnd( elIn, isClosed=False ):
+def geomTrimVertsStartToEnd( elIn, isClosed=False ):
 	elOut=[]
 	
 	for i in elIn:
@@ -4246,24 +4268,24 @@ def geomTrimPointsStartToEnd( elIn, isClosed=False ):
 
 
 #############################################################################
-### geomGetLastPoint
+### geomGetLastVert
 ###
-### Returns the point of the last element in a geom.
+### Returns the vert of the last element in a geom.
 #############################################################################
-def geomGetLastPoint( geom ):
+def geomGetLastVert( geom ):
 
 	if not isinstance( geom, list ):
-		print( "ERR: geomGetLastPoint: geom is not a list: ", type(geom) )
+		print( "ERR: geomGetLastVert: geom is not a list: ", type(geom) )
 		return None
 
 	if len( geom ) < 1:
-		print( "ERR: geomGetLastPoint: geom is empty" )
+		print( "ERR: geomGetLastVert: geom is empty" )
 		return None
 
 	e = geom[-1]
 
 	if not isinstance( e, dict ):
-		print( "ERR: geomGetLastPoint: last element of geom is not a dict: ", type(e) )
+		print( "ERR: geomGetLastVert: last element of geom is not a dict: ", type(e) )
 		return None
 
 	pts = elemGetPts( e )
@@ -4273,30 +4295,30 @@ def geomGetLastPoint( geom ):
 	elif len(pts) == 2:
 		return pts[1]
 
-	print( "ERR: geomGetLastPoint: last element does not have valid amount of points: ", len(pts) )
+	print( "ERR: geomGetLastVert: last element does not have valid amount of points: ", len(pts) )
 	return None
 
 
 
 #############################################################################
-### geomGetFirstPoint
+### geomGetFirstVert
 ###
-### Returns the point of the last element in a geom.
+### Returns the vert of the last element in a geom.
 #############################################################################
-def geomGetFirstPoint( geom ):
+def geomGetFirstVert( geom ):
 
 	if not isinstance( geom, list ):
-		print( "ERR: geomGetFirstPoint: geom is not a list: ", type(geom) )
+		print( "ERR: geomGetFirstVert: geom is not a list: ", type(geom) )
 		return None
 
 	if len( geom ) < 1:
-		print( "ERR: geomGetFirstPoint: geom is empty" )
+		print( "ERR: geomGetFirstVert: geom is empty" )
 		return None
 
 	e = geom[0]
 
 	if not isinstance( e, dict ):
-		print( "ERR: geomGetFirstPoint: first element of geom is not a dict: ", type(e) )
+		print( "ERR: geomGetFirstVert: first element of geom is not a dict: ", type(e) )
 		return None
 
 	pts = elemGetPts( e )
@@ -4304,7 +4326,7 @@ def geomGetFirstPoint( geom ):
 	if len(pts) > 0:
 		return pts[0]
 
-	print( "ERR: geomGetFirstPoint: first element does not have valid amount of points: ", len(pts) )
+	print( "ERR: geomGetFirstVert: first element does not have valid amount of points: ", len(pts) )
 	return None
 
 
@@ -4411,14 +4433,13 @@ def geomCheckPolyIsClosed( geomPoly: list ) -> bool:
 ### geomExtractPolyIntersections
 ###
 #############################################################################
-def geomExtractPolyIntersections( geomPoly: list, basNr: int = 0 ) -> list:
+def geomExtractPolyIntersections( geomPoly: list ) -> list:
 	"""
 	Calculates self intersections in a geom.
 	Only lines are supported.
 
 	Args:
 		geomPoly (list): A geom (list of lines) representing the geometry.
-		basNr (int, optional): An optional base number, default is 0.
 
 	Returns:
 		list: A geom (list) of vertices.
