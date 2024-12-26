@@ -4043,8 +4043,17 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 
 
-	# TODO: throw all verts into one list and split every line at those, which are not endpoints
+	# TODO:
+	# Throw all verts into one list and split every line at those, which are not endpoints.
+	# As it seems, the split can only happen at the intersection of two offset lines (needs proof)
+	# and not at any of those which are already marked for deletion (needs proof too).
+	# A line can indeed have (much) more than only one intersection point, e.g. if a straight
+	# line is crossed by a zig-zag pattern. Multiple intersections of one line need to be
+	# deleted in this case.
+	# The to be deleted line segments can easily be identified by checking their distance to the
+	# original geometry.
 
+	
 
 
 	# DEBUG SHOW ALL
