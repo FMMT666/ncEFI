@@ -219,7 +219,10 @@ class myGLCanvas(GLCanvas):
 			p1=elem['p1']
 			p2=elem['p2']
 			glDisable(GL_LIGHTING)
-			glLineWidth( DRAW_LINE_SIZE )
+			if 'tSize' in elem:
+				glLineWidth( elem['tSize'] )
+			else:
+				glLineWidth( DRAW_LINE_SIZE )
 			if 'tColor' in elem:
 				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
 			else:

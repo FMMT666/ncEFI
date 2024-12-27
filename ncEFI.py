@@ -346,6 +346,30 @@ def elemAddSize( elem: dict, size: int | float) -> None:
 	elemAddExtra( elem, { 'tSize': size } )
 
 
+
+#############################################################################
+### elemGetType
+###
+#############################################################################
+def elemGetType(elem: dict) -> str:
+	"""
+	Returns the type of the element.
+
+	Args:
+		elem (dict): The element to get the type from
+
+	Returns:
+		str: The type of the element; 'v', 'l', 'a' or '' for an unknown type
+	"""
+
+	if 'type' in elem:
+		if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
+			return elem['type']
+
+	return ''
+
+
+
 #############################################################################
 ### elemCreateVertex
 ###
@@ -356,7 +380,6 @@ def elemCreateVertex(p1,extra={}):
 	ret={'type':'v','p1':p1}
 	elemAddExtra(ret,extra)
 	return ret
-
 
 
 #############################################################################
@@ -744,7 +767,7 @@ def elemReverse(elem):
 def elemIntersectsElemXY( e1:dict, e2:dict ) -> list:
 	"""
 	Returns a list of intersection points, sorted by distance from e1['p1'].
-	z is ignored
+	z is ignored.
 
 	Args:
 		e1 (dict): 1st element; line or arc
@@ -754,6 +777,11 @@ def elemIntersectsElemXY( e1:dict, e2:dict ) -> list:
 		list: A list of lists with [ <distance>, (<x>,<y>,<z>) ] values
 	"""
 	hits=[]
+
+	# not for vertices (yet)
+	if e1['type']=='v' or e2['type']=='v':
+		print( "ERR: elemIntersectsElemXY: not for vertices; use elemDistance() instead" )
+		return []
 
 	# line on line
 	if e1['type']=='l' and e2['type']=='l':
@@ -4053,15 +4081,66 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# The to be deleted line segments can easily be identified by checking their distance to the
 	# original geometry.
 
-	
+	splitLines = geomSplitPolyLines( offsLines, intsVerts )
+
+	# DEBUG
+	import random
+	for i in splitLines:
+		elemAddColor( i, ( random.random(), random.random(), random.random() ) )
+		elemAddSize( i, 4 )
+
 
 
 	# DEBUG SHOW ALL
-#	geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
-	geom = angleLines + offsLines + geomLines + geomPoly + intsVerts + offsVerts
+	# geom = geomVerts + offsVerts + angleLines + offsLines + geomLines
+	# geom = angleLines + offsLines + geomLines + geomPoly + intsVerts + offsVerts
 	# geom = angleLines + offsLines + geomLines + geomPoly
 	# geom = angleLines + offsLines + geomLines + intsVerts
+	geom = angleLines + geomLines + intsVerts + splitLines
 
+
+	return geom
+
+
+
+#############################################################################
+### geomSplitLines
+###
+#############################################################################
+def geomSplitPolyLines( geomPoly: list, verts: list ) -> list:
+
+	geom = []
+
+
+	for line in geomPoly:
+
+		if elemGetType( line ) != 'l':
+			print("ERR: geomSplitPolyLines: element is not a line, skipping: ", line )
+			continue
+
+		# --- check and mark all intersections for the line
+		hits = []
+		for vert in verts:
+			# TODO: probably better to integrate the intersection checks in elemIntersectsElemXY()
+			# TODO: also, check what's better, FINTOL or LINTOL; might create false positives as well as missing intersections
+			if elemDistance( line, vert ) < FINTOL:
+				hits.append( vert )
+
+		# --- sort by distance from start of line
+		if ( numHits:=len(hits) ) > 1:
+			hits.sort(  key = lambda vert: elemDistance(  elemCreateVertex(line['p1']), vert  )  )
+
+		# --- create new lines between the intersections
+		if numHits == 0:
+			geom.append( line )
+		else:
+			# --- "split" the line
+			for i in range( numHits ):
+				if i == 0:
+					geom.append( elemCreateLine( line['p1'], hits[i]['p1'] ) )
+				else:
+					geom.append( elemCreateLine( hits[i-1]['p1'], hits[i]['p1'] ) )
+			geom.append( elemCreateLine( hits[-1]['p1'], line['p2'] ) )
 
 	return geom
 

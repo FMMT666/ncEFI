@@ -118,6 +118,7 @@ that is named
     - added some 3D-space distance functions
     - added tColor in element's extras (for viewer)
     - added tSize  in element's extras (for viewer)
+    - added split lines function
 
 
 ### CHANGES 2024/11/XX
