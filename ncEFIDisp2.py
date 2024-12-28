@@ -33,10 +33,10 @@ DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 
 
 # TODO
-#  - interface and settings for all the vars
-#  - variables for grid settings
-#  - a lot more
-
+#  - check if 'tColor' is a tuple with 3 elements; could be used for highlighting, color cycling or other stuff
+#  - maybe rename cbCheckAutoRefresh to better reflect what it does, cycling the colors
+#  - implement color cycling for some parts; to improve debug & visibility
+#  - ...
 
 
 # everyone loves global vars <3
@@ -150,6 +150,9 @@ class myGLCanvas(GLCanvas):
 		self.leftDown  = False
 		self.rightDown = False
 
+		self.colorCycling = False
+
+
 
 	################################################################################################
 	### DrawAxes
@@ -184,12 +187,21 @@ class myGLCanvas(GLCanvas):
 	### DrawElement
 	################################################################################################
 	def DrawElement(self, elem ):
+
 		# TODO: Actually it's not a super brilliant idea to have the colors in here.
 		#       Especially if (at any later point of development) parts or geometries
 		#       can be selected, this is more than hindering.
 		#       Mhh, otherwise one could use the 'extra' parameters for this ...
+		#
+		#       Upd.:
+		#       Now it is an extra parameter, see ['tColor'].
+		#       Unfortunatly, I now had the brilliant idea to also implement a "color cycling" feature.
+		#       This might require a major overhaul of the color handling (and probably everything else too, lol).
+		#       Also: The viewer also supports pure "geoms", lists of elements without a part tag ('p').
+		#       To make color cycling work for specific elements, it would be necessary to add a tag to the elements.
+
 		if elem['type']=='v':
-			p1=elem['p1']
+			p1 = elem['p1']
 			glDisable(GL_LIGHTING)
 			if 'tSize' in elem:
 				glPointSize( elem['tSize'] )
@@ -215,9 +227,9 @@ class myGLCanvas(GLCanvas):
 			glPopMatrix()
 			glEnable(GL_LIGHTING)
 
-		if elem['type']=='l':
-			p1=elem['p1']
-			p2=elem['p2']
+		if elem['type'] == 'l':
+			p1 = elem['p1']
+			p2 = elem['p2']
 			glDisable(GL_LIGHTING)
 			if 'tSize' in elem:
 				glLineWidth( elem['tSize'] )
@@ -235,11 +247,11 @@ class myGLCanvas(GLCanvas):
 			glPopMatrix()
 			glEnable(GL_LIGHTING)
 
-		if elem['type']=='a':
-			p1=elem['p1']
-			p2=elem['p2']
-			rad=elem['rad']
-			dir=elem['dir']
+		if elem['type'] == 'a':
+			p1 = elem['p1']
+			p2 = elem['p2']
+			rad = elem['rad']
+			dir = elem['dir']
 			# TODO: adapt number of lines according to diameter (waste of resources)
 			lines = createArc180(p1,p2,rad,ARC_LINES_INTERPOLATION,dir)
 			glDisable(GL_LIGHTING)
@@ -288,7 +300,19 @@ class myGLCanvas(GLCanvas):
 					self.DrawElement(iElem)
 
 	#-----------------------------------------------------------------------------------------------
+	def SetColorCycling(self, cyclingOn: bool) -> None:
+		self.colorCycling = cyclingOn
+
+	#-----------------------------------------------------------------------------------------------
+	def GetColorCycling(self) -> bool:
+		return self.colorCycling
+
+	#-----------------------------------------------------------------------------------------------
 	def OnDraw(self):
+
+		# DEBUG
+		print("OnDraw")
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE )
@@ -481,17 +505,21 @@ class myGLCanvas(GLCanvas):
 #===================================================================================================
 class ToolPanel(wx.Panel):
 	def __init__(self, parent, canvas, *args, **kwargs):
+
+		# for the timer
+		self.mainWin = parent
+
 		wx.Panel.__init__(self, parent, *args, **kwargs)
 		self.canvas = canvas
 
-		self.button1 = wx.Button( self, label="Button 1" )
-		self.button2 = wx.Button( self, label="Button 2" )
-		self.button3 = wx.Button( self, label="Button 3" )
-		self.button4 = wx.Button( self, label="Button 4" )
-		self.button5 = wx.Button( self, label="Button 5" )
-		self.check1 = wx.CheckBox( self, label="Chkbox 1" )
+		self.button1        = wx.Button  ( self, label="Button 1" )
+		self.button2        = wx.Button  ( self, label="Button 2" )
+		self.button3        = wx.Button  ( self, label="Button 3" )
+		self.button4        = wx.Button  ( self, label="Button 4" )
+		self.button5        = wx.Button  ( self, label="Button 5" )
+		self.chkAutoRefresh = wx.CheckBox( self, label="Colorcycle" )
 
-		self.Bind(wx.EVT_CHECKBOX,       self.cbCheckbox1)
+		self.Bind(wx.EVT_CHECKBOX,       self.cbCheckAutoRefresh)
 		# self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
 		# self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
 
@@ -503,7 +531,7 @@ class ToolPanel(wx.Panel):
 		self.sizer.Add( self.button4, flag=wx.BOTTOM, border=5 )
 		self.sizer.Add( self.button5, flag=wx.BOTTOM, border=5 )
 		
-		self.sizer.Add( self.check1 )
+		self.sizer.Add( self.chkAutoRefresh )
 
 		self.border = wx.BoxSizer()
 		self.border.Add( self.sizer, flag=wx.ALL | wx.EXPAND, border=5 )
@@ -511,12 +539,19 @@ class ToolPanel(wx.Panel):
 		self.SetSizerAndFit(self.border)
 
 	#-----------------------------------------------------------------------------------------------
-	def cbCheckbox1(self, e):
-		print("checkbox 1 says ", e)
+	def cbCheckAutoRefresh(self, e):
+
+		if self.chkAutoRefresh.IsChecked():
+			self.mainWin.canvas.SetColorCycling( True )
+			self.mainWin.timer.Start(100)
+		else:
+			self.mainWin.canvas.SetColorCycling( False )
+			self.mainWin.timer.Stop()
 
 	#-----------------------------------------------------------------------------------------------
-	# def OnClose( self, e ):
+	def OnClose( self, e ):
 	# 	self.Destroy()
+		pass
 
 
 #===================================================================================================
@@ -524,10 +559,8 @@ class MainWin(wx.Frame):
 	def __init__(self, *args, **kwargs):
 		wx.Frame.__init__(self, title='OpenGL', *args, **kwargs)
 
-
 		self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
 		self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
-
 
 		self.canvas = myGLCanvas(self, size=(640, 480))
 
@@ -543,11 +576,27 @@ class MainWin(wx.Frame):
 
 		self.SetSizerAndFit(self.sizer)
 
+
+		# TODO: new timer for color cycling or other animations
+		self.timer = wx.Timer(self)
+		self.Bind(wx.EVT_TIMER, self.OnTimer)
+
+
 		self.Show()
 
 
 	#-----------------------------------------------------------------------------------------------
+	def OnTimer(self, event):
+
+		# DEBUG
+		# print("timer triggered")
+
+		self.canvas.Refresh()
+
+
+	#-----------------------------------------------------------------------------------------------
 	def OnClose( self, e ):
+		self.timer.Stop()
 #		self.panel.Destroy()
 #		self.sizer.Destroy()
 #		self.canvas.Destroy()
@@ -567,7 +616,7 @@ if __name__ == '__main__':
 		fname = sys.argv[ len(sys.argv)-1 ]
 
 		try:
-			f=open( fname, 'r+b')
+			f = open( fname, 'r+b')
 		except:
 			print( "ERROR: file not found (%s)" % fname )
 			sys.exit()
