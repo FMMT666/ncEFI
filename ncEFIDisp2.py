@@ -10,6 +10,7 @@ from ncVec       import *
 import wx
 import pickle
 import math
+import random
 
 
 MOUSE_ZOOM_FACTOR_WHEEL   = 0.1
@@ -186,28 +187,36 @@ class myGLCanvas(GLCanvas):
 	################################################################################################
 	### DrawElement
 	################################################################################################
-	def DrawElement(self, elem ):
+	def DrawElement(self, elem, colorOverride = None):
 
 		# TODO: Actually it's not a super brilliant idea to have the colors in here.
 		#       Especially if (at any later point of development) parts or geometries
 		#       can be selected, this is more than hindering.
 		#       Mhh, otherwise one could use the 'extra' parameters for this ...
 		#
-		#       Upd.:
+		#       Upd. 1:
 		#       Now it is an extra parameter, see ['tColor'].
 		#       Unfortunatly, I now had the brilliant idea to also implement a "color cycling" feature.
 		#       This might require a major overhaul of the color handling (and probably everything else too, lol).
 		#       Also: The viewer also supports pure "geoms", lists of elements without a part tag ('p').
 		#       To make color cycling work for specific elements, it would be necessary to add a tag to the elements.
+		#
+		#       Upd. 2:
+		#       Now also added a color parameter in the function call, which will override everything else.
 
+		# --- VERTEX
 		if elem['type']=='v':
 			p1 = elem['p1']
 			glDisable(GL_LIGHTING)
+			# --- size
 			if 'tSize' in elem:
 				glPointSize( elem['tSize'] )
 			else:
 				glPointSize( DRAW_VERTEX_SIZE )
-			if 'tColor' in elem:
+			# --- color
+			if colorOverride is not None:
+				glColor3f( colorOverride[0], colorOverride[1], colorOverride[2] )
+			elif 'tColor' in elem:
 				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
 			elif 'tFeed' in elem:
 				if   elem['tFeed'] == "FEED_ENGAGE":
@@ -220,6 +229,7 @@ class myGLCanvas(GLCanvas):
 					glColor3f( DRAW_VERTEX_COLOR[0], DRAW_VERTEX_COLOR[1], DRAW_VERTEX_COLOR[2] )
 			else:
 				glColor3f( DRAW_VERTEX_COLOR[0], DRAW_VERTEX_COLOR[1], DRAW_VERTEX_COLOR[2] )
+			# --- on to the matrix
 			glPushMatrix()
 			glBegin(GL_POINTS)
 			glVertex3f(p1[0],p1[1],p1[2])
@@ -227,18 +237,24 @@ class myGLCanvas(GLCanvas):
 			glPopMatrix()
 			glEnable(GL_LIGHTING)
 
+		# --- LINE
 		if elem['type'] == 'l':
 			p1 = elem['p1']
 			p2 = elem['p2']
 			glDisable(GL_LIGHTING)
+			# --- size
 			if 'tSize' in elem:
 				glLineWidth( elem['tSize'] )
 			else:
 				glLineWidth( DRAW_LINE_SIZE )
-			if 'tColor' in elem:
+			# --- color
+			if colorOverride is not None:
+				glColor3f( colorOverride[0], colorOverride[1], colorOverride[2] )
+			elif 'tColor' in elem:
 				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
 			else:
 				glColor3f( DRAW_LINE_COLOR[0], DRAW_LINE_COLOR[1], DRAW_LINE_COLOR[2] )
+			# --- on to the matrix
 			glPushMatrix()
 			glBegin(GL_LINES)
 			glVertex3f(p1[0],p1[1],p1[2])
@@ -247,6 +263,7 @@ class myGLCanvas(GLCanvas):
 			glPopMatrix()
 			glEnable(GL_LIGHTING)
 
+		# --- ARC
 		if elem['type'] == 'a':
 			p1 = elem['p1']
 			p2 = elem['p2']
@@ -256,10 +273,14 @@ class myGLCanvas(GLCanvas):
 			lines = createArc180(p1,p2,rad,ARC_LINES_INTERPOLATION,dir)
 			glDisable(GL_LIGHTING)
 			glLineWidth( DRAW_ARC_SIZE )
+			# --- color
 			if 'tColor' in elem:
 				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
 			else:
 				glColor3f( DRAW_ARC_COLOR[0], DRAW_ARC_COLOR[1], DRAW_ARC_COLOR[2] )
+			# --- size
+				# TODO
+			# --- on to the matrix
 			glPushMatrix()
 			glBegin(GL_LINES)
 			for i in range(0,len(lines)-1):
@@ -276,27 +297,57 @@ class myGLCanvas(GLCanvas):
 	### For debug purposes, this now also supports elements in directories and elements in lists.
 	################################################################################################
 	def DrawPartList(self):
-		for iPart in PartList:
-			if iPart == {}:
+
+		############################################################################################
+		### Color AddOns
+		############################################################################################
+		def CycleColorsInList( itemList: list ) -> None:
+			pass
+		############################################################################################
+		def GetRandomColor() -> None:
+			return ( random.random(), random.random(), random.random() )
+		############################################################################################
+		###
+		############################################################################################
+
+
+		pos = -1
+		for item in PartList:
+
+			pos += 1
+
+			# --- an empty item; skip it
+			if item == {}:
+				print( "DBG DrawPartList: empty item in PartList at position: ", pos )
 				continue
-			# check if that's something we know
-			if 'type' not in iPart:
-				# that's super ugly, yes; also not sure whether or not this works in all cases
-				if isinstance(iPart,list) and len(iPart) > 0:
-					for unp in iPart:
+
+			# --- a part is a dict with 'type' == 'p', but we also support pure geoms (lists of elements)
+			if 'type' not in item:
+				# --- is it a list? then it's not a part
+				if isinstance(item,list) and len(item) > 0:
+					for unp in item:
 						if 'type' in unp:
 							if unp['type'] == 'v' or unp['type'] == 'l' or unp['type'] == 'a':
-									self.DrawElement(unp)
+								myColor = None	
+								if self.colorCycling:
+									if 'tColor' in unp:
+										myColor = GetRandomColor()
+								self.DrawElement(unp, myColor )
 				continue
-			if iPart['type'] != 'p':
-				# this seems to be an element, not a part list
-				if iPart['type'] == 'v' or iPart['type'] == 'l' or iPart['type'] == 'a':
-					self.DrawElement(iPart)
+
+			# --- apparently, the item has a type (checked above)
+			if item['type'] != 'p':
+				if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
+					myColor = None	
+					if self.colorCycling:
+						if 'tColor' in item:
+							myColor = GetRandomColor()
+					self.DrawElement(item, myColor )
 				else:
 					continue
 			else:
 				# this could use some additional error checks, but well ...
-				for iElem in iPart['elements']:
+				for iElem in item['elements']:
 					self.DrawElement(iElem)
 
 	#-----------------------------------------------------------------------------------------------
@@ -309,9 +360,6 @@ class myGLCanvas(GLCanvas):
 
 	#-----------------------------------------------------------------------------------------------
 	def OnDraw(self):
-
-		# DEBUG
-		print("OnDraw")
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 

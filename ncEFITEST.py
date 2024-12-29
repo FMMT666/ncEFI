@@ -18,7 +18,10 @@ lstPts = [ (-40,-40,0), (-10,-1,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,
 gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
 
 
+# now I rememeber this strange stuff in the viewer
+# even elements in a list a directly supported; so are lists in lists (or parts in lists)
 llist += gPOff1
+#llist.append( gPOff1 )
 
 
 debugShowViewer( llist )
