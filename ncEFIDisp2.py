@@ -34,7 +34,9 @@ DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 
 
 # TODO
+#  - modify PartListPrintGeoms to iteratively print an ordered list of elements in parts or lists and then the remaining (direct) elements
 #  - check if 'tColor' is a tuple with 3 elements; could be used for highlighting, color cycling or other stuff
+#  - PartList should be a class
 #  - maybe rename cbCheckAutoRefresh to better reflect what it does, cycling the colors
 #  - implement color cycling for some parts; to improve debug & visibility
 #  - ...
@@ -112,8 +114,135 @@ def createArc180(p1,p2,rad,step,dir):
 
 
 
+#############################################################################
+### GetRandomColor
+###
+#############################################################################
+def GetRandomColor() -> tuple:
+	return ( random.random(), random.random(), random.random() )
 
 
+
+#############################################################################
+### GeomCycleColor
+###
+#############################################################################
+def GeomCycleColor( geom: list, types: list = None ) -> None:
+	# the last resort; if it's not a list, check if it's a part with elements
+	if not isinstance(geom,list):
+		if isinstance(geom,dict) and 'elements' in geom and isinstance(geom['elements'],list):
+			print( "DBG: GeomCycleColor: found part with elements; using this instead" )
+			geom = geom['elements']
+		else:
+			print( "ERR: GeomCycleColor: not a list: ", type(geom) )
+			return
+
+	# by default, we cycle through all types
+	if types is None:
+		types = ['v','l','a']	
+
+	# create missing color tags
+	for item in list:
+		if not 'tColor' in item:
+			item['tColor'] = GetRandomColor()
+
+	# now cycle the colors; the check for 'type' also makes sure that it's a valid element (and not something different)
+	for i in range( 0, len(geom) ):
+		if geom[i]['type'] in types:
+			geom[i]['tColor'] = geom[(i+1) % len(geom ) ]['tColor']
+
+
+
+#############################################################################
+### PartListPrintGeoms
+###
+#############################################################################
+def PartListPrintGeoms( geom: list ) -> None:
+	print("-----")
+	if not isinstance(geom,list):
+		print( "ERR: PartListPrintGeoms: not a list" )
+		return
+	
+	if len(geom) == 0:
+		print( "DBG: PartListPrintGeoms: empty list" )
+		return
+
+	# --- count items
+	cParts         = 0  # number of parts in main list
+	cPartElements  = 0  # sum of elements ('v', 'l', 'a') in all parts
+	cPartError     = 0  # sum of errors in parts
+
+	cLists         = 0  # number of lists in main list
+	cListsElements = 0  # sum of elements ('v', 'l', 'a') in all lists
+	cListsError    = 0  # sum of errors in lists
+
+	cElems         = 0  # number of elements ('v', 'l', 'a') in main list
+	cError         = 0  # sum of errors in main list
+
+	for item in geom:
+		# --- with type
+		if 'type' in item:
+			# --- part in main list (should be the default)
+			if item['type'] == 'p':
+				cParts += 1
+				for i in item['elements']:
+					if i['type'] == 'v' or i['type'] == 'l' or i['type'] == 'a':
+						cPartElements += 1
+					else:
+						print( "ERR: PartListPrintGeoms: unknown type in part: ", type(i) )
+						cPartError += 1
+			# --- element in main list (allowed for debugging)
+			elif item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
+				cElems += 1
+			else:
+			# --- unknown element
+				print( "ERR: PartListPrintGeoms: unknown type in item: ", type(item) )
+				cError += 1
+		# --- if not with 'type', it must be a list
+		else:
+			if isinstance(item,list):
+				cLists += 1
+				for i in item:
+					if i['type'] == 'v' or i['type'] == 'l' or i['type'] == 'a':
+						cListsElements += 1
+					else:
+						print( "ERR: PartListPrintGeoms: unknown type in list item: ", type(i) )
+						cListsError += 1
+			else:
+				print( "ERR: PartListPrintGeoms: item does not have 'type' and is not a list: ", item )
+				cError += 1
+
+	print( "Parts      : ", cParts)
+	print( "  Elements : ", cPartElements)
+	print( "  Errors   : ", cPartError)
+	print( "Lists      : ", cLists)
+	print( "  Elements : ", cListsElements)
+	print( "  Errors   : ", cListsError)
+	print( "Elements   : ", cElems)
+	print( "Errors     : ", cError)
+
+
+
+#############################################################################
+### PartListCountGeoms
+###
+#############################################################################
+def PartListCountGeoms( geom: list ) -> int:
+	pass
+
+
+
+#############################################################################
+### PartListPickGeom
+###
+#############################################################################
+def PartListPickGeom( geom: list, num: int ) -> list:
+	pass
+
+
+
+#===================================================================================================
+#===================================================================================================
 #===================================================================================================
 class myGLCanvas(GLCanvas):
 	def __init__(self, *args, **kwargs):
@@ -297,19 +426,6 @@ class myGLCanvas(GLCanvas):
 	### For debug purposes, this now also supports elements in directories and elements in lists.
 	################################################################################################
 	def DrawPartList(self):
-
-		############################################################################################
-		### Color AddOns
-		############################################################################################
-		def CycleColorsInList( itemList: list ) -> None:
-			pass
-		############################################################################################
-		def GetRandomColor() -> None:
-			return ( random.random(), random.random(), random.random() )
-		############################################################################################
-		###
-		############################################################################################
-
 
 		pos = -1
 		for item in PartList:
@@ -679,6 +795,8 @@ if __name__ == '__main__':
 		if f:
 			f.close()
 
+		# DEBUG
+		PartListPrintGeoms( PartList )	
 
 	app = wx.App(False)
 	main_win = MainWin(None)

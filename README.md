@@ -120,6 +120,7 @@ that is named
     - added tSize  in element's extras (for viewer)
     - added split lines function
     - added color cycling in the viewer
+    - added some parts count debug prints in the viewer
 
 
 ### CHANGES 2024/11/XX
