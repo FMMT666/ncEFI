@@ -121,6 +121,7 @@ that is named
     - added split lines function
     - added color cycling in the viewer
     - added some parts count debug prints in the viewer
+    - needs changes to highlighting/colorcycling before more offset work
 
 
 ### CHANGES 2024/11/XX

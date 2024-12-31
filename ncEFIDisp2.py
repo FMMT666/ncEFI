@@ -128,6 +128,15 @@ def GetRandomColor() -> tuple:
 ###
 #############################################################################
 def GeomCycleColor( geom: list, types: list = None ) -> None:
+
+	# The decision to have not only "parts", but also a single list with items or
+	# a list with lists (of elements) as valid data structures, makes this far more
+	# complicated than necessary.
+	# In case multiple elems (v,l,a) are already on the same "list level" as a part -
+	# which colors shall be considered for cycling?
+	# This was actually only a debug feature, but it would be nice to have a solution
+	# for, e.g. highlighting a part too.
+
 	# the last resort; if it's not a list, check if it's a part with elements
 	if not isinstance(geom,list):
 		if isinstance(geom,dict) and 'elements' in geom and isinstance(geom['elements'],list):
@@ -444,16 +453,23 @@ class myGLCanvas(GLCanvas):
 					for unp in item:
 						if 'type' in unp:
 							if unp['type'] == 'v' or unp['type'] == 'l' or unp['type'] == 'a':
+
+								# TODO: This does not belong here. Either store "new" colors directly in the elements
+								# or create a list with colors somewhere outside (to not modify the original data).
 								myColor = None	
 								if self.colorCycling:
 									if 'tColor' in unp:
 										myColor = GetRandomColor()
+
 								self.DrawElement(unp, myColor )
 				continue
 
 			# --- apparently, the item has a type (checked above)
 			if item['type'] != 'p':
 				if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
+
+					# TODO: This does not belong here. Either store "new" colors directly in the elements
+					# or create a list with colors somewhere outside (to not modify the original data).
 					myColor = None	
 					if self.colorCycling:
 						if 'tColor' in item:
