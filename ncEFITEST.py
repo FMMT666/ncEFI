@@ -20,8 +20,8 @@ gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), 
 
 # now I rememeber this strange stuff in the viewer
 # even elements in a list a directly supported; so are lists in lists (or parts in lists)
-llist += gPOff1
-#llist.append( gPOff1 )
+#llist += gPOff1
+llist.append( gPOff1 )
 
 
 debugShowViewer( llist )

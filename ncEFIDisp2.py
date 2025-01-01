@@ -26,14 +26,20 @@ DRAW_VERTEX_COLOR         = ( 0.8, 0.8, 0.0 )
 DRAW_VERTEX_COLOR_ENGAGE  = ( 1.0, 0.0, 0.0 )
 DRAW_VERTEX_COLOR_NORMAL  = ( 0.7, 0.7, 0.0 )
 DRAW_VERTEX_COLOR_RETRACT = ( 0.0, 1.0, 0.0 )
+
 DRAW_LINE_SIZE            = 1.0
 DRAW_LINE_COLOR           = ( 0.8, 0.8, 0.8 )
+
 DRAW_ARC_SIZE             = 1.0
 DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
+
+DRAW_HIGHLIGHT_COLOR	  = ( 1.0, 0.0, 1.0 )  # for tags of 'tHighlight'; overrides 'tColor'
 
 
 
 # TODO
+#  - the color cycling as well as the color highlighting need an item picker; this is not implemented yet
+#    maybe a wxWidget with a list of items; or simply a number in an input field for now
 #  - modify PartListPrintGeoms to iteratively print an ordered list of elements in parts or lists and then the remaining (direct) elements
 #  - check if 'tColor' is a tuple with 3 elements; could be used for highlighting, color cycling or other stuff
 #  - PartList should be a class
@@ -127,7 +133,7 @@ def GetRandomColor() -> tuple:
 ### GeomCycleColor
 ###
 #############################################################################
-def GeomCycleColor( geom: list, types: list = None ) -> None:
+def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list = None ) -> None:
 
 	# The decision to have not only "parts", but also a single list with items or
 	# a list with lists (of elements) as valid data structures, makes this far more
@@ -150,15 +156,32 @@ def GeomCycleColor( geom: list, types: list = None ) -> None:
 	if types is None:
 		types = ['v','l','a']	
 
-	# create missing color tags
+	# count 'tColors' in list and create missing color tags in case we're supposed to cycle through all of them
+	numColors = 0
 	for item in list:
-		if not 'tColor' in item:
-			item['tColor'] = GetRandomColor()
+		if item['type'] in types:
+			if 'tColor' in item:
+				numColors += 1
+				continue
+			elif cycleColorless:
+				numColors += 1
+				item['tColor'] = GetRandomColor()
+
+	# if there are less than two colors, we can't cycle
+	if numColors < 2:
+		print( "DBG: GeomCycleColor: not enough color tags to cycle" )
+		return
 
 	# now cycle the colors; the check for 'type' also makes sure that it's a valid element (and not something different)
 	for i in range( 0, len(geom) ):
 		if geom[i]['type'] in types:
-			geom[i]['tColor'] = geom[(i+1) % len(geom ) ]['tColor']
+			if 'tColor' in geom[i]:
+				# find next color tag
+				for j in range( i+1, len(geom) ):
+					if geom[  j % len(geom )  ]['type'] in types:
+						if 'tColor' in geom[j]:
+							geom[i]['tColor'] = geom[j % len(geom)]['tColor']
+							break
 
 
 
@@ -412,7 +435,9 @@ class myGLCanvas(GLCanvas):
 			glDisable(GL_LIGHTING)
 			glLineWidth( DRAW_ARC_SIZE )
 			# --- color
-			if 'tColor' in elem:
+			if colorOverride is not None:
+				glColor3f( colorOverride[0], colorOverride[1], colorOverride[2] )
+			elif 'tColor' in elem:
 				glColor3f( elem['tColor'][0], elem['tColor'][1], elem['tColor'][2] )
 			else:
 				glColor3f( DRAW_ARC_COLOR[0], DRAW_ARC_COLOR[1], DRAW_ARC_COLOR[2] )
@@ -453,34 +478,29 @@ class myGLCanvas(GLCanvas):
 					for unp in item:
 						if 'type' in unp:
 							if unp['type'] == 'v' or unp['type'] == 'l' or unp['type'] == 'a':
-
-								# TODO: This does not belong here. Either store "new" colors directly in the elements
-								# or create a list with colors somewhere outside (to not modify the original data).
+								# --- highlight color
 								myColor = None	
-								if self.colorCycling:
-									if 'tColor' in unp:
-										myColor = GetRandomColor()
-
+								if 'tHighlight' in unp:
+									myColor = DRAW_HIGHLIGHT_COLOR
 								self.DrawElement(unp, myColor )
 				continue
 
 			# --- apparently, the item has a type (checked above)
 			if item['type'] != 'p':
 				if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
-
-					# TODO: This does not belong here. Either store "new" colors directly in the elements
-					# or create a list with colors somewhere outside (to not modify the original data).
+					# --- highlight color
 					myColor = None	
-					if self.colorCycling:
-						if 'tColor' in item:
-							myColor = GetRandomColor()
+					if 'tHighlight' in item:
+						myColor = DRAW_HIGHLIGHT_COLOR
 					self.DrawElement(item, myColor )
 				else:
 					continue
 			else:
 				# this could use some additional error checks, but well ...
 				for iElem in item['elements']:
+					print( "DBG DrawPartList: WHAT ARE WE EVEN DRAWING HERE?" )
 					self.DrawElement(iElem)
+
 
 	#-----------------------------------------------------------------------------------------------
 	def SetColorCycling(self, cyclingOn: bool) -> None:
