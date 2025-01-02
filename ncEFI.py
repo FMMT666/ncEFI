@@ -4085,8 +4085,17 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 	# DEBUG
 	import random
+	def GetRandomColor() -> tuple:
+		while True:
+			r = random.random()
+			g = random.random()
+			b = random.random()
+			if math.sqrt( r**2 + g**2 + b**2 ) >= 0.2:
+				break
+		return ( r, g, b )
+
 	for i in splitLines:
-		elemAddColor( i, ( random.random(), random.random(), random.random() ) )
+		elemAddColor( i, GetRandomColor() )
 		elemAddSize( i, 4 )
 
 
@@ -4096,7 +4105,13 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# geom = angleLines + offsLines + geomLines + geomPoly + intsVerts + offsVerts
 	# geom = angleLines + offsLines + geomLines + geomPoly
 	# geom = angleLines + offsLines + geomLines + intsVerts
-	geom = angleLines + geomLines + intsVerts + splitLines
+	# geom = angleLines + geomLines + intsVerts + splitLines
+
+	# DEBUG ONLY; WARNING, APPEND ONLY FOR DEBUGGING!!!
+	geom.append( angleLines )
+	geom.append( geomLines )
+	geom.append( intsVerts )
+	geom.append( splitLines )
 
 
 	return geom

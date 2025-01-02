@@ -113,6 +113,11 @@ that is named
 ---
 ## News
 
+### CHANGES 2025/01/XX
+    - added minimum brightness for random colors
+    - added list/check boxes for testing; lol no
+
+
 ### CHANGES 2024/12/XX
     - started poly offset functionality & tools
     - added some 3D-space distance functions

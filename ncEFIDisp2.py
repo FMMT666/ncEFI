@@ -34,6 +34,7 @@ DRAW_ARC_SIZE             = 1.0
 DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 
 DRAW_HIGHLIGHT_COLOR	  = ( 1.0, 0.0, 1.0 )  # for tags of 'tHighlight'; overrides 'tColor'
+DRAW_MIN_BRIGHTNESS	      = 0.2
 
 
 
@@ -125,7 +126,18 @@ def createArc180(p1,p2,rad,step,dir):
 ###
 #############################################################################
 def GetRandomColor() -> tuple:
-	return ( random.random(), random.random(), random.random() )
+	# there are probably better ways to achieve this, but - well ...
+	while True:
+		r = random.random()
+		g = random.random()
+		b = random.random()
+		if math.sqrt( r**2 + g**2 + b**2 ) >= DRAW_MIN_BRIGHTNESS:
+			break
+		else:
+			# DEBUG ONLY
+			print( "DBG: GetRandomColor: too dark; retrying" )
+
+	return ( r, g, b )
 
 
 
@@ -260,6 +272,7 @@ def PartListPrintGeoms( geom: list ) -> None:
 ###
 #############################################################################
 def PartListCountGeoms( geom: list ) -> int:
+	# actually the same as PartListPrintGeoms, but only returns the total number of elements
 	pass
 
 
@@ -712,12 +725,25 @@ class ToolPanel(wx.Panel):
 		wx.Panel.__init__(self, parent, *args, **kwargs)
 		self.canvas = canvas
 
+
 		self.button1        = wx.Button  ( self, label="Button 1" )
 		self.button2        = wx.Button  ( self, label="Button 2" )
 		self.button3        = wx.Button  ( self, label="Button 3" )
 		self.button4        = wx.Button  ( self, label="Button 4" )
 		self.button5        = wx.Button  ( self, label="Button 5" )
 		self.chkAutoRefresh = wx.CheckBox( self, label="Colorcycle" )
+
+		# TESTING
+#		self.lstList        = wx.ListBox( self, choices=["List 1", "List 2", "List 3"], style=wx.LB_SINGLE )
+#		self.lstList.InsertItems( ["List 4", "List 5", "Listlistlistlistlist 6"], 3 )	
+
+
+		# only works with more than three items; bug?
+#		self.chklstList		= wx.CheckListBox( self, choices=["Check 1", "Check 2", "Check 3"] )
+		self.chklstList		= wx.CheckListBox( self, choices=[] )
+		self.chklstList.InsertItems( ["Check 4", "Check 5", "Checkcheckcheckcheck 6"], 0 )
+
+
 
 		self.Bind(wx.EVT_CHECKBOX,       self.cbCheckAutoRefresh)
 		# self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
@@ -730,8 +756,11 @@ class ToolPanel(wx.Panel):
 		self.sizer.Add( self.button3, flag=wx.BOTTOM, border=5 )
 		self.sizer.Add( self.button4, flag=wx.BOTTOM, border=5 )
 		self.sizer.Add( self.button5, flag=wx.BOTTOM, border=5 )
-		
 		self.sizer.Add( self.chkAutoRefresh )
+#		self.sizer.Add( self.lstList )
+		self.sizer.Add( self.chklstList )
+
+
 
 		self.border = wx.BoxSizer()
 		self.border.Add( self.sizer, flag=wx.ALL | wx.EXPAND, border=5 )
