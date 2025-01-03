@@ -1014,7 +1014,7 @@ def partCreate( name="", elems = None, extras={} ):
 	# TODO: check what to do if the part creation fails; return {} or an empty part??
 
 	if not isinstance( elems, list ):
-		print( "ERR: partCreate: elems is not a list; ignoring: ", type(elems) )
+		print( "DBG: partCreate: elems is not a list; ignoring: ", type(elems) )
 		elems = []
 	
 #	part = { 'name':name, 'type':'p', 'elements':elems }

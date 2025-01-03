@@ -7,6 +7,30 @@ from ncEFI import *
 
 
 
+
+#---------------------------------------
+# COPIED FROM BELOW TO TEST IF THE PART SYSTEM IS STILL WORKING
+llist=[]
+p1 = partCreate('Hole')
+# def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+for i in range(6):
+#	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
+#	llist.append(  partRotateZ(p1, 360/5 * i)  )
+	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
+debugShowViewer( llist )
+tool = []
+for part in llist:
+	tool += toolRapidToNextPart( part )
+	tool += toolCreateFromPart( part )
+toolFileWrite( tool )
+sys.exit(0)
+
+
+
+
+
+
 #---------------------------------------
 llist = []
 
@@ -15,16 +39,19 @@ llist = []
 lstPts = [ (-40,-40,0), (-10,-1,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
 
 
+myPart = partCreate( name = "Hupe" )
 # WARNING THIS NOW RETURNS A LIST WITH LISTS FOR BETTER VISIBILITY
 # DO NOT USE APPEND TO ADD TO LLIST
 gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
-llist += gPOff1
+for lstElem in gPOff1:
+	for i in lstElem:
+		partAddElements( myPart, i )
 
 
 
+llist.append( myPart )
 
 debugShowViewer( llist )
-
 
 
 

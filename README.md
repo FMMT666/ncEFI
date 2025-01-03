@@ -116,6 +116,8 @@ that is named
 ### CHANGES 2025/01/XX
     - added minimum brightness for random colors
     - added list/check boxes for testing; lol no
+    - added some helper functions for parts
+    - added filling the CheckList box with parts
 
 
 ### CHANGES 2024/12/XX

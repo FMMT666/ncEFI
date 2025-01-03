@@ -198,18 +198,20 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 
 
 #############################################################################
-### PartListPrintGeoms
+### PartListCountGeoms
 ###
 #############################################################################
-def PartListPrintGeoms( geom: list ) -> None:
-	print("-----")
+def PartListCountGeoms( geom: list ) -> dict:
+
+	counts = {}
+
 	if not isinstance(geom,list):
 		print( "ERR: PartListPrintGeoms: not a list" )
-		return
+		return counts
 	
 	if len(geom) == 0:
 		print( "DBG: PartListPrintGeoms: empty list" )
-		return
+		return counts
 
 	# --- count items
 	cParts         = 0  # number of parts in main list
@@ -256,24 +258,38 @@ def PartListPrintGeoms( geom: list ) -> None:
 				print( "ERR: PartListPrintGeoms: item does not have 'type' and is not a list: ", item )
 				cError += 1
 
-	print( "Parts      : ", cParts)
-	print( "  Elements : ", cPartElements)
-	print( "  Errors   : ", cPartError)
-	print( "Lists      : ", cLists)
-	print( "  Elements : ", cListsElements)
-	print( "  Errors   : ", cListsError)
-	print( "Elements   : ", cElems)
-	print( "Errors     : ", cError)
+	# still less typing than using the dict directly
+	counts['cParts']         = cParts
+	counts['cPartElements']  = cPartElements
+	counts['cPartError']     = cPartError
+	counts['cLists']         = cLists
+	counts['cListsElements'] = cListsElements
+	counts['cListsError']    = cListsError
+	counts['cElems']         = cElems
+	counts['cError']         = cError
+
+	return counts
 
 
 
 #############################################################################
-### PartListCountGeoms
+### PartListPrintGeoms
 ###
 #############################################################################
-def PartListCountGeoms( geom: list ) -> int:
-	# actually the same as PartListPrintGeoms, but only returns the total number of elements
-	pass
+def PartListPrintGeoms( geom: list ) -> None:
+
+	counts = PartListCountGeoms( geom )
+
+	if counts != {}:
+		print("-----")
+		print( "Parts      : ", counts['cParts'])
+		print( "  Elements : ", counts['cPartElements'])
+		print( "  Errors   : ", counts['cPartError'])
+		print( "Lists      : ", counts['cLists'])
+		print( "  Elements : ", counts['cListsElements'])
+		print( "  Errors   : ", counts['cListsError'])
+		print( "Elements   : ", counts['cElems'])
+		print( "Errors     : ", counts['cError'])
 
 
 
@@ -286,9 +302,39 @@ def PartListPickGeom( geom: list, num: int ) -> list:
 
 
 
-#===================================================================================================
-#===================================================================================================
-#===================================================================================================
+#############################################################################
+### PartListGetPartNames
+###
+#############################################################################
+def PartListGetPartNames( geom: list ) -> list:
+	
+	names = []
+
+	if not isinstance(geom,list):
+		print( "ERR: PartListGetPartNames: not a list" )
+		return names
+
+	for item in geom:
+		if 'type' in item:
+			if item['type'] == 'p':
+				if 'name' in item:
+					names.append( item['name'] )
+				else:
+					names.append( "unnamed" )
+			if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
+				print( "DBG: PartListGetPartNames: found element in main list; debug; skipping" )
+				continue
+		else:
+			print( "ERR: PartListGetPartNames: not a part: ", item )
+
+	return names
+
+
+
+####################################################################################################
+### class myGLCanvas ###############################################################################
+####################################################################################################
+####################################################################################################
 class myGLCanvas(GLCanvas):
 	def __init__(self, *args, **kwargs):
 
@@ -715,8 +761,15 @@ class myGLCanvas(GLCanvas):
 
 		self.Resize()
 
-#===================================================================================================
+
+
+####################################################################################################
+### class ToolPanel ################################################################################
+####################################################################################################
+####################################################################################################
 class ToolPanel(wx.Panel):
+
+	#-----------------------------------------------------------------------------------------------
 	def __init__(self, parent, canvas, *args, **kwargs):
 
 		# for the timer
@@ -726,6 +779,7 @@ class ToolPanel(wx.Panel):
 		self.canvas = canvas
 
 
+		# --- GUI elements
 		self.button1        = wx.Button  ( self, label="Button 1" )
 		self.button2        = wx.Button  ( self, label="Button 2" )
 		self.button3        = wx.Button  ( self, label="Button 3" )
@@ -734,21 +788,22 @@ class ToolPanel(wx.Panel):
 		self.chkAutoRefresh = wx.CheckBox( self, label="Colorcycle" )
 
 		# TESTING
-#		self.lstList        = wx.ListBox( self, choices=["List 1", "List 2", "List 3"], style=wx.LB_SINGLE )
-#		self.lstList.InsertItems( ["List 4", "List 5", "Listlistlistlistlist 6"], 3 )	
+		# self.lstList        = wx.ListBox( self, choices=["List 1", "List 2", "List 3"], style=wx.LB_SINGLE )
+		# self.lstList.InsertItems( ["List 4", "List 5", "Listlistlistlistlist 6"], 3 )	
 
+		# bug? only works with more than three items
+		# self.lstPartSelector = wx.CheckListBox( self, choices=["Check 1", "Check 2", "Check 3"] )
+		# self.lstPartSelector.InsertItems( ["Check 4", "Check 5", "Checkcheckcheckcheck 6"], 0 )
+		self.lstPartSelector = wx.CheckListBox( self, choices=[] )
+		self.AddPartsToPartList( self.lstPartSelector, PartList )
 
-		# only works with more than three items; bug?
-#		self.chklstList		= wx.CheckListBox( self, choices=["Check 1", "Check 2", "Check 3"] )
-		self.chklstList		= wx.CheckListBox( self, choices=[] )
-		self.chklstList.InsertItems( ["Check 4", "Check 5", "Checkcheckcheckcheck 6"], 0 )
-
-
-
+		# --- GUI events
 		self.Bind(wx.EVT_CHECKBOX,       self.cbCheckAutoRefresh)
 		# self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
 		# self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
 
+
+		# --- GUI layout
 		self.sizer = wx.BoxSizer( wx.VERTICAL )
 
 		self.sizer.Add( self.button1, flag=wx.BOTTOM, border=5 )
@@ -758,14 +813,13 @@ class ToolPanel(wx.Panel):
 		self.sizer.Add( self.button5, flag=wx.BOTTOM, border=5 )
 		self.sizer.Add( self.chkAutoRefresh )
 #		self.sizer.Add( self.lstList )
-		self.sizer.Add( self.chklstList )
-
-
+		self.sizer.Add( self.lstPartSelector )
 
 		self.border = wx.BoxSizer()
 		self.border.Add( self.sizer, flag=wx.ALL | wx.EXPAND, border=5 )
 
 		self.SetSizerAndFit(self.border)
+
 
 	#-----------------------------------------------------------------------------------------------
 	def cbCheckAutoRefresh(self, e):
@@ -777,13 +831,38 @@ class ToolPanel(wx.Panel):
 			self.mainWin.canvas.SetColorCycling( False )
 			self.mainWin.timer.Stop()
 
+
+	#-----------------------------------------------------------------------------------------------
+	def AddPartsToPartList(self, guiList, parts: list) -> None:
+
+		# TODO: functions is called "Add...", but clears all; maybe add a parameter like
+		# "clearAll = True" to actually allow appending instead of overwriting
+		self.lstPartSelector.Clear()
+
+		counts = PartListCountGeoms( parts )
+		if counts == {}:
+			return
+
+		if counts['cParts'] > 0:
+			names = PartListGetPartNames( parts )
+			guiList.Insert( names, 0 )
+		
+		if ( num := counts['cLists'] ) > 0:
+			for i in range( num ):
+				guiList.Insert( "List %d" % (i+1), i )	
+
+
 	#-----------------------------------------------------------------------------------------------
 	def OnClose( self, e ):
 	# 	self.Destroy()
 		pass
 
 
-#===================================================================================================
+
+####################################################################################################
+### class MainWin ##################################################################################
+####################################################################################################
+####################################################################################################
 class MainWin(wx.Frame):
 	def __init__(self, *args, **kwargs):
 		wx.Frame.__init__(self, title='OpenGL', *args, **kwargs)
@@ -834,7 +913,9 @@ class MainWin(wx.Frame):
 		pass
 
 
+
 #===================================================================================================
+
 
 
 if __name__ == '__main__':
