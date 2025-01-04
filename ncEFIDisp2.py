@@ -11,6 +11,7 @@ import wx
 import pickle
 import math
 import random
+from typing import Generator, Union
 
 
 MOUSE_ZOOM_FACTOR_WHEEL   = 0.1
@@ -39,18 +40,11 @@ DRAW_MIN_BRIGHTNESS	      = 0.2
 
 
 # TODO
-#  - the color cycling as well as the color highlighting need an item picker; this is not implemented yet
-#    maybe a wxWidget with a list of items; or simply a number in an input field for now
-#  - modify PartListPrintGeoms to iteratively print an ordered list of elements in parts or lists and then the remaining (direct) elements
+#  - PartList is now a class; implement the remaining functions
 #  - check if 'tColor' is a tuple with 3 elements; could be used for highlighting, color cycling or other stuff
-#  - PartList should be a class
 #  - maybe rename cbCheckAutoRefresh to better reflect what it does, cycling the colors
 #  - implement color cycling for some parts; to improve debug & visibility
 #  - ...
-
-
-# everyone loves global vars <3
-PartList = None
 
 
 
@@ -197,6 +191,70 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 
 
 
+####################################################################################################
+### class PartList #################################################################################
+####################################################################################################
+####################################################################################################
+class PartList():
+
+	#-----------------------------------------------------------------------------------------------
+	def __init__(self, fname: str = None):
+
+		self.fileName = fname
+		self.PartList = []
+
+		if fname is not None:
+			self.LoadFromFile( fname )
+
+
+	#-----------------------------------------------------------------------------------------------
+	def LoadFromFile(self, fname: str) -> None:
+
+		try:
+			fin = open( fname, 'r+b')
+		except:
+			print( "ERR: LoadFromFile: file not found (%s)" % fname )
+			return
+
+		try:
+			self.PartList = pickle.load(fin)
+		except:
+			print( "ERR: LoadFromFile: error loading data from (%s)" % fname )
+			fin.close()
+			self.PartList = []
+	
+		if fin:
+			fin.close()
+
+		# DEBUG
+		PartListPrintGeoms( self.PartList )	
+
+
+	#-----------------------------------------------------------------------------------------------
+	def IsEmpty(self) -> bool:
+		if len(self.PartList) == 0:
+			return True
+		return False
+
+
+	#-----------------------------------------------------------------------------------------------
+	def YieldParts(self) -> Generator[Union[list, dict], None, None]:
+		for item in self.PartList:
+			yield item
+
+
+	#-----------------------------------------------------------------------------------------------
+	def YieldPartNames(self) -> Generator[Union[list, dict], None, None]:
+		numList = 1
+		for item in self.PartList:
+			if 'name' in item:
+				yield item['name']
+			else:
+				if isinstance(item,list):
+					yield " List %d" % numList 
+
+
+
 #############################################################################
 ### PartListCountGeoms
 ###
@@ -336,7 +394,11 @@ def PartListGetPartNames( geom: list ) -> list:
 ####################################################################################################
 ####################################################################################################
 class myGLCanvas(GLCanvas):
-	def __init__(self, *args, **kwargs):
+
+	#-----------------------------------------------------------------------------------------------
+	def __init__(self, PartListData = None, *args, **kwargs ):
+
+		self.PartListData = PartListData
 
 		# TODO: probably not necessary (needs testing)
 		glutInit(['lmfao'])
@@ -521,7 +583,7 @@ class myGLCanvas(GLCanvas):
 	def DrawPartList(self):
 
 		pos = -1
-		for item in PartList:
+		for item in self.PartListData.YieldParts():
 
 			pos += 1
 
@@ -544,20 +606,23 @@ class myGLCanvas(GLCanvas):
 								self.DrawElement(unp, myColor )
 				continue
 
-			# --- apparently, the item has a type (checked above)
+			# --- apparently, the item has a type (checked above), but it's not a part
 			if item['type'] != 'p':
+				# --- it's an element
 				if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
 					# --- highlight color
-					myColor = None	
+					myColor = None
 					if 'tHighlight' in item:
 						myColor = DRAW_HIGHLIGHT_COLOR
 					self.DrawElement(item, myColor )
+				# --- it's something that does not belong here
 				else:
+					print( "DBG DrawPartList: WHAT ARE WE EVEN DRAWING HERE?: ", item )
 					continue
+			# --- it's a part
 			else:
-				# this could use some additional error checks, but well ...
+				# TODO: additional error checks
 				for iElem in item['elements']:
-					print( "DBG DrawPartList: WHAT ARE WE EVEN DRAWING HERE?" )
 					self.DrawElement(iElem)
 
 
@@ -595,7 +660,7 @@ class myGLCanvas(GLCanvas):
 
 		#---------------------------------
 		# draw parts
-		if PartList is not None:
+		if not self.PartListData.IsEmpty():
 			glLineWidth(2)
 			glPointSize(4)
 			glColor3f( 0.8, 0.8, 0.8)
@@ -773,7 +838,10 @@ class ToolPanel(wx.Panel):
 	def __init__(self, parent, canvas, *args, **kwargs):
 
 		# for the timer
-		self.mainWin = parent
+		self.mainWin      = parent
+
+		# for the part list (TODO: this sucks)
+		self.PartListData = parent.PartListData
 
 		wx.Panel.__init__(self, parent, *args, **kwargs)
 		self.canvas = canvas
@@ -795,7 +863,7 @@ class ToolPanel(wx.Panel):
 		# self.lstPartSelector = wx.CheckListBox( self, choices=["Check 1", "Check 2", "Check 3"] )
 		# self.lstPartSelector.InsertItems( ["Check 4", "Check 5", "Checkcheckcheckcheck 6"], 0 )
 		self.lstPartSelector = wx.CheckListBox( self, choices=[] )
-		self.AddPartsToPartList( self.lstPartSelector, PartList )
+		self.AddPartNamesToPartSelector( self.lstPartSelector, self.PartListData.YieldPartNames() )	
 
 		# --- GUI events
 		self.Bind(wx.EVT_CHECKBOX,       self.cbCheckAutoRefresh)
@@ -833,23 +901,16 @@ class ToolPanel(wx.Panel):
 
 
 	#-----------------------------------------------------------------------------------------------
-	def AddPartsToPartList(self, guiList, parts: list) -> None:
+	def AddPartNamesToPartSelector(self, guiList, names: list) -> None:
 
 		# TODO: functions is called "Add...", but clears all; maybe add a parameter like
 		# "clearAll = True" to actually allow appending instead of overwriting
 		self.lstPartSelector.Clear()
 
-		counts = PartListCountGeoms( parts )
-		if counts == {}:
-			return
-
-		if counts['cParts'] > 0:
-			names = PartListGetPartNames( parts )
-			guiList.Insert( names, 0 )
-		
-		if ( num := counts['cLists'] ) > 0:
-			for i in range( num ):
-				guiList.Insert( "List %d" % (i+1), i )	
+		num = 0
+		for name in names:
+			guiList.Insert( name, num )
+			num += 1
 
 
 	#-----------------------------------------------------------------------------------------------
@@ -863,14 +924,21 @@ class ToolPanel(wx.Panel):
 ### class MainWin ##################################################################################
 ####################################################################################################
 ####################################################################################################
-class MainWin(wx.Frame):
-	def __init__(self, *args, **kwargs):
-		wx.Frame.__init__(self, title='OpenGL', *args, **kwargs)
+class MainWin( wx.Frame ):
+
+	#-----------------------------------------------------------------------------------------------
+	def __init__(self, fileName: str = None, *args, **kwargs ):
+
+		# --- load data
+		self.PartListData = PartList( fileName )
+
+		# --- GUI
+		wx.Frame.__init__(self, title='ncEFI Disp', *args, **kwargs)
 
 		self.Bind(wx.EVT_CLOSE,          self.OnClose) # not working in macOS (not sure about others)
 		self.Bind(wx.EVT_WINDOW_DESTROY, self.OnClose)
 
-		self.canvas = myGLCanvas(self, size=(640, 480))
+		self.canvas = myGLCanvas( self.PartListData, self, size=(640, 480))
 
 		self.context = wx.glcanvas.GLContext(self.canvas)
 		self.canvas.context = self.context
@@ -885,11 +953,12 @@ class MainWin(wx.Frame):
 		self.SetSizerAndFit(self.sizer)
 
 
-		# TODO: new timer for color cycling or other animations
+		# --- timer for color cycling, animations, etc.
 		self.timer = wx.Timer(self)
 		self.Bind(wx.EVT_TIMER, self.OnTimer)
 
 
+		# --- go
 		self.Show()
 
 
@@ -920,31 +989,27 @@ class MainWin(wx.Frame):
 
 if __name__ == '__main__':
 
-	if len(sys.argv) > 1:
+	fname = None
 
-		# use last argument as file name and open it
+	# ---- get file name if given
+	if len(sys.argv) > 1:
 		fname = sys.argv[ len(sys.argv)-1 ]
 
-		try:
-			f = open( fname, 'r+b')
-		except:
-			print( "ERROR: file not found (%s)" % fname )
-			sys.exit()
+		# try:
+		# 	f = open( fname, 'r+b')
+		# except:
+		# 	print( "ERROR: file not found (%s)" % fname )
+		# 	sys.exit()
+		# try:
+		# 	PartList = pickle.load(f)
+		# except:
+		# 	print( "ERROR loading data (%s)" % fname )
+		# 	f.close()
+		# 	sys.exit()
+		# if f:
+		# 	f.close()
 
-		try:
-			PartList = pickle.load(f)
-		except:
-			print( "ERROR loading data (%s)" % fname )
-			f.close()
-			sys.exit()
 
-		if f:
-			f.close()
-
-		# DEBUG
-		PartListPrintGeoms( PartList )	
-
-	app = wx.App(False)
-	main_win = MainWin(None)
+	app = wx.App( False )
+	main_win = MainWin( fname, None )
 	app.MainLoop()
-

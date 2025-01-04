@@ -118,6 +118,7 @@ that is named
     - added list/check boxes for testing; lol no
     - added some helper functions for parts
     - added filling the CheckList box with parts
+    - added a class for the part list
 
 
 ### CHANGES 2024/12/XX
