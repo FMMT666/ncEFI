@@ -17,7 +17,21 @@ p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  2
 for i in range(6):
 #	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
 #	llist.append(  partRotateZ(p1, 360/5 * i)  )
-	llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ) )  )
+
+	# Some tests with the new "no instance" translate/rotate function.
+	# Appending without copying to the list will of course always create a new entry,
+	# but even after that, modifications to the original (if the variable is still available)
+	# WILL affect the appended part, as the elements are not truly copied, but just referenced (by Python itself).
+
+	# llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ), copy = False )  )
+	# partRotateZAt( p1, 360/5 * i, (-10,-15,0 ) )
+	# llist.append( p1 )
+
+	# p1 = partRotateZAt( p1, 360.0/5, (-10,-15,0 ), copy=True )
+	p1 = partRotateZAt( p1, 30, (-10,-15,0 ), copy=True )
+	llist.append( p1 )
+
+
 debugShowViewer( llist )
 tool = []
 for part in llist:

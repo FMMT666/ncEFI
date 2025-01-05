@@ -134,6 +134,7 @@ import sys      # only for 'debugShowViewer()'
 
 import math
 import pickle
+from copy import deepcopy
 
 from ncVec import *
 
@@ -620,10 +621,7 @@ def elemGetPts(el):
 ### Returns a new instance of the given element
 #############################################################################
 def elemCopy(el):
-	en={}
-	for i in el:
-		en[i]=el[i]
-	return en
+	return deepcopy(el)
 
 
 
@@ -632,26 +630,25 @@ def elemCopy(el):
 ###
 ### Rotates an element around the z-axis at (0,0). Angle 'ang' in degrees.
 ### (or physically correct (0,0,1) :-)
-### Returns a new instance.
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def elemRotateZ(elem, ang):
-	# TODO: probably not necessary to copy the element here
-	elemn={}
-	ang = math.radians( ang )
-	for i in elem:
-		elemn[i]=elem[i]
-	if   elemn['type'] == 'v':
-		elemn['p1']=vecRotateZ(elemn['p1'],ang)
-		return elemn
-	elif elemn['type'] == 'l':
-		elemn['p1']=vecRotateZ(elemn['p1'],ang)
-		elemn['p2']=vecRotateZ(elemn['p2'],ang)
-		return elemn
-	elif elemn['type'] == 'a':
-		elemn['p1']=vecRotateZ(elemn['p1'],ang)
-		elemn['p2']=vecRotateZ(elemn['p2'],ang)
-		return elemn
+def elemRotateZ(elem, ang, copy=False):
+	if copy:
+		nelem = deepcopy(elem)
+	else:
+		nelem = elem
 
+	ang = math.radians( ang )
+
+	nelem['p1'] = vecRotateZ(nelem['p1'],ang)
+
+	if nelem['type'] == 'v':
+		return nelem
+
+	if nelem['type'] == 'l' or nelem['type'] == 'a':
+		nelem['p2'] = vecRotateZ(nelem['p2'],ang)
+
+	return nelem
 
 
 #############################################################################
@@ -659,18 +656,21 @@ def elemRotateZ(elem, ang):
 ###
 ### Rotates an element around the z-axis at a given center point.
 ### Angle 'ang' in degrees.
-### Returns a new instance.
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def elemRotateZAt(elem, ang, center):
-	# TODO: probably not necessary to copy the element here
-	elemn={}
-	for i in elem:
-		elemn[i] = elem[i]
+def elemRotateZAt(elem, ang, center, copy=False):
+	if copy:
+		nelem = deepcopy(elem)
+	else:
+		nelem = elem
+
 	vec = vecReverse( center )
-	elemn = elemTranslate( elemn, vec )
-	elemn = elemRotateZ( elemn, ang )
-	elemn = elemTranslate( elemn, center )
-	return elemn 
+
+	elemTranslate( nelem, vec )
+	elemRotateZ( nelem, ang )
+	elemTranslate( nelem, center )
+
+	return nelem 
 
 
 
@@ -678,22 +678,21 @@ def elemRotateZAt(elem, ang, center):
 ### elemTranslate
 ###
 ### Moves an element into the directions specified by a vector (tuple)
-### Returns a new instance.
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def elemTranslate(elem, vec):
-	# TODO: probably not necessary to copy the element here
-	elemn={}
-	for i in elem:
-		elemn[i]=elem[i]
+def elemTranslate(elem, vec, copy=False):
+	if copy:
+		nelem = deepcopy(elem)
+	else:
+		nelem = elem
+
 	# every element has 'p1':
-	p1=vecAdd(elemn['p1'],vec)
-	elemn['p1']=p1
+	nelem['p1'] = vecAdd(nelem['p1'],vec)
 
-	if 'p2' in elem:
-		p2=vecAdd(elemn['p2'],vec)
-		elemn['p2']=p2
+	if 'p2' in nelem:
+		nelem['p2'] = vecAdd(nelem['p2'],vec)
 
-	return elemn
+	return nelem
 
 
 
@@ -702,28 +701,36 @@ def elemTranslate(elem, vec):
 ###
 ### Moves an element to a specific position. Reference is either 'p1' (default),
 ### 'p2' or the midpoint between 'p1' and 'p2'.
-### Returns a new instance.
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def elemMoveTo(elem, pos, ref='p1'):
-	# TODO: probably not necessary to copy the element here
-	elemn={}
-	for i in elem:
-		elemn[i]=elem[i]
-	if   elemn['type'] == 'v':
-		elemn['p1'] = pos
-		return elemn
-	elif elemn['type'] == 'l' or elemn['type'] == 'a':
+def elemMoveTo(elem, pos, ref='p1', copy=False):
+	if copy:
+		nelem = deepcopy(elem)
+	else:
+		nelem = elem
+
+	if nelem['type'] == 'v':
+		nelem['p1'] = pos
+		return nelem
+	
+	# TODO UNTESTED (1/2025)
+	elif nelem['type'] == 'l' or nelem['type'] == 'a':
 		if ref == 'p1':
-			elemn['p1'] = pos
-			elemn['p2'] = vecAdd( elemn['p1'], vecExtract(  elem['p1'], elem['p2']  )  )
+			# store vector before modifying v1
+			pm = vecExtract(  elem['p1'], elem['p2']  )
+			nelem['p1'] = pos
+			nelem['p2'] = vecAdd( nelem['p1'], pm )
 		elif ref == 'p2':
-			elemn['p2'] = pos
-			elemn['p1'] = vecAdd( elemn['p2'], vecExtract(  elem['p2'], elem['p1']  )  )
+			# store vector before modifying v1
+			pm = vecExtract(  elem['p2'], elem['p1']  )			
+			nelem['p2'] = pos
+			nelem['p1'] = vecAdd( nelem['p2'], pm  )
 		elif ref == 'p1p2':
-			pm = vecExtractMid( elem['p1'], elem['p2'] ) 
-			elemn['p1'] = vecAdd( pos, vecReverse( pm ) )
-			elemn['p2'] = vecAdd( pos, pm )
-		return elemn
+			# store vector before modifying v1
+			pm = vecExtractMid( nelem['p1'], nelem['p2'] ) 
+			nelem['p1'] = vecAdd( pos, vecReverse( pm ) )
+			nelem['p2'] = vecAdd( pos, pm )
+		return nelem
 
 
 
@@ -731,32 +738,30 @@ def elemMoveTo(elem, pos, ref='p1'):
 ### elemReverse
 ###
 ### Reverses the direction of an element, swapping 'p1' and 'p2'
-### Returns a new instance.
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def elemReverse(elem):
-	elemn={}
-	for i in elem:
-		elemn[i]=elem[i]
+def elemReverse(elem, copy=False):
+	if copy:
+		nelem = deepcopy(elem)
+	else:
+		nelem = elem
 
-	if elem['type']=='v':
-		return elemn
+	# store original points before swapping
+	p1 = nelem['p1']
+	p2 = nelem['p2']
 
-	# future upgrades may require changes...
-	p1=elemn['p1']
-	p2=elemn['p2']
+	if elem['type'] == 'l':
+		nelem['p1'] = p2
+		nelem['p2'] = p1
 
-	if elem['type']=='l':
-		elemn['p1']=p2
-		elemn['p2']=p1
-
-	if elem['type']=='a':
-		elemn['p1']=p2
-		elemn['p2']=p1
-		if elemn['dir']=='cw':
-			elemn['dir']='cc'
+	if elem['type'] == 'a':
+		nelem['p1'] = p2
+		nelem['p2'] = p1
+		if nelem['dir'] == 'cw':
+			nelem['dir'] = 'cc'
 		else:
-			elemn['dir']='cw'
-	return elemn
+			nelem['dir'] = 'cw'
+	return nelem
 
 
 
@@ -1238,6 +1243,31 @@ def partRenumber( part ):
 
 
 #############################################################################
+### partRename
+###
+#############################################################################
+def partRename( part, name ):
+	part['name'] = name
+	return part
+
+
+
+#############################################################################
+### partCopy
+###
+#############################################################################
+def partCopy( part, name = None ):
+
+	newPart = deepcopy(part)
+	
+	if name is not None:
+		partRename( newPart, name )
+
+	return newPart
+
+
+
+#############################################################################
 ### partSortByNumber
 ###
 #############################################################################
@@ -1350,33 +1380,32 @@ def partCheckClosed( part ):
 ### partTranslate
 ###
 ### Moves the part into the direction specified by a vector.
-### Returns a new instance
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def partTranslate( part, vec ):
-	partn = {}
-	for i in part:
-		# do not copy the elements; they are what wee need to translate in here
-		if i == 'elements':
-			partn['elements'] = []
-		else:
-			partn[i] = part[i]
+def partTranslate( part, vec, copy = False ):
 	if not isinstance( part, dict ):
 		print( "ERR: partTranslate: not a dict ", type(part) )
-		return []
+		return {}
 	if 'type' not in part:
 		print( "ERR: partTranslate: no 'type' in part" )
-		return []
+		return {}
 	if part['type'] != 'p':
 		print( "ERR: partTranslate: wrong 'type' in part:", part['type'] )
-		return []
+		return {}
 	if 'elements' not in part:
 		print( "ERR: partTranslate: no 'elements' in part" )
-		return []
+		return {}
+
+	if copy:
+		npart = deepcopy(part)
+	else:
+		npart = part
+
 	# could also pass the list to 'geomTranslate()', but ok ...
-	for elem in part['elements']:
-		partn['elements'].append(  elemTranslate( elem, vec)  )
+	for elem in npart['elements']:
+		elem = elemTranslate( elem, vec )
 	
-	return partn
+	return npart
 
 
 
@@ -1385,33 +1414,32 @@ def partTranslate( part, vec ):
 ###
 ### Rotates the part around the center of the z-axis, vec(0,0,1)
 ### Angle 'ang' in degrees.
-### Returns a new instance
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def partRotateZ( part, ang ):
-	partn = {}
-	for i in part:
-		# do not copy the elements; they are what wee need to translate in here
-		if i == 'elements':
-			partn['elements'] = []
-		else:
-			partn[i] = part[i]
+def partRotateZ( part, ang, copy=False ):
 	if not isinstance( part, dict ):
 		print( "ERR: partRotateZ: not a dict ", type(part) )
-		return []
+		return {}
 	if 'type' not in part:
 		print( "ERR: partRotateZ: no 'type' in part" )
-		return []
+		return {}
 	if part['type'] != 'p':
 		print( "ERR: partRotateZ: wrong 'type' in part:", part['type'] )
-		return []
+		return {}
 	if 'elements' not in part:
 		print( "ERR: partRotateZ: no 'elements' in part" )
-		return []
+		return {}
+
+	if copy:
+		npart = deepcopy(part)
+	else:
+		npart = part
+
 	# could also pass the list to 'geomRotateZ()', but ok ...
-	for elem in part['elements']:
-		partn['elements'].append(  elemRotateZ( elem, ang)  )
+	for elem in npart['elements']:
+		elem = elemRotateZ( elem, ang )
 	
-	return partn
+	return npart
 
 
 
@@ -1420,33 +1448,32 @@ def partRotateZ( part, ang ):
 ###
 ### Rotates the part around the z-axis specified by a 'center' point.
 ### Angle 'ang' in degrees.
-### Returns a new instance
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def partRotateZAt( part, ang, center ):
-	partn = {}
-	for i in part:
-		# do not copy the elements; they are what wee need to translate in here
-		if i == 'elements':
-			partn['elements'] = []
-		else:
-			partn[i] = part[i]
+def partRotateZAt( part, ang, center, copy=False ):
 	if not isinstance( part, dict ):
 		print( "ERR: partRotateZAt: not a dict ", type(part) )
-		return []
+		return {}
 	if 'type' not in part:
 		print( "ERR: partRotateZAt: no 'type' in part" )
-		return []
+		return {}
 	if part['type'] != 'p':
 		print( "ERR: partRotateZAt: wrong 'type' in part:", part['type'] )
-		return []
+		return {}
 	if 'elements' not in part:
 		print( "ERR: partRotateZAt: no 'elements' in part" )
-		return []
+		return {}
+
+	if copy:
+		npart = deepcopy(part)
+	else:
+		npart = part
+
 	# could also pass the list to 'geomRotateZ()', but ok ...
-	for elem in part['elements']:
-		partn['elements'].append(  elemRotateZAt( elem, ang, center )  )
+	for elem in npart['elements']:
+		elem = elemRotateZAt( elem, ang, center )
 	
-	return partn
+	return npart
 
 
 
@@ -1492,11 +1519,16 @@ def partPrintInfo( part ):
 	else:
 		strName = part['name']
 	print( "-----" )
-	print( "  PART: " + strName + ' with ' + str( len( part['elements'] ) ) + ' elements' )
-	for k,v in part:
-		if k in ['name', 'type', 'elements']:
+	print( "PART: '" + strName + "' with " + str( len( part['elements'] ) ) + " elements" )
+	for k,v in part.items():
+		if k in ['name', 'type']:
 			continue
-		print( "    " + str(k) + " = " + str(v))
+		elif k == 'elements':
+			for i in v:
+				print( "  ", end='' )
+				elemDebugPrint( i )
+		else:
+			print( "??" + str(k) + " = " + str(v))
 
 
 

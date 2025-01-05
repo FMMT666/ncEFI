@@ -119,6 +119,7 @@ that is named
     - added some helper functions for parts
     - added filling the CheckList box with parts
     - added a class for the part list
+    - began modifying false instance copies, with "no copy" as default
 
 
 ### CHANGES 2024/12/XX
