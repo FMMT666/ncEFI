@@ -120,6 +120,7 @@ that is named
     - added filling the CheckList box with parts
     - added a class for the part list
     - began modifying false instance copies, with "no copy" as default
+    - began modifying false instance copies for some geoms too
 
 
 ### CHANGES 2024/12/XX

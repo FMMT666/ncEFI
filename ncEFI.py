@@ -53,6 +53,8 @@
 # >>>  - DONE: the segmentation fault upon exit is caused by a (now fixed in git) bug; will self-heal someday
 # >>>
 # >>>
+# - a lot of recent major changes are UNTESTED
+# - clean up the TODO list
 # - all "elemCreate" functions return "{}" if an error occurs; maybe "None" would be better?
 # - toolFeedRateSet() in the test file
 # - Maybe the global safe-Z variable should be handled like the feed rate,
@@ -4280,28 +4282,38 @@ def geomCreatePoly( geomVerts: list, basNr: int = 0 ) -> list:
 ### geomTranslate
 ###
 ### Moves a geometry  into the direction specified by a vector.
-### Returns a new instance
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def geomTranslate( geom, vec ):
-	# TODO: probably not necessary to copy the element here
-	geomn = []
+def geomTranslate( geom, vec, copy=False ):
+
+	# TODO UNTESTED (with 1/2025 changes)
+
 	if not isinstance( geom, list ):
 		print( "ERR: geomTranslate: 'geom' not a list" )
 		return []
-	for elem in geom:
+
+	if copy:
+		ngeom = geom.deepcopy()
+	else:
+		ngeom = geom
+
+	for elem in ngeom:
+
 		if not isinstance( elem, dict ):
 			print( "ERR: geomTranslate: element is not a dict:", type(elem) )
 			return []
+
 		if 'type' not in elem:
 			print( "ERR: geomTranslate: no 'type' in element" )
 			return []
 		else:
 			if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
-				geomn.append( elemTranslate( elem, vec ) )
+				elemTranslate( elem, vec )
 			else:
 				print( "ERR: geomTranslate: unknown 'type' in element:", elem['type'] )
 				return []
-	return geomn
+
+	return ngeom
 
 
 
@@ -4309,29 +4321,37 @@ def geomTranslate( geom, vec ):
 ### geomRotateZ
 ###
 ### Rotates a geometry around the center of the z-axis vec(0,0,1).
-### Returns a new instance
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def geomRotateZ( geom, ang ):
-	# TODO: probably not necessary to copy the element here
-	geomn=[]
-	# mhh, basically the same code as in geomTranslate above :-/
+def geomRotateZ( geom, ang, copy=False ):
+
+	# TODO UNTESTED (with 1/2025 changes)
+
 	if not isinstance( geom, list ):
 		print( "ERR: geomRotateZ: 'geom' not a list" )
 		return []
-	for elem in geom:
+
+	if copy:
+		ngeom = geom.deepcopy()
+	else:
+		ngeom = geom
+
+	for elem in ngeom:
+
 		if not isinstance( elem, dict ):
 			print( "ERR: geomRotateZ: element is not a dict:", type(elem) )
 			return []
+
 		if 'type' not in elem:
 			print( "ERR: geomRotateZ: no 'type' in element" )
 			return []
 		else:
 			if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
-				geomn.append( elemRotateZ( elem, ang ) )
+				elemRotateZ( elem, ang )
 			else:
 				print( "ERR: geomRotateZ: unknown 'type' in element:", elem['type'] )
 				return []
-	return geomn
+	return ngeom
 
 
 
@@ -4339,33 +4359,40 @@ def geomRotateZ( geom, ang ):
 ### geomRotateZAt
 ###
 ### Rotates a geometry around a point given by 'vec'.
-### Returns a new instance
+### NEW 1/2025: Does NOT return a new instance anymore, by default.
 #############################################################################
-def geomRotateZAt( geom, ang, center ):
-	# TODO: probably not necessary to copy the element here
-	geomn=[]
-	# mhh, basically the same code as in geomTranslate above :-/
+def geomRotateZAt( geom, ang, center, copy=False ):
+
+	# TODO UNTESTED (with 1/2025 changes)
+
 	if not isinstance( geom, list ):
 		print( "ERR: geomRotateZAt: 'geom' not a list" )
 		return []
-	for elem in geom:
+
+	if copy:
+		ngeom = geom.deepcopy()
+	else:
+		ngeom = geom
+
+	for elem in ngeom:
 		if not isinstance( elem, dict ):
 			print( "ERR: geomRotateZAt: element is not a dict:", type(elem) )
 			return []
+
 		if 'type' not in elem:
 			print( "ERR: geomRotateZAt: no 'type' in element" )
 			return []
 		else:
 			if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
 				vec = vecReverse( center )
-				elemn = elemTranslate( elem, vec )
-				elemn = elemRotateZ( elemn, ang )
-				elemn = elemTranslate( elemn, center )
-				geomn.append( elemn )
+				elemTranslate( elem, vec )
+				elemRotateZ( elem, ang )
+				elemTranslate( elem, center )
 			else:
 				print( "ERR: geomRotateZAt: unknown 'type' in element:", elem['type'] )
 				return []
-	return geomn
+
+	return ngeom
 
 
 
