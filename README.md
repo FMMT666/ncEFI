@@ -121,6 +121,7 @@ that is named
     - added a class for the part list
     - began modifying false instance copies, with "no copy" as default
     - began modifying false instance copies for some geoms too
+    - added some tests for the new part instance copies
 
 
 ### CHANGES 2024/12/XX

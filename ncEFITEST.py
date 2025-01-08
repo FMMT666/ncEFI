@@ -5,40 +5,72 @@ from ncEFI import *
 
 
 
+#---------------------------------------
+# Some tests for the new "no default instance copy" part translate/rotate function.
+llist=[]
+p1 = partCreate('Hole')
+p1 = partAddElements( p1, geomCreateCircRingHole( (30,30,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+
+# part functions to test:
+#  - partCopy
+#  - partTranslate
+#  - partRotateZ
+#  - partRotateZAt
+
+# p1a = partTranslate( p1, (-30,0,0) )             # p1a is just a reference to p1; p1 gets modified
+# p1b = partTranslate( p1, (-30,0,0), copy=True )  # p1b is a true copy; no changes to p1
+# print( p1a == p1, p1b == p1 )
+
+# p1a = partRotateZ( p1, 45 )                      # p1a is just a reference to p1; p1 gets modified
+# p1b = partRotateZ( p1, 45, copy=True )           # p1b is a true copy; no changes to p1
+# print( p1a == p1, p1b == p1 )
+
+p1a = partRotateZAt( p1, 45, (-50,0,0) )                      # p1a is just a reference to p1; p1 gets modified
+p1b = partRotateZAt( p1, 45, (-50,0,0), copy=True )           # p1b is a true copy; no changes to p1
+print( p1a == p1, p1b == p1 )
+
+# keep in mind that this here is only a visualization of the current state of the parts
+llist.append( p1  )
+llist.append( p1a ) # will be this of course creates anothercreates
+llist.append( p1b )
+
+debugShowViewer( llist )
+sys.exit(0)
+
 
 
 
 #---------------------------------------
 # COPIED FROM BELOW TO TEST IF THE PART SYSTEM IS STILL WORKING
-llist=[]
-p1 = partCreate('Hole')
-# def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
-p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
-for i in range(6):
-#	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
-#	llist.append(  partRotateZ(p1, 360/5 * i)  )
+# llist=[]
+# p1 = partCreate('Hole')
+# # def geomCreateCircRingHole(p1,diaStart,diaEnd,diaSt,depth,depthSt,hDepth,hDepthSt,clear,dir,basNr=0):
+# p1 = partAddElements( p1, geomCreateCircRingHole( (20,25,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+# for i in range(6):
+# #	llist.append(  partTranslate(p1, (-100 + i*30,-50,0))  )
+# #	llist.append(  partRotateZ(p1, 360/5 * i)  )
 
-	# Some tests with the new "no instance" translate/rotate function.
-	# Appending without copying to the list will of course always create a new entry,
-	# but even after that, modifications to the original (if the variable is still available)
-	# WILL affect the appended part, as the elements are not truly copied, but just referenced (by Python itself).
+# 	# Some tests with the new "no instance" translate/rotate function.
+# 	# Appending without copying to the list will of course always create a new entry,
+# 	# but even after that, modifications to the original (if the variable is still available)
+# 	# WILL affect the appended part, as the elements are not truly copied, but just referenced (by Python itself).
 
-	# llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ), copy = False )  )
-	# partRotateZAt( p1, 360/5 * i, (-10,-15,0 ) )
-	# llist.append( p1 )
+# 	# llist.append(  partRotateZAt(p1, 360/5 * i, (-10,-15,0 ), copy = False )  )
+# 	# partRotateZAt( p1, 360/5 * i, (-10,-15,0 ) )
+# 	# llist.append( p1 )
 
-	# p1 = partRotateZAt( p1, 360.0/5, (-10,-15,0 ), copy=True )
-	p1 = partRotateZAt( p1, 30, (-10,-15,0 ), copy=True )
-	llist.append( p1 )
+# 	# p1 = partRotateZAt( p1, 360.0/5, (-10,-15,0 ), copy=True )
+# 	p1 = partRotateZAt( p1, 30, (-10,-15,0 ), copy=True )
+# 	llist.append( p1 )
 
 
-debugShowViewer( llist )
-tool = []
-for part in llist:
-	tool += toolRapidToNextPart( part )
-	tool += toolCreateFromPart( part )
-toolFileWrite( tool )
-sys.exit(0)
+# debugShowViewer( llist )
+# tool = []
+# for part in llist:
+# 	tool += toolRapidToNextPart( part )
+# 	tool += toolCreateFromPart( part )
+# toolFileWrite( tool )
+# sys.exit(0)
 
 
 

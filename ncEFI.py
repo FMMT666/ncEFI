@@ -1115,6 +1115,20 @@ def partAddElements(part, elems):
 
 
 #############################################################################
+### partAddColor
+###
+#############################################################################
+def partAddColor(part, color):
+	# Actually, what's the best way?
+	# a) Add a color tag to the part?
+	# b) Add a color tag to each element?
+	# Need to check the viewer code for this (easy rulez).
+
+	pass
+
+
+
+#############################################################################
 ### partGetElement
 ###
 #############################################################################
