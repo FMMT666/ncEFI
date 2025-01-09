@@ -1119,12 +1119,34 @@ def partAddElements(part, elems):
 ###
 #############################################################################
 def partAddColor(part, color):
-	# Actually, what's the best way?
-	# a) Add a color tag to the part?
-	# b) Add a color tag to each element?
-	# Need to check the viewer code for this (easy rulez).
+	if not isinstance( color, tuple ):
+		print( "ERR: partAddColor: color is not a tuple: ", type(color) )
+		return part
 
-	pass
+	if len(color) != 3:
+		print( "ERR: partAddColor: color is not a RGB tuple: ", color )
+		return part
+
+	part['tColor'] = color
+
+	return part
+
+
+
+#############################################################################
+### partDeleteColor
+###
+#############################################################################
+def partDeleteColor(part, all = False):
+	if 'tColor' in part:
+		del part['tColor']
+	
+	if all:
+		for i in part['elements']:
+			if 'tColor' in i:
+				del i['tColor']
+
+	return part
 
 
 

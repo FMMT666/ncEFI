@@ -621,9 +621,13 @@ class myGLCanvas(GLCanvas):
 					continue
 			# --- it's a part
 			else:
-				# TODO: additional error checks
+				# TODO: probably needs some additional error checks (check for dict, check for 'elements')
+				if 'tColor' in item:
+					colorOverride = item['tColor']
+				else:
+					colorOverride = None
 				for iElem in item['elements']:
-					self.DrawElement(iElem)
+					self.DrawElement(iElem, colorOverride = colorOverride)
 
 
 	#-----------------------------------------------------------------------------------------------

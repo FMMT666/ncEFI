@@ -122,6 +122,7 @@ that is named
     - began modifying false instance copies, with "no copy" as default
     - began modifying false instance copies for some geoms too
     - added some tests for the new part instance copies
+    - added tColor tag for parts
 
 
 ### CHANGES 2024/12/XX

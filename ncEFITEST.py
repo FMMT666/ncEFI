@@ -29,6 +29,10 @@ p1a = partRotateZAt( p1, 45, (-50,0,0) )                      # p1a is just a re
 p1b = partRotateZAt( p1, 45, (-50,0,0), copy=True )           # p1b is a true copy; no changes to p1
 print( p1a == p1, p1b == p1 )
 
+# also test this on the fly
+partAddColor( p1,  (1,0,0) )
+partAddColor( p1b, (0,1,0) )
+
 # keep in mind that this here is only a visualization of the current state of the parts
 llist.append( p1  )
 llist.append( p1a ) # will be this of course creates anothercreates
