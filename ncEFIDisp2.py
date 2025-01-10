@@ -469,7 +469,7 @@ class myGLCanvas(GLCanvas):
 	################################################################################################
 	### DrawElement
 	################################################################################################
-	def DrawElement(self, elem, colorOverride = None):
+	def DrawElement(self, elem, colorOverride = None, sizeOverride = None ):
 
 		# TODO: Actually it's not a super brilliant idea to have the colors in here.
 		#       Especially if (at any later point of development) parts or geometries
@@ -491,7 +491,9 @@ class myGLCanvas(GLCanvas):
 			p1 = elem['p1']
 			glDisable(GL_LIGHTING)
 			# --- size
-			if 'tSize' in elem:
+			if sizeOverride is not None:
+				glPointSize( sizeOverride )
+			elif 'tSize' in elem:
 				glPointSize( elem['tSize'] )
 			else:
 				glPointSize( DRAW_VERTEX_SIZE )
@@ -525,7 +527,9 @@ class myGLCanvas(GLCanvas):
 			p2 = elem['p2']
 			glDisable(GL_LIGHTING)
 			# --- size
-			if 'tSize' in elem:
+			if sizeOverride is not None:
+				glLineWidth( sizeOverride )
+			elif 'tSize' in elem:
 				glLineWidth( elem['tSize'] )
 			else:
 				glLineWidth( DRAW_LINE_SIZE )
@@ -563,7 +567,12 @@ class myGLCanvas(GLCanvas):
 			else:
 				glColor3f( DRAW_ARC_COLOR[0], DRAW_ARC_COLOR[1], DRAW_ARC_COLOR[2] )
 			# --- size
-				# TODO
+			if sizeOverride is not None:
+				glLineWidth( sizeOverride )
+			elif 'tSize' in elem:
+				glLineWidth( elem['tSize'] )
+			else:
+				glLineWidth( DRAW_ARC_SIZE )
 			# --- on to the matrix
 			glPushMatrix()
 			glBegin(GL_LINES)
@@ -599,10 +608,11 @@ class myGLCanvas(GLCanvas):
 					for unp in item:
 						if 'type' in unp:
 							if unp['type'] == 'v' or unp['type'] == 'l' or unp['type'] == 'a':
-								# --- highlight color
+								# --- TODO, REALLY?: highlight color
 								myColor = None	
 								if 'tHighlight' in unp:
 									myColor = DRAW_HIGHLIGHT_COLOR
+								# --- size
 								self.DrawElement(unp, myColor )
 				continue
 
@@ -622,12 +632,20 @@ class myGLCanvas(GLCanvas):
 			# --- it's a part
 			else:
 				# TODO: probably needs some additional error checks (check for dict, check for 'elements')
+				# TODO: also see this "highlight" color above!
+				# --- override colors
 				if 'tColor' in item:
 					colorOverride = item['tColor']
 				else:
 					colorOverride = None
+				# override size
+				if 'tSize' in item:
+					sizeOverride = item['tSize']
+				else:
+					sizeOverride = None
+				
 				for iElem in item['elements']:
-					self.DrawElement(iElem, colorOverride = colorOverride)
+					self.DrawElement(iElem, colorOverride = colorOverride, sizeOverride = sizeOverride )
 
 
 	#-----------------------------------------------------------------------------------------------

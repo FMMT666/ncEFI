@@ -1151,6 +1151,26 @@ def partDeleteColor(part, all = False):
 
 
 #############################################################################
+### partAddSize
+###
+#############################################################################
+def partAddSize(part, size):
+
+	if size < 1.0:
+		print( "DBG: partAddSize: fixing incorrect size < 1.0" )
+		size = 1.0
+	# TODO: check if size > 10.0 is a good idea
+	if size > 10.0:
+		print( "DBG: partAddSize: fixing incorrect size > 10.0" )
+		size = 10.0
+
+	part['tSize'] = size
+
+	return part
+
+
+
+#############################################################################
 ### partGetElement
 ###
 #############################################################################

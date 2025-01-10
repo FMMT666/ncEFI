@@ -32,6 +32,7 @@ print( p1a == p1, p1b == p1 )
 # also test this on the fly
 partAddColor( p1,  (1,0,0) )
 partAddColor( p1b, (0,1,0) )
+partAddSize( p1,  3 )
 
 # keep in mind that this here is only a visualization of the current state of the parts
 llist.append( p1  )
