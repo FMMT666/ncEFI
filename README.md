@@ -124,6 +124,7 @@ that is named
     - added some tests for the new part instance copies
     - added tColor tag for parts
     - added tSize tag for parts
+    - moved some things into the PartList class (still a mess)
 
 
 ### CHANGES 2024/12/XX

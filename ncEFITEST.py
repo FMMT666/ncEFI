@@ -4,7 +4,6 @@
 from ncEFI import *
 
 
-
 #---------------------------------------
 # Some tests for the new "no default instance copy" part translate/rotate function.
 llist=[]
@@ -34,10 +33,15 @@ partAddColor( p1,  (1,0,0) )
 partAddColor( p1b, (0,1,0) )
 partAddSize( p1,  3 )
 
+
 # keep in mind that this here is only a visualization of the current state of the parts
 llist.append( p1  )
 llist.append( p1a ) # will be this of course creates anothercreates
 llist.append( p1b )
+
+
+p1z = partCopy( p1a )
+llist.append( p1z )
 
 debugShowViewer( llist )
 sys.exit(0)

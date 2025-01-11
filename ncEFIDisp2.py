@@ -152,7 +152,7 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 	# the last resort; if it's not a list, check if it's a part with elements
 	if not isinstance(geom,list):
 		if isinstance(geom,dict) and 'elements' in geom and isinstance(geom['elements'],list):
-			print( "DBG: GeomCycleColor: found part with elements; using this instead" )
+			print( "DBG: GeomCycleColor: found part with elements; using them instead" )
 			geom = geom['elements']
 		else:
 			print( "ERR: GeomCycleColor: not a list: ", type(geom) )
@@ -203,6 +203,16 @@ class PartList():
 		self.fileName = fname
 		self.PartList = []
 
+		self.cPartsCounted  = False    # UNUSED, so far; shall indicate if parts have been counted (following values)
+		self.cParts         = 0
+		self.cPartElements  = 0
+		self.cPartError     = 0
+		self.cLists         = 0
+		self.cListsElements = 0
+		self.cListsError    = 0
+		self.cElems         = 0
+		self.cError         = 0
+
 		if fname is not None:
 			self.LoadFromFile( fname )
 
@@ -227,7 +237,7 @@ class PartList():
 			fin.close()
 
 		# DEBUG
-		PartListPrintGeoms( self.PartList )	
+		self.PartListPrintGeoms()	
 
 
 	#-----------------------------------------------------------------------------------------------
@@ -254,91 +264,92 @@ class PartList():
 					yield " List %d" % numList 
 
 
+	#-----------------------------------------------------------------------------------------------
+	def PartListGetPartNames(self) -> list:
+		# TODO: This is an old function and actually should make use of YieldPartNames above
+		#       if the output as a list (from here) is still desired.
+		names = []
 
-#############################################################################
-### PartListCountGeoms
-###
-#############################################################################
-def PartListCountGeoms( geom: list ) -> dict:
-
-	counts = {}
-
-	if not isinstance(geom,list):
-		print( "ERR: PartListPrintGeoms: not a list" )
-		return counts
-	
-	if len(geom) == 0:
-		print( "DBG: PartListPrintGeoms: empty list" )
-		return counts
-
-	# --- count items
-	cParts         = 0  # number of parts in main list
-	cPartElements  = 0  # sum of elements ('v', 'l', 'a') in all parts
-	cPartError     = 0  # sum of errors in parts
-
-	cLists         = 0  # number of lists in main list
-	cListsElements = 0  # sum of elements ('v', 'l', 'a') in all lists
-	cListsError    = 0  # sum of errors in lists
-
-	cElems         = 0  # number of elements ('v', 'l', 'a') in main list
-	cError         = 0  # sum of errors in main list
-
-	for item in geom:
-		# --- with type
-		if 'type' in item:
-			# --- part in main list (should be the default)
-			if item['type'] == 'p':
-				cParts += 1
-				for i in item['elements']:
-					if i['type'] == 'v' or i['type'] == 'l' or i['type'] == 'a':
-						cPartElements += 1
+		for item in self.PartList:
+			if 'type' in item:
+				if item['type'] == 'p':
+					if 'name' in item:
+						names.append( item['name'] )
 					else:
-						print( "ERR: PartListPrintGeoms: unknown type in part: ", type(i) )
-						cPartError += 1
-			# --- element in main list (allowed for debugging)
-			elif item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
-				cElems += 1
+						names.append( "unnamed" )
+				if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
+					print( "DBG: PartListGetPartNames: found element in main list; debug; skipping" )
+					continue
 			else:
-			# --- unknown element
-				print( "ERR: PartListPrintGeoms: unknown type in item: ", type(item) )
-				cError += 1
-		# --- if not with 'type', it must be a list
-		else:
-			if isinstance(item,list):
-				cLists += 1
-				for i in item:
-					if i['type'] == 'v' or i['type'] == 'l' or i['type'] == 'a':
-						cListsElements += 1
-					else:
-						print( "ERR: PartListPrintGeoms: unknown type in list item: ", type(i) )
-						cListsError += 1
+				print( "ERR: PartListGetPartNames: not a part: ", item )
+
+		return names
+
+
+	#-----------------------------------------------------------------------------------------------
+	def PartListCountGeoms( self ) -> dict:
+		# --- count items (could be the "self." variables, but less typing :)
+		cParts         = 0  # number of parts in main list
+		cPartElements  = 0  # sum of elements ('v', 'l', 'a') in all parts
+		cPartError     = 0  # sum of errors in parts
+
+		cLists         = 0  # number of lists in main list
+		cListsElements = 0  # sum of elements ('v', 'l', 'a') in all lists
+		cListsError    = 0  # sum of errors in lists
+
+		cElems         = 0  # number of elements ('v', 'l', 'a') in main list
+		cError         = 0  # sum of errors in main list
+
+		for item in self.PartList:
+			# --- with type
+			if 'type' in item:
+				# --- part in main list (should be the default)
+				if item['type'] == 'p':
+					cParts += 1
+					for i in item['elements']:
+						if i['type'] == 'v' or i['type'] == 'l' or i['type'] == 'a':
+							cPartElements += 1
+						else:
+							print( "ERR: PartListPrintGeoms: unknown type in part: ", type(i) )
+							cPartError += 1
+				# --- element in main list (allowed for debugging)
+				elif item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
+					cElems += 1
+				else:
+				# --- unknown element
+					print( "ERR: PartListPrintGeoms: unknown type in item: ", type(item) )
+					cError += 1
+			# --- if not with 'type', it must be a list
 			else:
-				print( "ERR: PartListPrintGeoms: item does not have 'type' and is not a list: ", item )
-				cError += 1
+				if isinstance(item,list):
+					cLists += 1
+					for i in item:
+						if i['type'] == 'v' or i['type'] == 'l' or i['type'] == 'a':
+							cListsElements += 1
+						else:
+							print( "ERR: PartListPrintGeoms: unknown type in list item: ", type(i) )
+							cListsError += 1
+				else:
+					print( "ERR: PartListPrintGeoms: item does not have 'type' and is not a list: ", item )
+					cError += 1
+		counts = {}
+		counts['cParts']         = self.cParts         = cParts
+		counts['cPartElements']  = self.cPartElements  = cPartElements
+		counts['cPartError']     = self.cPartError     = cPartError
+		counts['cLists']         = self.cLists         = cLists
+		counts['cListsElements'] = self.cListsElements = cListsElements
+		counts['cListsError']    = self.cListsError    = cListsError
+		counts['cElems']         = self.cElems         = cElems
+		counts['cError']         = self.cError         = cError
 
-	# still less typing than using the dict directly
-	counts['cParts']         = cParts
-	counts['cPartElements']  = cPartElements
-	counts['cPartError']     = cPartError
-	counts['cLists']         = cLists
-	counts['cListsElements'] = cListsElements
-	counts['cListsError']    = cListsError
-	counts['cElems']         = cElems
-	counts['cError']         = cError
-
-	return counts
+		return counts
 
 
+	#-----------------------------------------------------------------------------------------------
+	def PartListPrintGeoms(self) -> None:
 
-#############################################################################
-### PartListPrintGeoms
-###
-#############################################################################
-def PartListPrintGeoms( geom: list ) -> None:
+		counts = self.PartListCountGeoms()
 
-	counts = PartListCountGeoms( geom )
-
-	if counts != {}:
 		print("-----")
 		print( "Parts      : ", counts['cParts'])
 		print( "  Elements : ", counts['cPartElements'])
@@ -350,42 +361,9 @@ def PartListPrintGeoms( geom: list ) -> None:
 		print( "Errors     : ", counts['cError'])
 
 
-
-#############################################################################
-### PartListPickGeom
-###
-#############################################################################
-def PartListPickGeom( geom: list, num: int ) -> list:
-	pass
-
-
-
-#############################################################################
-### PartListGetPartNames
-###
-#############################################################################
-def PartListGetPartNames( geom: list ) -> list:
-	
-	names = []
-
-	if not isinstance(geom,list):
-		print( "ERR: PartListGetPartNames: not a list" )
-		return names
-
-	for item in geom:
-		if 'type' in item:
-			if item['type'] == 'p':
-				if 'name' in item:
-					names.append( item['name'] )
-				else:
-					names.append( "unnamed" )
-			if item['type'] == 'v' or item['type'] == 'l' or item['type'] == 'a':
-				print( "DBG: PartListGetPartNames: found element in main list; debug; skipping" )
-				continue
-		else:
-			print( "ERR: PartListGetPartNames: not a part: ", item )
-
-	return names
+	#-----------------------------------------------------------------------------------------------
+	def PartListPickGeom( self, num: int ) -> list:
+		pass
 
 
 
@@ -931,6 +909,7 @@ class ToolPanel(wx.Panel):
 
 		num = 0
 		for name in names:
+			# BUG: this does not work for less than three items; all is blank then; fix?
 			guiList.Insert( name, num )
 			num += 1
 
