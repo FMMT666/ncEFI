@@ -41,6 +41,10 @@ llist.append( p1b )
 
 
 p1z = partCopy( p1a )
+p1z = partTranslate( p1z, (-40,0,0) )
+p1z = partDeleteColor(p1z)
+p1z = partAddRandomElementColors( p1z )
+p1z = partRename( p1z, "ColorMe" )
 llist.append( p1z )
 
 debugShowViewer( llist )
@@ -87,26 +91,26 @@ sys.exit(0)
 
 
 #---------------------------------------
-llist = []
+# llist = []
 
-# lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
-# lstPts = [ (-40,-40,0), (-3,-3,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
-lstPts = [ (-40,-40,0), (-10,-1,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
-
-
-myPart = partCreate( name = "Hupe" )
-# WARNING THIS NOW RETURNS A LIST WITH LISTS FOR BETTER VISIBILITY
-# DO NOT USE APPEND TO ADD TO LLIST
-gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
-for lstElem in gPOff1:
-	for i in lstElem:
-		partAddElements( myPart, i )
+# # lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+# # lstPts = [ (-40,-40,0), (-3,-3,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+# lstPts = [ (-40,-40,0), (-10,-1,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
 
 
+# myPart = partCreate( name = "Hupe" )
+# # WARNING THIS NOW RETURNS A LIST WITH LISTS FOR BETTER VISIBILITY
+# # DO NOT USE APPEND TO ADD TO LLIST
+# gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
+# for lstElem in gPOff1:
+# 	for i in lstElem:
+# 		partAddElements( myPart, i )
 
-llist.append( myPart )
 
-debugShowViewer( llist )
+
+# llist.append( myPart )
+
+# debugShowViewer( llist )
 
 
 

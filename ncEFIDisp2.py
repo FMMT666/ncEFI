@@ -140,6 +140,8 @@ def GetRandomColor() -> tuple:
 ###
 #############################################################################
 def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list = None ) -> None:
+	# TODO: this should be a class method of PartList
+
 
 	# The decision to have not only "parts", but also a single list with items or
 	# a list with lists (of elements) as valid data structures, makes this far more
@@ -159,13 +161,13 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 			return
 
 	# by default, we cycle through all types
-	if types is None:
-		types = ['v','l','a']	
+	if cycleTypes is None:
+		cycleTypes = ['v','l','a']	
 
 	# count 'tColors' in list and create missing color tags in case we're supposed to cycle through all of them
 	numColors = 0
-	for item in list:
-		if item['type'] in types:
+	for item in geom:
+		if item['type'] in cycleTypes:
 			if 'tColor' in item:
 				numColors += 1
 				continue
@@ -179,12 +181,14 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 		return
 
 	# now cycle the colors; the check for 'type' also makes sure that it's a valid element (and not something different)
+
+	# BUG: this does not work, lol; at the end everything is the same color bc we cannot "live" iterate through the list
 	for i in range( 0, len(geom) ):
-		if geom[i]['type'] in types:
+		if geom[i]['type'] in cycleTypes:
 			if 'tColor' in geom[i]:
 				# find next color tag
-				for j in range( i+1, len(geom) ):
-					if geom[  j % len(geom )  ]['type'] in types:
+				for j in range( i+1, len(geom) + 1 ):
+					if geom[  j % len(geom )  ]['type'] in cycleTypes:
 						if 'tColor' in geom[j]:
 							geom[i]['tColor'] = geom[j % len(geom)]['tColor']
 							break
@@ -362,7 +366,16 @@ class PartList():
 
 
 	#-----------------------------------------------------------------------------------------------
-	def PartListPickGeom( self, num: int ) -> list:
+	def PartListGetPartByName( self, name: str ) -> dict:
+		for item in self.PartList:
+			if 'name' in item:
+				if item['name'] == name:
+					return item
+		return {}
+
+
+	#-----------------------------------------------------------------------------------------------
+	def PartListGetGeom( self, num: int ) -> list:
 		pass
 
 
@@ -855,11 +868,13 @@ class ToolPanel(wx.Panel):
 		self.button5        = wx.Button  ( self, label="Button 5" )
 		self.chkAutoRefresh = wx.CheckBox( self, label="Colorcycle" )
 
-		# TESTING
-		# self.lstList        = wx.ListBox( self, choices=["List 1", "List 2", "List 3"], style=wx.LB_SINGLE )
-		# self.lstList.InsertItems( ["List 4", "List 5", "Listlistlistlistlist 6"], 3 )	
+		# self.lstPartSelector        = wx.ListBox( self, choices=["List 1", "List 2", "List 3"], style=wx.LB_SINGLE )
+		# self.lstPartSelector.InsertItems( ["List 4", "List 5", "Listlistlistlistlist 6"], 3 )	
+		# this only works with wxPython 4.1.0-dev and shall solve the "labels appear on right" bug (see below)
+		# self.lstPartSelector.EnableCheckBoxes()
 
-		# bug? only works with more than three items
+		# BUG! if three or less items are added, the labels are shifted to the right; see:
+		# https://discuss.wxpython.org/t/checklistbox-overly-left-padding-inserted-strings/34545/3
 		# self.lstPartSelector = wx.CheckListBox( self, choices=["Check 1", "Check 2", "Check 3"] )
 		# self.lstPartSelector.InsertItems( ["Check 4", "Check 5", "Checkcheckcheckcheck 6"], 0 )
 		self.lstPartSelector = wx.CheckListBox( self, choices=[] )
@@ -969,7 +984,13 @@ class MainWin( wx.Frame ):
 		# DEBUG
 		# print("timer triggered")
 
-		self.canvas.Refresh()
+		# TESTING color cycling
+		part = self.PartListData.PartListGetPartByName( "ColorMe" )
+		if part:
+			geom = part['elements']
+			GeomCycleColor( geom, cycleColorless = False, cycleTypes = ['v','l','a'] )	
+
+			self.canvas.Refresh()
 
 
 	#-----------------------------------------------------------------------------------------------

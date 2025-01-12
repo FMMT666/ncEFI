@@ -136,6 +136,8 @@ import sys      # only for 'debugShowViewer()'
 
 import math
 import pickle
+import random
+
 from copy import deepcopy
 
 from ncVec import *
@@ -149,6 +151,8 @@ MINOFFSETANGLE            = 2.0 * math.pi / 365  # minimum allowed angle for off
 RAYCAST_POINTS            = [ (+9965, +210, 0),  # raycast test points
 							(-7434,-6234, 0),
 							( -320,-9764,0) ]
+DRAW_MIN_BRIGHTNESS	      = 0.2                  # minimum brightness for drawing elements in the viewer
+
 
 # default G-codes also used as "state markers" during the tool path creation
 GCODE_COMMENT        = "()"
@@ -259,6 +263,21 @@ EXTRA_MOVE_RAPID   = "RAPID"         # for 'tMove' in line extras; creates G00 i
 #                     - if 0 (zero) or 'nnn%', the _global_ feed rate (GCODE_OP_BFEED, parsed from the last valid Fnnn value in
 #                       GCODE_PRG_START or set by 'toolFeedRateSet()') or a percentage of it, is used as a base feed rate for this part.
 #                     - if > 0, then this ("local") value will be used as a base feed rate for tFeed_Base and tFeed_Retract
+
+
+
+#############################################################################
+### GetRandomColor
+###
+#############################################################################
+def GetRandomColor() -> tuple:
+	while True:
+		r = random.random()
+		g = random.random()
+		b = random.random()
+		if math.sqrt( r**2 + g**2 + b**2 ) >= DRAW_MIN_BRIGHTNESS:
+			break
+	return ( r, g, b )
 
 
 
@@ -1134,14 +1153,25 @@ def partAddColor(part, color):
 
 
 #############################################################################
+### partAddRandomElementColors
+###
+#############################################################################
+def partAddRandomElementColors(part):
+	for elem in part['elements']:
+		elem['tColor'] = GetRandomColor()
+	return part
+
+
+
+#############################################################################
 ### partDeleteColor
 ###
 #############################################################################
-def partDeleteColor(part, all = False):
+def partDeleteColor(part, delElemColors = False):
 	if 'tColor' in part:
 		del part['tColor']
 	
-	if all:
+	if delElemColors:
 		for i in part['elements']:
 			if 'tColor' in i:
 				del i['tColor']
@@ -1159,7 +1189,7 @@ def partAddSize(part, size):
 	if size < 1.0:
 		print( "DBG: partAddSize: fixing incorrect size < 1.0" )
 		size = 1.0
-	# TODO: check if size > 10.0 is a good idea
+	# TODO: check if size of 10.0 is a good idea
 	if size > 10.0:
 		print( "DBG: partAddSize: fixing incorrect size > 10.0" )
 		size = 10.0
@@ -4172,17 +4202,6 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# original geometry.
 
 	splitLines = geomSplitPolyLines( offsLines, intsVerts )
-
-	# DEBUG
-	import random
-	def GetRandomColor() -> tuple:
-		while True:
-			r = random.random()
-			g = random.random()
-			b = random.random()
-			if math.sqrt( r**2 + g**2 + b**2 ) >= 0.2:
-				break
-		return ( r, g, b )
 
 	for i in splitLines:
 		elemAddColor( i, GetRandomColor() )
