@@ -37,6 +37,7 @@ DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 DRAW_HIGHLIGHT_COLOR	  = ( 1.0, 0.0, 1.0 )  # for tags of 'tHighlight'; overrides 'tColor'
 DRAW_MIN_BRIGHTNESS	      = 0.2
 
+TIMER_COLORCYCLING        = 100	 # ms; time between color changes for color cycling
 
 
 # TODO
@@ -188,8 +189,8 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 			if 'tColor' in geom[i]:
 				# find next color tag
 				for j in range( i+1, len(geom) + 1 ):
-					if geom[  j % len(geom )  ]['type'] in cycleTypes:
-						if 'tColor' in geom[j]:
+					if geom[  j % len(geom)  ]['type'] in cycleTypes:
+						if 'tColor' in geom[j % len(geom) ]:
 							geom[i]['tColor'] = geom[j % len(geom)]['tColor']
 							break
 
@@ -909,7 +910,7 @@ class ToolPanel(wx.Panel):
 
 		if self.chkAutoRefresh.IsChecked():
 			self.mainWin.canvas.SetColorCycling( True )
-			self.mainWin.timer.Start(100)
+			self.mainWin.timer.Start( TIMER_COLORCYCLING )
 		else:
 			self.mainWin.canvas.SetColorCycling( False )
 			self.mainWin.timer.Stop()

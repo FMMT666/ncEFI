@@ -126,6 +126,7 @@ that is named
     - added tSize tag for parts
     - moved some things into the PartList class (still a mess)
     - added color cycling tests
+    - added working color cycling; looks like crap with long elements though
 
 
 ### CHANGES 2024/12/XX
