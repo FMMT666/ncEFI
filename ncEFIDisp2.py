@@ -37,7 +37,7 @@ DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 DRAW_HIGHLIGHT_COLOR	  = ( 1.0, 0.0, 1.0 )  # for tags of 'tHighlight'; overrides 'tColor'
 DRAW_MIN_BRIGHTNESS	      = 0.2
 
-TIMER_COLORCYCLING        = 100	 # ms; time between color changes for color cycling
+TIMER_COLORCYCLING        = 1000    # ms; time between color changes for color cycling
 
 
 # TODO

@@ -4,51 +4,80 @@
 from ncEFI import *
 
 
+
 #---------------------------------------
-# Some tests for the new "no default instance copy" part translate/rotate function.
-llist=[]
-p1 = partCreate('Hole')
-p1 = partAddElements( p1, geomCreateCircRingHole( (30,30,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+llist = []
 
-# part functions to test:
-#  - partCopy
-#  - partTranslate
-#  - partRotateZ
-#  - partRotateZAt
+# back to the original plan, the offset development (which benefits from having the color cycling)
 
-# p1a = partTranslate( p1, (-30,0,0) )             # p1a is just a reference to p1; p1 gets modified
-# p1b = partTranslate( p1, (-30,0,0), copy=True )  # p1b is a true copy; no changes to p1
-# print( p1a == p1, p1b == p1 )
-
-# p1a = partRotateZ( p1, 45 )                      # p1a is just a reference to p1; p1 gets modified
-# p1b = partRotateZ( p1, 45, copy=True )           # p1b is a true copy; no changes to p1
-# print( p1a == p1, p1b == p1 )
-
-p1a = partRotateZAt( p1, 45, (-50,0,0) )                      # p1a is just a reference to p1; p1 gets modified
-p1b = partRotateZAt( p1, 45, (-50,0,0), copy=True )           # p1b is a true copy; no changes to p1
-print( p1a == p1, p1b == p1 )
-
-# also test this on the fly
-partAddColor( p1,  (1,0,0) )
-partAddColor( p1b, (0,1,0) )
-partAddSize( p1,  3 )
+# lstPts = [ (-40,-40,0), (-3,-2,0),(40,-40,0),(40,40,0),(3,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+# lstPts = [ (-40,-40,0), (-3,-3,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
+lstPts = [ (-40,-40,0), (-10,-1,0),(40,-40,0),(45,-40,0),(48,20,0),(40,20,0),(2,2,0),(-60,10,0),(-78,2,0),(-80,0,0),(-78,-2,0)  ]
 
 
-# keep in mind that this here is only a visualization of the current state of the parts
-llist.append( p1  )
-llist.append( p1a ) # will be this of course creates anothercreates
-llist.append( p1b )
+myPart = partCreate( name = "Hupe" )
+# WARNING THIS NOW RETURNS A LIST WITH LISTS FOR BETTER VISIBILITY
+# DO NOT USE APPEND TO ADD TO LLIST
+gPOff1 = geomCreatePolyOffset( geomCreatePoly( geomCreatePolyVerts( lstPts ) ), -5 )
+for lstElem in gPOff1:
+	for i in lstElem:
+		partAddElement( myPart, i )
+
+partRename( myPart, "ColorMe" )
 
 
-p1z = partCopy( p1a )
-p1z = partTranslate( p1z, (-40,0,0) )
-p1z = partDeleteColor(p1z)
-p1z = partAddRandomElementColors( p1z )
-p1z = partRename( p1z, "ColorMe" )
-llist.append( p1z )
+llist.append( myPart )
 
 debugShowViewer( llist )
-sys.exit(0)
+
+
+
+
+#---------------------------------------
+# Some tests for the new "no default instance copy" part translate/rotate function.
+# llist=[]
+# p1 = partCreate('Hole')
+# p1 = partAddElements( p1, geomCreateCircRingHole( (30,30,0), 20,30,3,   10,3,  20,2,5, 'cw')  )
+
+# # part functions to test:
+# #  - partCopy
+# #  - partTranslate
+# #  - partRotateZ
+# #  - partRotateZAt
+
+# # p1a = partTranslate( p1, (-30,0,0) )             # p1a is just a reference to p1; p1 gets modified
+# # p1b = partTranslate( p1, (-30,0,0), copy=True )  # p1b is a true copy; no changes to p1
+# # print( p1a == p1, p1b == p1 )
+
+# # p1a = partRotateZ( p1, 45 )                      # p1a is just a reference to p1; p1 gets modified
+# # p1b = partRotateZ( p1, 45, copy=True )           # p1b is a true copy; no changes to p1
+# # print( p1a == p1, p1b == p1 )
+
+# p1a = partRotateZAt( p1, 45, (-50,0,0) )                      # p1a is just a reference to p1; p1 gets modified
+# p1b = partRotateZAt( p1, 45, (-50,0,0), copy=True )           # p1b is a true copy; no changes to p1
+# print( p1a == p1, p1b == p1 )
+
+# # also test this on the fly
+# partAddColor( p1,  (1,0,0) )
+# partAddColor( p1b, (0,1,0) )
+# partAddSize( p1,  3 )
+
+
+# # keep in mind that this here is only a visualization of the current state of the parts
+# llist.append( p1  )
+# llist.append( p1a ) # will be this of course creates anothercreates
+# llist.append( p1b )
+
+
+# p1z = partCopy( p1a )
+# p1z = partTranslate( p1z, (-40,0,0) )
+# p1z = partDeleteColor(p1z)
+# p1z = partAddRandomElementColors( p1z )
+# p1z = partRename( p1z, "ColorMe" )
+# llist.append( p1z )
+
+# debugShowViewer( llist )
+# sys.exit(0)
 
 
 
