@@ -37,7 +37,7 @@ DRAW_ARC_COLOR            = ( 0.8, 0.8, 0.8 )
 DRAW_HIGHLIGHT_COLOR	  = ( 1.0, 0.0, 1.0 )  # for tags of 'tHighlight'; overrides 'tColor'
 DRAW_MIN_BRIGHTNESS	      = 0.2
 
-TIMER_COLORCYCLING        = 1000    # ms; time between color changes for color cycling
+TIMER_COLORCYCLING        = 200    # ms; time between color changes for color cycling
 
 
 # TODO
@@ -188,6 +188,14 @@ def GeomCycleColor( geom: list, cycleColorless: bool = False, cycleTypes: list =
 		if geom[i]['type'] in cycleTypes:
 			if 'tColor' in geom[i]:
 				# find next color tag
+
+				# TODO: THIS IS A BUG
+				# If the first element does not have a color and we started from somewhere in the middle,
+				# the first element will never get a color.
+				# This needs to repeat for the length of the list, not just "+1".
+				# At a glance, the solution could be to just add "i" to the range. Needs testing.
+				#   for j in range( i+1, len(geom) + 1 + i ):
+
 				for j in range( i+1, len(geom) + 1 ):
 					if geom[  j % len(geom)  ]['type'] in cycleTypes:
 						if 'tColor' in geom[j % len(geom) ]:
