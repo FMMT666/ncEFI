@@ -111,6 +111,15 @@ that is named
 
 
 ---
+## Notes
+
+### wxPython Bugs
+
+  - exiting the application might cause an error; they are working on a fix (for wxPython 4.0-dev+++)
+  - with than four items in a CheckListBox (or ListBox with "checks"), the labels are shifted to the right and are not visible; they are working on a fix (for wxPython 4.0-dev+++)
+
+
+---
 ## News
 
 ### CHANGES 2025/01/XX
@@ -127,6 +136,7 @@ that is named
     - moved some things into the PartList class (still a mess)
     - added color cycling tests
     - added working color cycling; looks like crap with long elements though
+    - fixed color cycling for parts with partial color tags
 
 
 ### CHANGES 2024/12/XX
