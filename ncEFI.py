@@ -321,6 +321,7 @@ def elemAddExtra(elem,extra):
 			elem['tSize'] = extra['tSize']
 
 
+
 #############################################################################
 ### elemAddColor
 ###
@@ -345,6 +346,24 @@ def elemAddColor( elem: dict, color: tuple) -> None:
 	elemAddExtra( elem, { 'tColor': color } )
 
 
+
+#############################################################################
+### elemDeleteColor
+###
+#############################################################################
+def elemDeleteColor( elem: dict ) -> None:
+	"""
+	Deletes the color information from the element's extra dictionary.
+
+	Args:
+		elem (dict): The element to delete the color from
+
+	"""
+	if 'tColor' in elem:
+		del elem['tColor']
+
+
+
 #############################################################################
 ### elemAddSize
 ###
@@ -366,6 +385,23 @@ def elemAddSize( elem: dict, size: int | float) -> None:
 		size = 1.0
 
 	elemAddExtra( elem, { 'tSize': size } )
+
+
+
+#############################################################################
+### elemDeleteSize
+###
+#############################################################################
+def elemDeleteSize( elem: dict ) -> None:
+	"""
+	Deletes the size information from the element's extra dictionary.
+
+	Args:
+		elem (dict): The element to delete the size from
+
+	"""
+	if 'tSize' in elem:
+		del elem['tSize']
 
 
 
@@ -4127,7 +4163,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# 
 	# OUTSIDE OFFSETS' STRATEGY
 	#
-	#   [ ] In theory, if all lines are splitat any intersection, the inside and outside offsets should be the same. In theory.
+	#   [ ] In theory, if all lines are split at any intersection, the inside and outside offsets should be the same. In theory.
 	#
 	#
 	# (**1**) Need to check which ones. For self-intersecting polygons, this might be a problem.
@@ -4191,7 +4227,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 
 
-	# TODO:
+	# TODO (or DONE already?):
 	# Throw all verts into one list and split every line at those, which are not endpoints.
 	# As it seems, the split can only happen at the intersection of two offset lines (needs proof)
 	# and not at any of those which are already marked for deletion (needs proof too).
@@ -4207,6 +4243,11 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 		elemAddColor( i, GetRandomColor() )
 		elemAddSize( i, 4 )
 
+	# delete all lines which are too close to the original geometry
+
+
+
+
 
 
 	# DEBUG SHOW ALL
@@ -4217,8 +4258,8 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# geom = angleLines + geomLines + intsVerts + splitLines
 
 	# DEBUG ONLY; WARNING, APPEND ONLY FOR DEBUGGING!!!
-	geom.append( angleLines )
-	geom.append( geomLines )
+	# geom.append( angleLines )
+	# geom.append( geomLines )
 	geom.append( intsVerts )
 	geom.append( splitLines )
 
@@ -4228,11 +4269,27 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 
 #############################################################################
-### geomSplitLines
+### geomSplitPolyLines
 ###
 #############################################################################
 def geomSplitPolyLines( geomPoly: list, verts: list ) -> list:
+	"""
+	Splits a list of lines at the intersections with a list of vertices.
+	Usually the list of verts were calculated from the intersections of the lines with other lines.
+	E.g.: line from ( 0, 0, 0) to (10, 0, 0)
+	      vert at   ( 5, 0, 0) or within FINTOL tolerance, e.g. (5, 0.0000001, 0)
+		  returns
+		  line from ( 0, 0, 0) to ( 5, 0, 0) and
+		  line from ( 5, 0, 0) to (10, 0, 0)
 
+	Args:
+		geomPoly (list): A list of lines representing the original geometry.
+		verts (list): A list of vertices representing the split points.	
+	
+	Returns:
+		list: A list of lines, split at the intersections.
+
+	"""
 	geom = []
 
 
@@ -4271,6 +4328,53 @@ def geomSplitPolyLines( geomPoly: list, verts: list ) -> list:
 
 
 #############################################################################
+### geomJoinPolyLines
+###
+#############################################################################
+def geomJoinPolyLines( geomLines: list ) -> list:
+	"""
+	Joins all lines which form a straight line, the opposite of what geomSplitPolyLines does.
+	E.g., two lines
+	      line 1, from ( 0, 0, 0) to ( 5, 0, 0) and
+	      line 2, from ( 5, 0, 0) to (10, 0, 0)
+		  will be combined to one
+		  line from ( 0, 0, 0) to (10, 0, 0)
+	
+	Args:
+		geomLines (list): A list of lines to be joined.
+	
+	Returns:
+		list: a new poly (list of lines)
+	"""
+
+	# TODO: only for closed polys, or for open ones too?
+
+	pass
+
+
+
+#############################################################################
+### geomJoinPolyVerts
+###
+#############################################################################
+def geomJoinPolyVerts( geomLines: list ) -> list:
+	"""
+	Joins all directly connected verts which are in close proximity.
+	
+	Args:
+		geomLines (list): A list of polylines.
+	
+	Returns:
+		list: a new, simplified list of poly lines poly (list of vertices)
+	"""
+
+	# TODO: ugh, yes
+
+	pass
+
+
+
+#############################################################################
 ### geomExtractPolyVerts
 ###
 #############################################################################
@@ -4297,7 +4401,7 @@ def geomExtractPolyVerts( geomPoly: list ) -> list:
 #############################################################################
 def geomCreatePolyVerts( listOfPoints: list, basNr: int = 0 ) -> list:
 	"""
-	Create a geom of vertices from a list of points.
+	Create a geom of vertices (true "elements") from a simple ("Python") list of points.
 	The list of points should be given anti-clockwise.
 
 	Args:
@@ -4305,7 +4409,7 @@ def geomCreatePolyVerts( listOfPoints: list, basNr: int = 0 ) -> list:
 		basNr (int, optional): An optional base number, default is 0.
 
 	Returns:
-		list: A geom with vertices.
+		list: A geom (list of elements) with vertices.
 	"""
 
 	geom = []
@@ -4323,7 +4427,7 @@ def geomCreatePolyVerts( listOfPoints: list, basNr: int = 0 ) -> list:
 #############################################################################
 def geomCreatePoly( geomVerts: list, basNr: int = 0 ) -> list:
 	"""
-	Creates a closed polygon as a geom made of vectors from a list of vertices.
+	Creates a closed polygon as a geom made of lines from a list of vertices.
 
 	Args:
 		geomVerts (list): A geom (list of vertices) representing the geometry.
@@ -4348,6 +4452,61 @@ def geomCreatePoly( geomVerts: list, basNr: int = 0 ) -> list:
 	for i in range( lenList ):
 		geom.append( elemCreateLine( geomVerts[i]['p1'], geomVerts[ (i+1) % lenList ]['p1'] ) )
 
+
+	return geom
+
+
+
+#############################################################################
+### geomAddColor
+###
+#############################################################################
+def geomAddColor( geom: list, color: tuple ) -> list:
+	"""
+	Adds a color to all elements in a geom.
+	Most likely used for debugging purposes.
+
+	Args:
+		geom (list): A geom.
+		color (tuple): A color as a tuple of three floats, e.g. (1.0, 0.0, 0.0) for red.
+
+	Returns:
+		list: The geom with the added color.
+	"""
+
+	if not isinstance( geom, list ):
+		print("ERR: geomAddColor: geom is not a list: ", type(geom))
+		return geom
+
+	for i in geom:
+		elemAddColor( i, color )
+
+	return geom
+
+
+
+#############################################################################
+### geomDeleteColor
+###
+#############################################################################
+def geomDeleteColor( geom: list ) -> list:
+	"""
+	Deletes the color from all elements in a geom.
+	Most likely used for debugging purposes.
+
+	Args:
+		geom (list): A geom.
+
+	Returns:
+		list: The geom with the color removed.
+	"""
+
+	if not isinstance( geom, list ):
+		print("ERR: geomDeleteColor: geom is not a list: ", type(geom))
+		return geom
+
+	for i in geom:
+		elemDeleteColor( i )
 
 	return geom
 
