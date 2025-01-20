@@ -4239,15 +4239,18 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 	splitLines = geomSplitPolyLines( offsLines, intsVerts )
 
-	for i in splitLines:
-		elemAddColor( i, GetRandomColor() )
-		elemAddSize( i, 4 )
+	# for i in splitLines:
+	# 	elemAddColor( i, GetRandomColor() )
+	# 	elemAddSize( i, 4 )
 
 	# delete all lines which are too close to the original geometry
-
-
-
-
+	for i in splitLines:
+		for j in geomPoly:
+			if ( dist := elemDistance( i, j )) < math.fabs(offset) - FINTOL :
+				print("dist: ", dist)
+				i['tDelete'] = True
+				elemAddColor( i, ( 1.0, 0.0, 0.0 ) )
+				elemAddSize( i, 6 )
 
 
 	# DEBUG SHOW ALL
@@ -4259,7 +4262,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 	# DEBUG ONLY; WARNING, APPEND ONLY FOR DEBUGGING!!!
 	# geom.append( angleLines )
-	# geom.append( geomLines )
+	geom.append( geomLines )
 	geom.append( intsVerts )
 	geom.append( splitLines )
 

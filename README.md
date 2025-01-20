@@ -137,6 +137,7 @@ that is named
     - added color cycling tests
     - added working color cycling; looks like crap with long elements though
     - fixed color cycling for parts with partial color tags
+    - added detecting too near offsets
 
 
 ### CHANGES 2024/12/XX
