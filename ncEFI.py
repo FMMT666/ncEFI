@@ -297,6 +297,7 @@ def elemAddExtra(elem,extra):
 			elem['pNext'] = extra['pNext']
 		if i == 'pPrev':
 			elem['pPrev'] = extra['pPrev']
+
 		if i == 'tMove':
 			elem['tMove'] = extra['tMove']
 
@@ -319,6 +320,68 @@ def elemAddExtra(elem,extra):
 		# --- size information for the graphical viewer
 		if i == 'tSize':
 			elem['tSize'] = extra['tSize']
+
+		# TESTING TESTING TESTING
+		# --- deletion information for other things
+		if i == 'tDelete':
+			elem['tDelete'] = extra['tDelete']
+
+
+
+#############################################################################
+### elemAddTags
+###
+#############################################################################
+def elemAddTags(elem: dict, tags: dict) -> None:
+	"""
+	Adds tags to an element.
+	Actually just a wrapper for elemAddExtra().
+
+	Args:
+		elem (dict): The element to add the tags to
+		tags (dict): The tags to add
+	"""
+
+	elemAddExtra(elem, tags)
+
+
+
+#############################################################################
+### elemGetTags
+###
+#############################################################################
+def elemGetTags(elem: dict) -> dict:
+	"""
+	Returns a dictionary with all the tags of an element.
+
+	Args:
+		elem (dict): The element to get the tags from
+
+	Returns:
+		dict: A dictionary with all the tags of the element
+	"""
+
+	tags = {}
+
+	if 'tMove' in elem:
+		tags['tMove'] = elem['tMove']
+
+	if 'tFeed' in elem:
+		tags['tFeed'] = elem['tFeed']
+
+	if 'tMsg' in elem:
+		tags['tMsg'] = elem['tMsg']
+
+	if 'tColor' in elem:
+		tags['tColor'] = elem['tColor']
+
+	if 'tSize' in elem:
+		tags['tSize'] = elem['tSize']
+	
+	if 'tDelete' in elem:
+		tags['tDelete'] = elem['tDelete']
+	
+	return tags
 
 
 
@@ -4209,7 +4272,6 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 		elemAddColor( i, ( 1.0, 0.0, 1.0 ) )
 		elemAddSize( i, 5 )
 	for i in offsLines:
-		elemAddColor( i, ( 0.0, 0.0, 1.0 ) )
 		elemAddSize( i, 3 )
 
 
@@ -4275,7 +4337,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 ### geomSplitPolyLines
 ###
 #############################################################################
-def geomSplitPolyLines( geomPoly: list, verts: list ) -> list:
+def geomSplitPolyLines( geomPoly: list, verts: list, keepTags: bool = True ) -> list:
 	"""
 	Splits a list of lines at the intersections with a list of vertices.
 	Usually the list of verts were calculated from the intersections of the lines with other lines.
@@ -4284,6 +4346,8 @@ def geomSplitPolyLines( geomPoly: list, verts: list ) -> list:
 		  returns
 		  line from ( 0, 0, 0) to ( 5, 0, 0) and
 		  line from ( 5, 0, 0) to (10, 0, 0)
+	If keepTags is True, the tags of the original lines are copied to the new ones,
+	e.g. 'tDelete' or 'tColor', etc.
 
 	Args:
 		geomPoly (list): A list of lines representing the original geometry.
@@ -4319,12 +4383,26 @@ def geomSplitPolyLines( geomPoly: list, verts: list ) -> list:
 			geom.append( line )
 		else:
 			# --- "split" the line
+
+			# remember the tags of the original line
+			if keepTags:
+				tags = elemGetTags( line )	
+			else:
+				tags = {}
+
 			for i in range( numHits ):
 				if i == 0:
-					geom.append( elemCreateLine( line['p1'], hits[i]['p1'] ) )
+					geom.append( tmpLine := elemCreateLine( line['p1'], hits[i]['p1'] ) )
 				else:
-					geom.append( elemCreateLine( hits[i-1]['p1'], hits[i]['p1'] ) )
-			geom.append( elemCreateLine( hits[-1]['p1'], line['p2'] ) )
+					geom.append(  tmpLine := elemCreateLine( hits[i-1]['p1'], hits[i]['p1'] ) )
+				
+				if tags:
+					elemAddTags( tmpLine, tags )
+
+			geom.append( tmpLine := elemCreateLine( hits[-1]['p1'], line['p2'] ) )
+			if tags:
+				elemAddTags( tmpLine, tags )	
+
 
 	return geom
 
