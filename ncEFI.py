@@ -4198,6 +4198,21 @@ def geomCreatePolyVertsOffset( geomVerts: list, offset: float ) -> list:
 ###
 #############################################################################
 def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> list:
+	"""
+	TODO
+	Offsets a polygon by a given value "offset".
+	Negative values move the offset inside the polygon, positive values towards the outside.
+
+	The function returns a list of geoms (lists) representing the offset polygon.
+
+	Args:
+		geomPoly (list): A geom consisting of a polyline.
+		offset (float): The offset value determining how far the vertices are from the original geometry. <0 means inside, >0 means outside.
+		basNr (int): The base number for the elements in the returned list.
+
+	Returns:
+		list: A list of geoms representing the offset polygon.
+	"""
 	#
 	# So far, only the inside offsets are implemented, without any collision checks
 	# to other geometry. Only self-intersections are checked.
@@ -4209,6 +4224,8 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# Have to start somewhere ...
 	#
 	# INSIDE OFFSETS' STRATEGY
+	#
+	#   [ ] TODO: This table needs to be updated and should reflect what's actually happening.
 	#
 	#   [X] extract verts from poly
 	#   [X] use geomCreatePolyVertsOffset() to create the offset vertices
@@ -4305,14 +4322,45 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# 	elemAddColor( i, GetRandomColor() )
 	# 	elemAddSize( i, 4 )
 
-	# delete all lines which are too close to the original geometry
+	# find all lines which are too close to the original geometry and tag them for deletion
 	for i in splitLines:
 		for j in geomPoly:
 			if ( dist := elemDistance( i, j )) < math.fabs(offset) - FINTOL :
-				print("dist: ", dist)
+				# delete later to avoid index out of range errors
 				i['tDelete'] = True
-				elemAddColor( i, ( 1.0, 0.0, 0.0 ) )
-				elemAddSize( i, 6 )
+				# FOR DEBUGGING ONLY:
+				# print("dist: ", dist)
+				# elemAddColor( i, ( 1.0, 0.0, 0.0 ) )
+				# elemAddSize( i, 6 )
+
+	# delete the tagged lines
+	for i in range( len(splitLines)-1, -1, -1 ):
+		if 'tDelete' in splitLines[i]:
+			del splitLines[i]
+
+
+	# TODO: clean splitLines
+	#   - Depeding on the geometry, the result in splitLines might contain multiple
+	#     closed (or even open) polygons. These need to be separated and returned in a list.
+	#   - very small line segments will cause issues
+	#   - There will definitely be geometries for which the splitLines are not correct;
+	#     e.g. for very large negative ("to inside") offsets which now became positive ones.
+	#   - Actually, the algorithm should work beween two polygons.
+	#     One to start from and the second one as a limit to split the lines.
+	#     This is probably the hardest part of the whole thing.
+
+	# Next steps would be to
+	#   - isolate all closed polygons in splitLines
+	#   - decide what to do with the open ones
+	#     - check if some of the verts are in close proximity; if so, join them
+	#   - test with very short lines
+	#     - create a elemArcToLines; like "createArc180(p1,p2,rad,step,dir)" in the viewer; for debugging
+	#   - find out where this check if its possible that multiple closed polygons are connected somehow?
+
+	pass
+
+
+
 
 
 	# DEBUG SHOW ALL
@@ -4322,10 +4370,12 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	# geom = angleLines + offsLines + geomLines + intsVerts
 	# geom = angleLines + geomLines + intsVerts + splitLines
 
-	# DEBUG ONLY; WARNING, APPEND ONLY FOR DEBUGGING!!!
+
+	# Actually, this, having lists in a list, was only planned for debugging purposes.
+	# Now, it's even necessary because there might be multiple polygons in the result. Ugh :)
 	# geom.append( angleLines )
-	geom.append( geomLines )
-	geom.append( intsVerts )
+	# geom.append( geomLines )
+	# geom.append( intsVerts )
 	geom.append( splitLines )
 
 
