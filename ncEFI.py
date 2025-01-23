@@ -1075,6 +1075,142 @@ def elemDistance( e1:dict, e2:dict ) -> float:
 	return None
 
 
+
+#############################################################################
+### elemIsElem
+###
+#############################################################################
+def elemIsElem( e1:dict ) -> bool:
+	"""
+	Checks if an element is an element.
+	Currently, only 'v', 'l' and 'a' are considered elements.
+
+	Args:
+		e1 (dict): The element to check
+	
+	Returns:
+		bool: True if the element is an element, False otherwise
+	"""
+
+	# --- check if it is a dict
+	if isinstance(e1, dict) == False:
+		return False		
+
+	# --- check if it has a 'type' key
+	if not 'type' in e1:
+		return False
+
+	# --- verts
+	if   e1['type'] == 'v':
+		if 'p1' in e1:
+			return True
+	# --- lines
+	elif e1['type'] == 'l':
+		if 'p1' in e1 and 'p2' in e1:
+			return True
+	# --- arcs
+	elif e1['type'] == 'a':
+		if 'p1' in e1 and 'p2' in e1 and 'rad' in e1 and 'dir' in e1:
+			return True
+	# --- unknown
+	else:
+		return False
+
+
+
+#############################################################################
+### elemIsIdentical
+###
+#############################################################################
+def elemIsIdentical( e1:dict, e2:dict ) -> bool:
+	"""
+	Checks if two elements are geometrically identical.
+	All tags or additional extras are ignored.
+	Reversed elements do not cout as identical; use elemIsReverse() for that.
+
+	Args:
+		e1 (dict): 1st element
+		e2 (dict): 2nd element
+	
+	Returns:
+		bool: True if the elements are identical, False otherwise
+	"""
+
+	if elemIsElem(e1) == False or elemIsElem(e2) == False:
+		print( "ERR: elemIsIdentical: e1 or e2 are not elements" )
+		return False
+
+	if e1['type'] != e2['type']:
+		return False
+	
+	# --- verts; just check the position
+	if e1['type'] == 'v':
+		if e1['p1'] == e2['p1']:
+			return True
+		return False
+
+	# --- lines; check both points
+	if e1['type'] == 'l':
+		if e1['p1'] == e2['p1'] and e1['p2'] == e2['p2']:
+			return True
+		return False
+
+	# --- arcs; a bit more complicated
+	if e1['type'] == 'a':
+		if e1['p1'] == e2['p1'] and e1['p2'] == e2['p2'] and e1['rad'] == e2['rad'] and e1['dir'] == e2['dir']:
+			return True
+		return False
+
+
+
+#############################################################################
+### elemIsReverse
+###
+#############################################################################
+def elemIsReverse( e1:dict, e2:dict ) -> bool:
+	"""
+	Checks if two elements are geometrically identical, but reversed.
+	All tags or additional extras are ignored.
+	Verts at the sane position will also be counted as reversed.
+
+	Args:
+		e1 (dict): 1st element
+		e2 (dict): 2nd element
+	
+	Returns:
+		bool: True if the elements are identical, False otherwise
+	"""
+
+	if elemIsElem(e1) == False or elemIsElem(e2) == False:
+		print( "ERR: elemIsIdentical: e1 or e2 are not elements" )
+		return False
+
+	if e1['type'] != e2['type']:
+		return False
+	
+	# --- verts; just check the position
+	if e1['type'] == 'v':
+		if e1['p1'] == e2['p1']:
+			return True
+		return False
+
+	# --- lines; check both points
+	if e1['type'] == 'l':
+		if e1['p1'] == e2['p2'] and e1['p2'] == e2['p1']:
+			return True
+		return False
+
+	# --- arcs; a bit more complicated
+	if e1['type'] == 'a':
+		if e1['p1'] == e2['p2'] and e1['p2'] == e2['p1'] and e1['rad'] == e2['rad']:
+			if e1['dir'] == 'cw' and e2['dir'] == 'cc' or e1['dir'] == 'cc' and e2['dir'] == 'cw':
+				return True
+		return False
+
+	return False
+
+
+
 #############################################################################
 ### elemDebugPrint
 ###
@@ -4459,10 +4595,10 @@ def geomSplitPolyLines( geomPoly: list, verts: list, keepTags: bool = True ) -> 
 
 
 #############################################################################
-### geomJoinPolyLines
+### geomExtendStraightPolyLines
 ###
 #############################################################################
-def geomJoinPolyLines( geomLines: list ) -> list:
+def geomExtendStraightPolyLines( geomLines: list ) -> list:
 	"""
 	Joins all lines which form a straight line, the opposite of what geomSplitPolyLines does.
 	E.g., two lines
@@ -4479,6 +4615,63 @@ def geomJoinPolyLines( geomLines: list ) -> list:
 	"""
 
 	# TODO: only for closed polys, or for open ones too?
+
+	pass
+
+
+
+#############################################################################
+### geomSplitMultiplePolys
+###
+#############################################################################
+def geomSplitMultiplePolys( geom: list ) -> list:
+	"""
+	Splits a geom with multiple closed polygons or "open remains" into single
+	geom polygons.
+	The easiest case is multiple polygons, which are not connected.
+	More complex cases are polygons which are connected by a single or multiple
+	verts, or even by lines.
+
+	Args:
+		geom (list): A geom with polylines.
+	
+	Returns:
+		list: a list with geoms (lists), each containing a single geom.
+	"""
+
+	pass
+
+
+#############################################################################
+### geomCountDoubleElements
+###
+#############################################################################
+def geomCountDoubleElements( geom: list, sameDirectionOnly = True ) -> dict:
+	"""
+	Counts the number of double 'v', 'l' or 'a' elements in a geom.
+	By default, a line or an arc going back and forth over the same verts is not
+	considered as a double element. Setting "sameDirectionOnly" to False
+	will change this.
+	The "algorithm" (lol) will 
+	Notice that shorter elements laying on top of longer ones are not considered here.
+	E.g. a line from (0,0,0) to (10,0,0) and two lines from (0,0,0) to (5,0,0) and
+	(5,0,0) to (10,0,0) are not considered as double elements.
+	
+
+	Args:
+		geom (list): A geom with elements.
+		sameDirectionOnly (bool, optional): If True, only elements with the same direction are counted. Default is False.
+
+	Returns:
+		dict: A dictionary with the counts of 'v', 'l' and 'a' elements.
+			
+	"""
+
+	count = { 'v': 0, 'l': 0, 'a': 0 }	
+
+	if isinstance( geom, list ):
+		print("ERR: geomCountDoubleElements: geom is not a list: ", type(geom))
+		return count
 
 	pass
 
