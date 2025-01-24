@@ -472,7 +472,7 @@ def elemDeleteSize( elem: dict ) -> None:
 ### elemGetType
 ###
 #############################################################################
-def elemGetType(elem: dict) -> str:
+def elemGetType(elem: dict) -> str | None:
 	"""
 	Returns the type of the element.
 
@@ -480,14 +480,15 @@ def elemGetType(elem: dict) -> str:
 		elem (dict): The element to get the type from
 
 	Returns:
-		str: The type of the element; 'v', 'l', 'a' or '' for an unknown type
+		str: The type of the element; 'v', 'l', 'a'
+		None: for an unknown type
 	"""
 
 	if 'type' in elem:
 		if elem['type'] == 'v' or elem['type'] == 'l' or elem['type'] == 'a':
 			return elem['type']
 
-	return ''
+	return None
 
 
 
@@ -4493,7 +4494,10 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	#     - create a elemArcToLines; like "createArc180(p1,p2,rad,step,dir)" in the viewer; for debugging
 	#   - find out where this check if its possible that multiple closed polygons are connected somehow?
 
-	pass
+	cDouble = geomCountDoubleElements( splitLines )
+
+	# DEBUG ONLY
+	print( "DBG: geomCreatePolyOffset: double elements in splitLines: ", cDouble )
 
 
 
@@ -4673,7 +4677,15 @@ def geomCountDoubleElements( geom: list, sameDirectionOnly = True ) -> dict:
 		print("ERR: geomCountDoubleElements: geom is not a list: ", type(geom))
 		return count
 
-	pass
+	for i in range( len(geom) - 1 ):
+		for j in range( i + 1, len(geom) ):
+			if elemIsIdentical( geom[i], geom[j] ):
+				if ( etype := elemGetType( geom[i] ) ) is not None:
+					count[ etype ] += 1
+				else:
+					print("ERR: geomCountDoubleElements: unknown element type: ", geom[i] )
+
+	return count
 
 
 
