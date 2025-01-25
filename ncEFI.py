@@ -4643,6 +4643,12 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 		list: a list with geoms (lists), each containing a single geom.
 	"""
 
+	# Algorithm ideas
+	# Three cases:
+	#   1. Multiple polygons, not connected
+	#   2. Multiple polygons, sharing a single or multiple verts
+	#   3. Multiple polygo 
+
 	pass
 
 
@@ -4650,7 +4656,7 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 ### geomCountDoubleElements
 ###
 #############################################################################
-def geomCountDoubleElements( geom: list, sameDirectionOnly = True ) -> dict:
+def geomCountDoubleElements( geom: list ) -> dict:
 	"""
 	Counts the number of double 'v', 'l' or 'a' elements in a geom.
 	By default, a line or an arc going back and forth over the same verts is not
@@ -4664,7 +4670,6 @@ def geomCountDoubleElements( geom: list, sameDirectionOnly = True ) -> dict:
 
 	Args:
 		geom (list): A geom with elements.
-		sameDirectionOnly (bool, optional): If True, only elements with the same direction are counted. Default is False.
 
 	Returns:
 		dict: A dictionary with the counts of 'v', 'l' and 'a' elements.
