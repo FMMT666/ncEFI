@@ -4643,13 +4643,36 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 		list: a list with geoms (lists), each containing a single geom.
 	"""
 
+
+
+	# WARNING:
+	# This was actually a wrong assumption.
+	# The lines returned by "geomCreatePolyOffset()" are not necessarily connected, but
+	# in an arbitrary order.
+	# There shall be a "find connected lines" algorithm first.
+
+
+
+
 	# Algorithm ideas
 	# Three cases:
 	#   1. Multiple polygons, not connected
 	#   2. Multiple polygons, sharing a single or multiple verts
 	#   3. Multiple polygo 
 
-	pass
+	ret = []
+
+	doubles = geomCountDoubleElements( geom )
+
+	# TODO: allow multiple polygons in one geom
+	if doubles['l'] > 0:
+		print("ERR: geomSplitMultiplePolys: double line connections not yet supported." )
+		return []
+
+	# ALGO: start with the first element and follow the lines until the end
+
+
+
 
 
 #############################################################################
