@@ -4500,6 +4500,8 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 	print( "DBG: geomCreatePolyOffset: double elements in splitLines: ", cDouble )
 
 
+	# TODO
+	splitGeoms = geomSplitMultiplePolys( splitLines )
 
 
 
@@ -4625,6 +4627,52 @@ def geomExtendStraightPolyLines( geomLines: list ) -> list:
 
 
 #############################################################################
+### geomFindNextConnection
+###
+#############################################################################
+def geomFindNextConnection( geom: list, elem: dict ) -> list:
+	"""
+	Finds the next geometric connection of an element in a geom, outgoing from 'p2'.
+	Ideally only one is found, but in case the geom splits up into multiple trees,
+	far more than one connection could be found (senseless, but possible).
+
+	Args:
+		geom (list): A geom with elements.
+		elem (dict): The element ('l' or 'a') to find the next connection for.
+	
+	Returns:
+		list: a list with the next connected element(s)
+	"""
+
+	ret = []
+
+	if len( geom ) < 2:
+		print("ERR: geomFindNextConnection: geom is too short: ", len(geom) )
+		return []
+
+	if elem not in geom:
+		print("ERR: geomFindNextConnection: element not in geom: ", elem )
+		return []
+	
+	if ( count := geom.count( elem ) )> 1:
+		print("ERR: geomFindNextConnection: element occurs multiple times in geom: ", count, elem )
+		return []
+
+	index = geom.index( elem )
+
+	for i in range( len(geom) ):
+
+		if i == index:
+			continue
+
+		if i['p1'] == elem['p2']:
+			ret.append( geom[i] )
+
+	return ret
+
+
+
+#############################################################################
 ### geomSplitMultiplePolys
 ###
 #############################################################################
@@ -4669,8 +4717,18 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 		print("ERR: geomSplitMultiplePolys: double line connections not yet supported." )
 		return []
 
-	# ALGO: start with the first element and follow the lines until the end
+	# TESTING
+	for i in range( len(geom) ):
 
+		# 0. deepcopy() the geom to work with it
+		# 1. use geomFindNextConnection() to find the next connection
+		# 2. if there is ONE connection, add it to the current poly
+		# 3. use the found element and back to 1.
+		# 4. if the found element matches the first element, the poly is closed; DONE
+		# 5. if there are no connections, the poly is open; DONE
+		# 6. all found elements should be removed from the original geom (maybe working on a copy is better)
+
+		pass
 
 
 
