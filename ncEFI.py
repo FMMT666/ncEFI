@@ -4665,7 +4665,7 @@ def geomFindNextConnection( geom: list, elem: dict ) -> list:
 		if i == index:
 			continue
 
-		if i['p1'] == elem['p2']:
+		if geom[i]['p1'] == elem['p2']:
 			ret.append( geom[i] )
 
 	return ret
@@ -4717,19 +4717,45 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 		print("ERR: geomSplitMultiplePolys: double line connections not yet supported." )
 		return []
 
+
 	# TESTING
-	for i in range( len(geom) ):
 
-		# 0. deepcopy() the geom to work with it
-		# 1. use geomFindNextConnection() to find the next connection
-		# 2. if there is ONE connection, add it to the current poly
-		# 3. use the found element and back to 1.
-		# 4. if the found element matches the first element, the poly is closed; DONE
-		# 5. if there are no connections, the poly is open; DONE
-		# 6. all found elements should be removed from the original geom (maybe working on a copy is better)
 
-		pass
 
+	# DEBUG
+	for i in geom:
+		elemDebugPrint( i )
+
+
+
+	gwork = deepcopy( geom )
+
+	tst = []
+
+	for i in range( len(gwork) ):
+
+		# [X] 0. deepcopy() the geom to work with it
+		# [ ] 1. use geomFindNextConnection() to find the next connection
+		# [ ] 2. if there is ONE connection, add it to the current poly
+		# [ ] 3. use the found element and back to 1.
+		# [ ] 4. if the found element matches the first element, the poly is closed; DONE
+		# [ ] 5. if there are no connections, the poly is open; DONE
+		# [ ] 6. all found elements should be removed from the original geom (maybe working on a copy is better)
+
+		if i == 0:
+			elem = gwork[0]
+			tst.append( elem )
+
+		nextElem = geomFindNextConnection( gwork, elem )
+
+		if nextElem:
+			tst.append( nextElem )
+			elem = nextElem
+		else:
+			return tst
+
+
+	return []
 
 
 
