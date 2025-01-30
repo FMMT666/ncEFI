@@ -4501,7 +4501,7 @@ def geomCreatePolyOffset( geomPoly: list, offset: float, basNr: int = 0 ) -> lis
 
 
 	# TODO
-	splitGeoms = geomSplitMultiplePolys( splitLines )
+	splitGeoms = geomSplitFirstPoly( splitLines )
 
 
 
@@ -4654,6 +4654,7 @@ def geomFindNextConnection( geom: list, elem: dict ) -> list:
 		print("ERR: geomFindNextConnection: element not in geom: ", elem )
 		return []
 	
+	# TODO: this actually needs to be supported
 	if ( count := geom.count( elem ) )> 1:
 		print("ERR: geomFindNextConnection: element occurs multiple times in geom: ", count, elem )
 		return []
@@ -4673,44 +4674,32 @@ def geomFindNextConnection( geom: list, elem: dict ) -> list:
 
 
 #############################################################################
-### geomSplitMultiplePolys
+### geomSplitFirstPoly
 ###
 #############################################################################
-def geomSplitMultiplePolys( geom: list ) -> list:
+def geomSplitFirstPoly( geom: list ) -> list:
 	"""
-	Splits a geom with multiple closed polygons or "open remains" into single
-	geom polygons.
-	The easiest case is multiple polygons, which are not connected.
-	More complex cases are polygons which are connected by a single or multiple
-	verts, or even by lines.
+	Extracts the first closed or open polygon (connected elements) from a geom.
+	WARNING: Found elements will be removed from the original geom!
+		Use deepcopy() prior to calling this to iterate over all polygons.
 
 	Args:
 		geom (list): A geom with polylines.
 	
 	Returns:
-		list: a list with geoms (lists), each containing a single geom.
+		list: a list with connected elements (geom), either open or closed.
 	"""
 
-
-
-	# WARNING:
-	# This was actually a wrong assumption.
-	# The lines returned by "geomCreatePolyOffset()" are not necessarily connected, but
-	# in an arbitrary order.
-	# There shall be a "find connected lines" algorithm first.
-
-
-
-
-	# Algorithm ideas
-	# Three cases:
-	#   1. Multiple polygons, not connected
-	#   2. Multiple polygons, sharing a single or multiple verts
-	#   3. Multiple polygo 
+	# Many things are possible here:
+	#   - Multiple polygons, not connected
+	#   - Multiple polygons, sharing a single or multiple verts
+	#   - Multiple polygons, sharing a single or multiple lines
+	#   - all of the above either closed or open
 
 	ret = []
 
 	doubles = geomCountDoubleElements( geom )
+
 
 	# TODO: allow multiple polygons in one geom
 	if doubles['l'] > 0:
@@ -4718,19 +4707,11 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 		return []
 
 
-	# TESTING
-
-
-
 	# DEBUG
-	for i in geom:
-		elemDebugPrint( i )
-
-
+	# for i in geom:
+	# 	elemDebugPrint( i )
 
 	gwork = deepcopy( geom )
-
-	tst = []
 
 	for i in range( len(gwork) ):
 
@@ -4744,18 +4725,27 @@ def geomSplitMultiplePolys( geom: list ) -> list:
 
 		if i == 0:
 			elem = gwork[0]
-			tst.append( elem )
+			ret.append( elem )
 
-		nextElem = geomFindNextConnection( gwork, elem )
+		listElems = geomFindNextConnection( gwork, elem )
 
-		if nextElem:
-			tst.append( nextElem )
-			elem = nextElem
+		# --- too many connections found
+		if len( listElems ) > 1:
+			print("ERR: geomSplitMultiplePolys: multiple connections found: ", listElems )
+			return []
+		# --- no (further) connections found
+		elif len( listElems ) == 0:
+			break
+		# --- good; exactly one connection found
 		else:
-			return tst
+			# --- we cycled through the whole geom and are back at the start
+			if i > 0 and listElems[0] == geom[0]:
+				break
+			ret.append( listElems[0] )
+			elem = listElems[0]
 
 
-	return []
+	return ret
 
 
 
@@ -4785,7 +4775,7 @@ def geomCountDoubleElements( geom: list ) -> dict:
 
 	count = { 'v': 0, 'l': 0, 'a': 0 }	
 
-	if isinstance( geom, list ):
+	if not isinstance( geom, list ):
 		print("ERR: geomCountDoubleElements: geom is not a list: ", type(geom))
 		return count
 
